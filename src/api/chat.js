@@ -17,9 +17,11 @@ export function getMessages(sessionId, params = {}) {
   return service.get(`/api/sessions/${sessionId}/messages`, { params })
 }
 
-// 创建会话（单聊）：POST /api/sessions { participantId }
-export function createSession(participantId) {
-  return service.post('/api/sessions', { participantId })
+// 创建单聊会话：POST /api/sessions { sessionType: 'Private', friendId } -> ApiResponse<Guid>
+// ⚠️ 后端契约是 sessionType+friendId（前端旧版 participantId 字段后端不识别，已修正）；
+//    私聊幂等：两人会话已存在时直接返回现有 sessionId
+export function createSession(friendId) {
+  return service.post('/api/sessions', { sessionType: 'Private', friendId })
 }
 
 // 已读：POST /api/messages/{id}/read
