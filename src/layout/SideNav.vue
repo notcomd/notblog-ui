@@ -53,6 +53,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 defineProps({
   blurred: { type: Boolean, default: false }
@@ -60,6 +61,7 @@ defineProps({
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 
 // 个人主页：SideNav 导航项切换为空间工具栏（作品/收藏/我的仓库/安全），与主页面公用同一布局
 const isUserSpace = computed(() => route.path.startsWith('/users/'))
@@ -73,13 +75,17 @@ const mainNavItems = [
 
 const spaceNavItems = computed(() => {
   const id = route.params.id || ''
+  // 收藏/安全是个人私密功能，他人主页不显示（他人只保留：主页/作品/公开仓库）
+  const isSelf = !!auth.user && String(auth.user.id) === String(id)
   const tabItems = [
+    { key: 'home', label: '主页', icon: 'M3 12l9-9 9 9M5 10v10a1 1 0 0 0 1 1h3m10-11v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6' },
     { key: 'works', label: '作品', icon: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z' },
     { key: 'favorites', label: '收藏', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
-    { key: 'files', label: '我的仓库', icon: 'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z' },
+    { key: 'files', label: isSelf ? '我的仓库' : '公开仓库', icon: 'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z' },
     { key: 'security', label: '安全', icon: 'M12 17v2M7 11V7a5 5 0 0 1 10 0v4M5 11h14a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1z' }
   ]
-  return tabItems.map(t => ({ to: { path: `/users/${id}`, query: { tab: t.key } }, label: t.label, icon: t.icon }))
+  return (isSelf ? tabItems : tabItems.filter(t => !['favorites', 'security'].includes(t.key)))
+    .map(t => ({ to: { path: `/users/${id}`, query: { tab: t.key } }, label: t.label, icon: t.icon }))
 })
 
 const navItems = computed(() => (isUserSpace.value ? spaceNavItems.value : mainNavItems))
@@ -87,7 +93,7 @@ const navItems = computed(() => (isUserSpace.value ? spaceNavItems.value : mainN
 function isActive(item) {
   if (isUserSpace.value) {
     const tab = item.to.query.tab
-    return (route.query.tab || 'works') === tab
+    return (route.query.tab || 'home') === tab
   }
   return route.path === item.to.path || route.path.startsWith(item.to.path + '/')
 }
