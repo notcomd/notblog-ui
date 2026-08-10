@@ -1,10 +1,10 @@
 <template>
-  <div class="max-w-3xl mx-auto">
-    <div class="glass-card p-6">
+  <div class="max-w-[1400px] mx-auto">
+    <div class="glass-card p-6 min-h-[calc(100vh-20rem)] flex flex-col">
       <!-- 头部：标题 + 返回工作台（类型选择已移至工作台，此处不再提供 Tab 切换） -->
       <div class="flex items-start justify-between gap-4 mb-6">
         <div>
-          <h1 class="text-xl font-bold text-zinc-800 dark:text-zinc-100 mb-1">{{ title }}</h1>
+          <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-1">{{ title }}</h1>
           <p class="text-sm text-zinc-400">{{ subtitle }}</p>
         </div>
         <router-link to="/workspace" class="shrink-0 flex items-center gap-1.5 px-3.5 h-9 rounded-xl text-xs font-medium bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: active:scale-95 transition-all">

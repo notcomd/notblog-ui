@@ -1,12 +1,13 @@
 <template>
-  <div>
+  <div class="flex flex-col flex-1 justify-center">
     <input v-model="form.name" placeholder="社区名称（必填）" class="w-full h-11 px-4 rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-purple-400/50 transition-all mb-3" />
     <textarea v-model="form.description" rows="3" placeholder="社区简介" class="w-full resize-none rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-purple-400/50 transition-all mb-3"></textarea>
     <input v-model="form.avatarUrl" placeholder="头像 URL（可选）" class="w-full h-11 px-4 rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-purple-400/50 transition-all mb-3" />
     <input v-model.number="form.maxMembers" type="number" placeholder="成员上限（默认 500）" class="w-full h-11 px-4 rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-purple-400/50 transition-all mb-5" />
-    <button class="w-full h-11 rounded-2xl bg-gradient-to-r from-purple-400 to-fuchsia-600 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="creating || !form.name.trim()" @click="create">
+    <div class="flex justify-end"><button class="w-44 h-11 rounded-2xl bg-gradient-to-r from-purple-400 to-fuchsia-600 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="creating || !form.name.trim()" @click="create">
       {{ creating ? '创建中...' : '创建社区' }}
     </button>
+    </div>
   </div>
 </template>
 
