@@ -1,38 +1,59 @@
 <template>
-  <div>
-    <!-- 视频源 -->
+  <div class="flex flex-col flex-1">
+    <!-- 封面（最上方，点击封面框直接上传/更换） -->
     <div class="mb-4">
-      <label class="text-xs text-zinc-400 block mb-1.5">视频地址 / 文件</label>
-      <div class="flex gap-2">
-        <input v-model="videoUrl" class="flex-1 h-11 px-4 rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-blue-400/50 transition-all min-w-0" placeholder="粘贴视频 URL（mp4/webm）" />
-        <label class="shrink-0 inline-flex items-center gap-1.5 px-4 h-11 rounded-2xl text-xs font-medium bg-blue-400/15 text-blue-600 dark:text-blue-400 hover:bg-blue-400/25 transition-colors cursor-pointer">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
-          {{ videoUploading ? '上传中...' : '上传文件' }}
-          <input type="file" accept="video/*" class="hidden" :disabled="videoUploading" @change="onVideoFile" />
-        </label>
-      </div>
-      <p class="text-[10px] text-zinc-400 mt-1.5">本地文件载入后自动生成预览地址；上传接口见后端 /api/files/upload（分片）</p>
-    </div>
-
-    <!-- 封面 -->
-    <div class="mb-4">
-      <label class="text-xs text-zinc-400 block mb-1.5">封面图（必填）</label>
-      <div class="flex items-center gap-3">
-        <div class="w-32 h-20 rounded-2xl overflow-hidden border border-white/60 dark:border-white/10 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center relative group">
-          <img v-if="coverUrl" :src="coverUrl" alt="" class="w-full h-full object-cover" @error="hideImg" />
-          <button v-if="coverUrl" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" @click="coverUrl = ''; coverFileId = ''">✕</button>
-          <span v-if="!coverUrl" class="text-xl">🎬</span>
+      <label class="text-xs text-zinc-400 block mb-1.5">封面图（必填 · 点击上传）</label>
+      <div
+        class="relative max-w-[360px] aspect-video rounded-2xl overflow-hidden border-2 border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-100/60 dark:bg-zinc-900/60 cursor-pointer group transition-colors hover:border-blue-400 dark:hover:border-blue-400"
+        @click="pickCover"
+      >
+        <img v-if="coverUrl" :src="coverUrl" alt="封面" class="w-full h-full object-cover" @error="hideImg" />
+        <div v-else class="w-full h-full flex flex-col items-center justify-center gap-2 text-zinc-400">
+          <span class="text-3xl">🎬</span>
+          <span class="text-xs">{{ coverUploading ? '上传中...' : '点击上传封面' }}</span>
         </div>
-        <label class="px-3.5 h-9 rounded-xl text-xs font-medium bg-blue-400/15 text-blue-600 dark:text-blue-400 hover:bg-blue-400/25 transition-colors cursor-pointer">
-          {{ coverUploading ? '上传中...' : '上传封面' }}
-          <input type="file" accept="image/*" class="hidden" :disabled="coverUploading" @change="onCoverPick" />
-        </label>
+        <div class="absolute inset-0 bg-black/40 text-white text-xs font-medium flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          {{ coverUrl ? '点击更换封面' : '点击上传封面' }}
+        </div>
+        <button
+          v-if="coverUrl"
+          class="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 text-white text-[10px] flex items-center justify-center hover:bg-black/70 transition-colors"
+          title="移除封面"
+          @click.stop="clearCover"
+        >✕</button>
       </div>
+      <input ref="coverInput" type="file" accept="image/*" class="hidden" :disabled="coverUploading" @change="onCoverPick" />
     </div>
 
+    <!-- 视频文件 / 地址（点击上传，上传后下方显示视频 URL） -->
+    <div class="mb-4 flex flex-col">
+      <label class="text-xs text-zinc-400 block mb-1.5">视频文件 / 地址</label>
+      <div
+        class="rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-100/60 dark:bg-zinc-900/60 cursor-pointer group transition-colors hover:border-blue-400 dark:hover:border-blue-400 flex-1 min-h-[10rem] flex flex-col items-center justify-center gap-2 text-zinc-400"
+        @click="pickVideo"
+      >
+        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
+        <span class="text-xs">{{ videoUploading ? '上传中...' : '点击上传视频文件（mp4/webm，≤500MB）' }}</span>
+      </div>
+      <input ref="videoInput" type="file" accept="video/*" class="hidden" :disabled="videoUploading" @change="onVideoFile" />
+      <!-- 上传后显示视频 URL（也可直接粘贴地址） -->
+      <div v-if="videoUrl" class="mt-2 flex items-center gap-2">
+        <input
+          v-model="videoUrl"
+          class="flex-1 h-10 px-3.5 rounded-xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-xs text-zinc-600 dark:text-zinc-300 outline-none focus:ring-2 focus:ring-blue-400/50 transition-all min-w-0"
+          placeholder="视频 URL（mp4/webm）"
+        />
+        <button class="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-zinc-400 hover:bg-red-500/10 hover:text-red-500 transition-colors" title="清除视频" @click="clearVideo">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+        </button>
+      </div>
+      <p class="text-[10px] text-zinc-400 mt-1.5">点击上方区域选择本地文件，或粘贴视频地址到下方输入框</p>
+    </div>
+
+    <!-- 视频描述（高度减半） -->
     <textarea
       v-model="content"
-      rows="4"
+      rows="3"
       class="w-full resize-none rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
       placeholder="视频标题与描述...（支持 @提及）"
     ></textarea>
@@ -45,11 +66,21 @@
       </select>
     </div>
 
-    <div class="mt-5 flex gap-3">
-      <button class="flex-1 h-11 rounded-2xl bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="savingDraft" @click="saveAsDraft">
+    <!-- 可见范围：公开 / 私密 -->
+    <div class="mt-4">
+      <label class="text-xs text-zinc-400 block mb-1.5">谁可以看</label>
+      <div class="flex gap-2">
+        <button type="button" class="h-9 px-4 rounded-xl text-xs font-medium transition-all" :class="visibility === 'Public' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-300'" @click="visibility = 'Public'">🌍 公开</button>
+        <button type="button" class="h-9 px-4 rounded-xl text-xs font-medium transition-all" :class="visibility === 'Private' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-300'" @click="visibility = 'Private'">🔒 私密 · 仅自己可见</button>
+      </div>
+    </div>
+
+    <!-- 底部按钮：右对齐，固定宽度 -->
+    <div class="mt-5 flex justify-end gap-3">
+      <button class="w-44 h-11 rounded-2xl bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="savingDraft" @click="saveAsDraft">
         {{ savingDraft ? '保存中...' : '💾 存草稿' }}
       </button>
-      <button class="flex-1 h-11 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="publishing || !content.trim() || !coverUrl" @click="publish">
+      <button class="w-44 h-11 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="publishing || !content.trim() || !coverUrl" @click="publish">
         {{ publishing ? '发布中...' : '发布视频' }}
       </button>
     </div>
@@ -77,11 +108,14 @@ const coverUrl = ref('')     // 可显示 URL（预览用）
 const coverFileId = ref('')  // 发布用（fileId）
 const content = ref('')
 const circleGuid = ref('')
+const visibility = ref('Public')
 const videoUploading = ref(false)
 const coverUploading = ref(false)
 const publishing = ref(false)
 const savingDraft = ref(false)
 const draftId = ref('')
+const videoInput = ref(null)
+const coverInput = ref(null)
 
 watch(() => props.draft, (d) => {
   if (!d) return
@@ -91,7 +125,23 @@ watch(() => props.draft, (d) => {
   coverFileId.value = d.coverFileId || ''
   content.value = d.content || ''
   if (d.circleGuid) circleGuid.value = d.circleGuid
+  visibility.value = d.visibility || 'Public'
 }, { immediate: true })
+
+// 点击区域触发文件选择
+function pickVideo() {
+  if (!videoUploading.value && videoInput.value) videoInput.value.click()
+}
+function pickCover() {
+  if (!coverUploading.value && coverInput.value) coverInput.value.click()
+}
+function clearVideo() {
+  videoUrl.value = ''
+}
+function clearCover() {
+  coverUrl.value = ''
+  coverFileId.value = ''
+}
 
 function onVideoFile(e) {
   const file = e.target.files && e.target.files[0]
@@ -144,7 +194,8 @@ function saveAsDraft() {
       cover: coverUrl.value,
       coverUrl: coverUrl.value,
       coverFileId: coverFileId.value,
-      circleGuid: circleGuid.value
+      circleGuid: circleGuid.value,
+      visibility: visibility.value
     })
     draftId.value = saved.id
     toast.push('草稿已保存', 'success')
@@ -157,7 +208,7 @@ async function publish() {
   if (publishing.value) return
   publishing.value = true
   try {
-    const payload = { content: content.value.trim(), fileIds: coverFileId.value ? [coverFileId.value] : [] }
+    const payload = { content: content.value.trim(), fileIds: coverFileId.value ? [coverFileId.value] : [], visibility: visibility.value }
     const res = circleGuid.value
       ? await createCirclePost({ circleGuid: circleGuid.value, ...payload })
       : await createTweet(payload)
