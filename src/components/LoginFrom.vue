@@ -4,15 +4,15 @@
     <div class="transition-all duration-300">
       <!-- 标题 -->
       <div class="mb-6">
-        <h1 class="text-3xl font-bold text-amber-900 dark:text-amber-100 mb-2">登入 NotBlog</h1>
-        <p class="text-sm text-amber-600 dark:text-amber-300">欢迎回来，请选择登录方式</p>
+        <h1 class="text-3xl font-bold text-zinc-800 dark:text-zinc-100 mb-2">登入 NotBlog</h1>
+        <p class="text-sm text-zinc-500 dark:text-zinc-300">欢迎回来，请选择登录方式</p>
       </div>
 
       <!-- 登录方式Tab切换 -->
       <div class="flex mb-6 bg-amber-50 dark:bg-zinc-800/70 rounded-[5%] p-1 gap-1">
         <button
           class="flex-1 py-2 text-sm font-medium rounded-[5%] transition-all duration-200"
-          :class="loginMode === 'email' ? 'bg-white text-amber-800 dark:bg-zinc-700 dark:text-amber-200' : 'text-amber-500 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-200'"
+          :class="loginMode === 'email' ? 'bg-white text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
           @click="switchLoginMode('email')"
         >
           <span class="flex items-center justify-center gap-1.5">
@@ -25,7 +25,7 @@
         </button>
         <button
           class="flex-1 py-2 text-sm font-medium rounded-[5%] transition-all duration-200"
-          :class="loginMode === 'phone' ? 'bg-white text-amber-800 dark:bg-zinc-700 dark:text-amber-200' : 'text-amber-500 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-200'"
+          :class="loginMode === 'phone' ? 'bg-white text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
           @click="switchLoginMode('phone')"
         >
           <span class="flex items-center justify-center gap-1.5">
@@ -42,11 +42,11 @@
       <form v-show="loginMode === 'email'" @submit.prevent="handleEmailPasswordSubmit" novalidate>
         <!-- 邮箱输入框 -->
         <div class="mb-4">
-          <label for="email" class="block text-xs font-semibold text-amber-700 dark:text-amber-200 tracking-wide mb-1.5">
+          <label for="email" class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide mb-1.5">
             邮箱
           </label>
           <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-400 dark:text-amber-300">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400 dark:text-zinc-400">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -56,7 +56,7 @@
               type="email"
               id="email"
               v-model="email"
-              class="w-full pl-10 pr-4 py-2.5 bg-amber-50/50 border rounded-[5%] text-sm text-gray-800 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
+              class="w-full pl-10 pr-4 py-2.5 bg-amber-50/50 border rounded-[5%] text-sm text-zinc-700 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
               :class="errors.email ? 'border-red-300 focus:border-red-400 focus:ring-red-300 dark:border-red-400/70 dark:focus:ring-red-400/50' : 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50'"
               :disabled="loading"
               placeholder="请输入您的邮箱"
@@ -74,19 +74,19 @@
         <!-- 密码输入框 -->
         <div class="mb-4">
           <div class="flex justify-between items-center mb-1.5">
-            <label for="password" class="block text-xs font-semibold text-amber-700 dark:text-amber-200 tracking-wide">
+            <label for="password" class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide">
               密码
             </label>
             <a
               href="#"
-              class="text-xs text-amber-600 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-100 transition-colors duration-200 underline underline-offset-2 decoration-amber-300 dark:decoration-amber-500 hover:decoration-amber-500"
+              class="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors duration-200 underline underline-offset-2 decoration-amber-300 dark:decoration-amber-500 hover:decoration-amber-500"
               @click.prevent="handleForgotPassword"
             >
               忘记密码？
             </a>
           </div>
           <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-400 dark:text-amber-300">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400 dark:text-zinc-400">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -96,7 +96,7 @@
               :type="showPassword ? 'text' : 'password'"
               id="password"
               v-model="password"
-              class="w-full pl-10 pr-12 py-2.5 bg-amber-50/50 border rounded-[5%] text-sm text-gray-800 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
+              class="w-full pl-10 pr-12 py-2.5 bg-amber-50/50 border rounded-[5%] text-sm text-zinc-700 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
               :class="errors.password ? 'border-red-300 focus:border-red-400 focus:ring-red-300 dark:border-red-400/70 dark:focus:ring-red-400/50' : 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50'"
               :disabled="loading"
               placeholder="请输入您的密码"
@@ -104,7 +104,7 @@
             >
             <button
               type="button"
-              class="absolute inset-y-0 right-0 flex items-center pr-3 text-amber-400 dark:text-amber-300 hover:text-amber-600 dark:hover:text-amber-100 transition-colors duration-200"
+              class="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 dark:text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-100 transition-colors duration-200"
               @click="togglePasswordVisibility"
               :disabled="loading"
               tabindex="-1"
@@ -137,7 +137,7 @@
               v-model="rememberMe"
               class="w-4 h-4 rounded border-amber-300 bg-amber-50 text-amber-600 focus:ring-amber-400 focus:ring-2 focus:ring-offset-0 transition-all duration-200 cursor-pointer dark:border-amber-400/60 dark:bg-zinc-800 dark:text-amber-300"
             >
-            <span class="ml-2 text-sm text-amber-700 dark:text-amber-200 group-hover:text-amber-800 dark:group-hover:text-amber-100 transition-colors duration-200">
+            <span class="ml-2 text-sm text-zinc-600 dark:text-zinc-200 group-hover:text-zinc-700 dark:group-hover:text-zinc-100 transition-colors duration-200">
               记住我
             </span>
           </label>
@@ -146,8 +146,8 @@
         <!-- 邮箱登录按钮 -->
         <button
           type="submit"
-          class="w-full py-2.5 bg-amber-700 text-white text-sm font-medium rounded-[5%] transition-all duration-200 flex justify-center items-center focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1"
-          :class="loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-amber-800 active:bg-amber-900 active:scale-[0.98]'"
+          class="w-full py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium rounded-[5%] transition-all duration-200 flex justify-center items-center focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1"
+          :class="loading ? 'opacity-70 cursor-not-allowed' : 'hover:brightness-110 active:scale-[0.98]'"
           :disabled="loading"
         >
           <span v-if="loading" class="mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -159,11 +159,11 @@
       <form v-show="loginMode === 'phone'" @submit.prevent="handlePhoneVerificationLogin" novalidate>
         <!-- 手机号输入框 -->
         <div class="mb-4">
-          <label for="phone-number" class="block text-xs font-semibold text-amber-700 dark:text-amber-200 tracking-wide mb-1.5">
+          <label for="phone-number" class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide mb-1.5">
             手机号码
           </label>
           <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-400 dark:text-amber-300">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400 dark:text-zinc-400">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -173,7 +173,7 @@
               type="tel"
               id="phone-number"
               v-model="phoneNumber"
-              class="w-full pl-10 pr-4 py-2.5 bg-amber-50/50 border rounded-[5%] text-sm text-gray-800 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
+              class="w-full pl-10 pr-4 py-2.5 bg-amber-50/50 border rounded-[5%] text-sm text-zinc-700 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
               :class="errors.phoneNumber ? 'border-red-300 focus:border-red-400 focus:ring-red-300 dark:border-red-400/70 dark:focus:ring-red-400/50' : 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50'"
               :disabled="phoneLoading"
               placeholder="请输入您的手机号码"
@@ -191,7 +191,7 @@
 
         <!-- 短信验证码 -->
         <div class="mb-5">
-          <label for="phone-code" class="block text-xs font-semibold text-amber-700 dark:text-amber-200 tracking-wide mb-1.5">
+          <label for="phone-code" class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide mb-1.5">
             短信验证码
           </label>
           <div class="flex gap-2">
@@ -199,7 +199,7 @@
               type="text"
               id="phone-code"
               v-model="phoneCode"
-              class="flex-1 py-2.5 px-4 bg-amber-50/50 border rounded-[5%] text-sm text-gray-800 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
+              class="flex-1 py-2.5 px-4 bg-amber-50/50 border rounded-[5%] text-sm text-zinc-700 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
               :class="errors.phoneCode ? 'border-red-300 focus:border-red-400 focus:ring-red-300 dark:border-red-400/70 dark:focus:ring-red-400/50' : 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50'"
               :disabled="phoneLoading"
               placeholder="请输入验证码"
@@ -208,7 +208,7 @@
             <button
               type="button"
               class="px-4 py-2.5 text-xs font-medium rounded-[5%] whitespace-nowrap transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1"
-              :class="phoneCodeCountdown > 0 ? 'bg-amber-100 text-amber-500 cursor-not-allowed dark:bg-zinc-800 dark:text-amber-300' : 'bg-amber-600 text-white hover:bg-amber-700 active:bg-amber-800 focus:ring-amber-400 active:scale-[0.97]'"
+              :class="phoneCodeCountdown > 0 ? 'bg-amber-100 text-amber-500 cursor-not-allowed dark:bg-zinc-800 dark:text-amber-300' : 'bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:brightness-110 focus:ring-amber-400 active:scale-[0.97]'"
               :disabled="phoneCodeCountdown > 0 || phoneLoading"
               @click="handleSendPhoneCode"
             >
@@ -226,8 +226,8 @@
         <!-- 手机验证登录按钮 -->
         <button
           type="submit"
-          class="w-full py-2.5 bg-amber-700 text-white text-sm font-medium rounded-[5%] transition-all duration-200 flex justify-center items-center focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1"
-          :class="phoneLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-amber-800 active:bg-amber-900 active:scale-[0.98]'"
+          class="w-full py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium rounded-[5%] transition-all duration-200 flex justify-center items-center focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1"
+          :class="phoneLoading ? 'opacity-70 cursor-not-allowed' : 'hover:brightness-110 active:scale-[0.98]'"
           :disabled="phoneLoading"
         >
           <span v-if="phoneLoading" class="mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -238,70 +238,70 @@
       <!-- ==================== 分隔线 ==================== -->
       <div class="my-6 flex items-center gap-3">
         <div class="flex-1 h-px bg-amber-200 dark:bg-zinc-600"></div>
-        <span class="text-xs text-amber-400 dark:text-amber-500 whitespace-nowrap">或使用第三方账号登录</span>
+        <span class="text-xs text-zinc-400 dark:text-zinc-500 whitespace-nowrap">或使用第三方账号登录</span>
         <div class="flex-1 h-px bg-amber-200 dark:bg-zinc-600"></div>
       </div>
 
       <!-- ==================== 第三方登录按钮 ==================== -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="flex items-center justify-center gap-3">
         <!-- Microsoft 登录 -->
         <button
-          class="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-[5%] text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-1 dark:border-white/10 dark:text-zinc-100 dark:bg-zinc-800/70 dark:hover:bg-zinc-700/60 dark:hover:border-white/15 dark:active:bg-zinc-700"
+          class="w-12 h-12 shrink-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-[5%] flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300 hover:brightness-110 active:scale-95"
+          title="Microsoft 登录"
           @click="handleMicrosoftLogin"
         >
-          <svg class="h-4 w-4 flex-shrink-0" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg class="h-5 w-5 flex-shrink-0" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="1" y="1" width="9" height="9" fill="#F25022" />
             <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
             <rect x="1" y="11" width="9" height="9" fill="#00A4EF" />
             <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
           </svg>
-          Microsoft
         </button>
 
         <!-- GitHub 登录 -->
         <button
-          class="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-[5%] text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-1 dark:border-white/10 dark:text-zinc-100 dark:bg-zinc-800/70 dark:hover:bg-zinc-700/60 dark:hover:border-white/15 dark:active:bg-zinc-700"
+          class="w-12 h-12 shrink-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-[5%] flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300 hover:brightness-110 active:scale-95"
+          title="GitHub 登录"
           @click="handleGitHubLogin"
         >
-          <svg class="h-4 w-4 flex-shrink-0 text-zinc-900 dark:text-zinc-100" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <svg class="h-5 w-5 flex-shrink-0 text-white" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
           </svg>
-          GitHub
         </button>
 
         <!-- WeChat 登录 -->
         <button
-          class="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-[5%] text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-1 dark:border-white/10 dark:text-zinc-100 dark:bg-zinc-800/70 dark:hover:bg-zinc-700/60 dark:hover:border-white/15 dark:active:bg-zinc-700"
+          class="w-12 h-12 shrink-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-[5%] flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300 hover:brightness-110 active:scale-95"
+          title="微信登录"
           @click="handleWeChatLogin"
         >
-          <svg class="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="#07C160" xmlns="http://www.w3.org/2000/svg">
+          <svg class="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" fill="#07C160" xmlns="http://www.w3.org/2000/svg">
             <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 01.213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 00.167-.054l1.903-1.114a.864.864 0 01.717-.098 10.16 10.16 0 002.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 01-1.162 1.178A1.17 1.17 0 014.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 01-1.162 1.178 1.17 1.17 0 01-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 01.598.082l1.584.926a.272.272 0 00.14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 01-.023-.156.49.49 0 01.201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.952-7.062-6.122zm-2.18 2.769c.535 0 .969.44.969.982a.976.976 0 01-.969.983.976.976 0 01-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 01-.969.983.976.976 0 01-.969-.983c0-.542.434-.982.97-.982z" />
           </svg>
-          WeChat
         </button>
 
         <!-- Google 登录 -->
         <button
-          class="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-[5%] text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-1 dark:border-white/10 dark:text-zinc-100 dark:bg-zinc-800/70 dark:hover:bg-zinc-700/60 dark:hover:border-white/15 dark:active:bg-zinc-700"
+          class="w-12 h-12 shrink-0 bg-gradient-to-r from-amber-400 to-orange-500 rounded-[5%] flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300 hover:brightness-110 active:scale-95"
+          title="Google 登录"
           @click="handleGoogleLogin"
         >
-          <svg class="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg class="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
-          Google
         </button>
       </div>
 
       <!-- 注册链接 -->
       <div class="mt-5 text-center">
-        <p class="text-xs text-amber-600 dark:text-amber-300">
+        <p class="text-xs text-zinc-500 dark:text-zinc-300">
           还没有账号？
           <a
             href="#"
-            class="text-amber-800 dark:text-amber-200 font-semibold hover:text-amber-900 dark:hover:text-amber-100 transition-colors duration-200 underline underline-offset-2 decoration-amber-300 dark:decoration-amber-500"
+            class="text-amber-600 dark:text-amber-400 font-semibold hover:text-amber-700 dark:hover:text-amber-300 transition-colors duration-200 underline underline-offset-2 decoration-amber-300 dark:decoration-amber-500"
             @click.prevent="handleRegisterClick"
           >
             立即注册

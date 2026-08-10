@@ -17,7 +17,7 @@
     </div>
 
     <!-- 举报弹窗 -->
-    <div v-if="reportOpen" class="fixed inset-0 z-[85] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="reportOpen = false">
+    <div v-if="reportOpen" class="fixed inset-0 z-[85] flex items-center justify-center bg-black/40" @click.self="reportOpen = false">
       <div class="glass-card p-6 w-[440px]">
         <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 mb-1">举报内容</h3>
         <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">请选择举报类型，我们会尽快核实处理</p>
@@ -69,10 +69,10 @@
                 <img :key="activeMedia" :src="mediaUrls[activeMedia]" alt="" class="w-full h-full object-contain" @error="onMediaError" />
               </transition>
               <!-- 左右切换箭头（多图） -->
-              <button v-if="mediaUrls.length > 1" class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/30 backdrop-blur text-white flex items-center justify-center hover:bg-black/50 transition-colors" @click="prevMedia">
+              <button v-if="mediaUrls.length > 1" class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/50 transition-colors" @click="prevMedia">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6" /></svg>
               </button>
-              <button v-if="mediaUrls.length > 1" class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/30 backdrop-blur text-white flex items-center justify-center hover:bg-black/50 transition-colors" @click="nextMedia">
+              <button v-if="mediaUrls.length > 1" class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/50 transition-colors" @click="nextMedia">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </button>
               <!-- 缩略图指示点 -->

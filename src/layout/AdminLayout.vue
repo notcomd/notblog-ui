@@ -67,7 +67,7 @@
     <!-- 左栏 + 主内容 -->
     <div class="flex pt-16">
       <!-- 侧边栏 -->
-      <aside class="sticky top-16 h-[calc(100vh-4rem)] flex flex-col items-center py-5 gap-2 shrink-0 transition-all duration-300 border-r border-zinc-200/50 dark:border-zinc-800/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl"
+      <aside class="sticky top-16 h-[calc(100vh-4rem)] flex flex-col items-center py-5 gap-2 shrink-0 transition-all duration-300 border-r border-zinc-200/50 dark:border-zinc-800/50 bg-white/95 dark:bg-zinc-900/95"
         :class="collapsed ? 'w-[72px]' : 'w-[210px]'">
         <nav class="flex flex-col items-center gap-1.5 w-full px-3">
           <router-link

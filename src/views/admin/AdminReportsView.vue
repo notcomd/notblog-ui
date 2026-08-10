@@ -44,7 +44,7 @@
     </AdminTable>
 
     <!-- 详情侧滑面板 -->
-    <div v-if="viewing" class="fixed inset-0 z-[75] bg-black/40 backdrop-blur-sm" @click="viewing = null">
+    <div v-if="viewing" class="fixed inset-0 z-[75] bg-black/40" @click="viewing = null">
       <div class="absolute right-0 top-0 bottom-0 w-[480px] glass-card rounded-l-[5%] rounded-r-none flex flex-col">
         <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-200/60 dark:border-zinc-700/60">
           <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100">举报详情 #{{ viewing.reportGuid }}</h3>

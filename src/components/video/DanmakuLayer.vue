@@ -262,8 +262,7 @@ defineExpose({ addBarrage, likeMap, blockedUsers })
 .danmaku-menu {
   position: fixed;
   z-index: 999;
-  background: rgba(30, 30, 35, 0.92);
-  backdrop-filter: blur(12px);
+  background: rgba(30, 30, 35, 0.95);
   border-radius: 12px;
   padding: 4px;
 }

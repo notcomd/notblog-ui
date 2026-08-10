@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="emit('close')">
+  <div class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40" @click.self="emit('close')">
     <div class="glass-card p-6 w-[420px]">
       <div class="flex items-start gap-3">
         <div class="w-10 h-10 rounded-[5%] flex items-center justify-center shrink-0" :class="danger ? 'bg-red-500/15 text-red-500' : 'bg-amber-400/15 text-amber-500'">

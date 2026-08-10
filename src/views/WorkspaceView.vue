@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-[1200px] mx-auto">
+  <div class="max-w-[1400px] mx-auto">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">发布工作台</h1>
@@ -19,7 +19,7 @@
           <div class="text-6xl transition-transform duration-300 group-hover:scale-110">{{ t.icon }}</div>
           <div class="text-xl font-bold text-white drop-shadow">{{ t.label }}</div>
           <div class="text-xs text-white/80">{{ t.desc }}</div>
-          <div class="absolute top-3 right-3 w-8 h-8 rounded-xl bg-white/25 backdrop-blur flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+          <div class="absolute top-3 right-3 w-8 h-8 rounded-xl bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
           </div>
         </div>
