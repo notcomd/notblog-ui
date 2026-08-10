@@ -1,0 +1,130 @@
+<template>
+  <div class="max-w-[1400px] mx-auto space-y-6">
+    <!-- 4列统计卡片 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div class="glass-card p-5 bg-gradient-to-br from-blue-500/10 to-indigo-500/5 hover: transition-all cursor-pointer" @click="router.push('/admin/users')">
+        <div class="flex items-center justify-between">
+          <span class="text-3xl">👥</span>
+          <span class="text-xs px-2 py-1 rounded-full font-medium" :class="stats.userGrowth >= 0 ? 'bg-emerald-400/15 text-emerald-500' : 'bg-red-400/15 text-red-500'">
+            {{ stats.userGrowth >= 0 ? '▲' : '▼' }} {{ Math.abs(stats.userGrowth) }}%
+          </span>
+        </div>
+        <div class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mt-3">{{ compactNumber(stats.totalUsers) }}</div>
+        <div class="text-xs text-zinc-400 mt-1">总注册用户</div>
+      </div>
+
+      <div class="glass-card p-5 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 hover: transition-all cursor-pointer" @click="showOnline = true">
+        <div class="flex items-center justify-between">
+          <span class="text-3xl">🟢</span>
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        </div>
+        <div class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mt-3">{{ stats.onlineUsers }}</div>
+        <div class="text-xs text-zinc-400 mt-1">当前在线人数（实时）</div>
+      </div>
+
+      <div class="glass-card p-5 bg-gradient-to-br from-amber-400/10 to-orange-400/5 hover: transition-all cursor-pointer" @click="router.push('/admin/content')">
+        <div class="flex items-center justify-between">
+          <span class="text-3xl">⏳</span>
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        </div>
+        <div class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-3">{{ stats.pendingTweets }}</div>
+        <div class="text-xs text-zinc-400 mt-1">待审核内容（点击处理）</div>
+      </div>
+
+      <div class="glass-card p-5 bg-gradient-to-br from-red-500/10 to-rose-500/5 hover: transition-all cursor-pointer" @click="router.push('/admin/reports')">
+        <div class="flex items-center justify-between">
+          <span class="text-3xl">🚩</span>
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+        </div>
+        <div class="text-2xl font-bold text-red-500 mt-3">{{ stats.pendingReports }}</div>
+        <div class="text-xs text-zinc-400 mt-1">未处理举报（点击处理）</div>
+      </div>
+    </div>
+
+    <!-- 快捷操作区 -->
+    <div class="glass-card p-4 flex items-center gap-3">
+      <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 shrink-0">快捷操作：</span>
+      <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover: active:scale-95 transition-all" @click="router.push('/admin/announcements')">📢 发布系统公告</button>
+      <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: active:scale-95 transition-all" @click="exportReport">📊 导出运营日报</button>
+    </div>
+
+    <!-- 最近动态列表 -->
+    <div class="glass-card p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100">最近动态</h3>
+        <button class="text-xs text-blue-500 hover:text-blue-600 transition-colors" @click="toast.push('全部日志开发中（操作日志缺口）', 'info')">查看全部 →</button>
+      </div>
+      <div class="space-y-2.5">
+        <div v-for="log in logs" :key="log.id" class="flex items-center gap-3 px-3 py-2 rounded-[5%] hover:bg-white/50 dark:hover:bg-zinc-800/40 transition-colors">
+          <span class="text-xs px-2 py-1 rounded-full shrink-0" :class="typeClass(log.type)">{{ log.type }}</span>
+          <span class="text-sm text-zinc-600 dark:text-zinc-300 flex-1 truncate">
+            <span class="font-medium">{{ log.actor }}</span> 对 <span class="text-blue-500">{{ log.target }}</span> 执行了操作
+          </span>
+          <span class="text-xs text-zinc-400 shrink-0">{{ relativeTime(log.time) }}</span>
+        </div>
+        <div v-if="logs.length === 0" class="py-8 text-center text-sm text-zinc-400">暂无动态</div>
+      </div>
+    </div>
+
+    <!-- 在线用户弹窗 -->
+    <AdminModal v-if="showOnline" title="在线用户（实时）" width="w-[560px]" @close="showOnline = false">
+      <div class="space-y-2">
+        <div v-for="u in onlineUsers" :key="u.userGuid" class="flex items-center gap-3 px-3 py-2.5 rounded-[5%] bg-white/50 dark:bg-zinc-800/50">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 flex-1">{{ u.userName }}</span>
+          <span class="text-xs text-zinc-400">{{ u.page }}</span>
+          <span class="text-[10px] text-zinc-400">{{ relativeTime(u.lastActive) }}活跃</span>
+        </div>
+        <div v-if="onlineUsers.length === 0" class="py-6 text-center text-sm text-zinc-400">暂无在线用户</div>
+      </div>
+    </AdminModal>
+  </div>
+</template>
+
+<script>
+export default { name: 'AdminDashboardView' }
+</script>
+
+<script setup>
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import AdminModal from '@/components/admin/AdminModal.vue'
+import { getAdminStats, getAdminActivityLog, getAdminOnlineUsers } from '@/api/admin'
+import { useToastStore } from '@/stores/toast'
+import { compactNumber, relativeTime } from '@/utils/format'
+
+const router = useRouter()
+const toast = useToastStore()
+
+const stats = ref({ totalUsers: 0, userGrowth: 0, onlineUsers: 0, pendingTweets: 0, pendingReports: 0 })
+const logs = ref([])
+const onlineUsers = ref([])
+const showOnline = ref(false)
+
+function typeClass(t) {
+  const map = {
+    '用户注册': 'bg-emerald-400/15 text-emerald-500',
+    '内容发布': 'bg-blue-400/15 text-blue-500',
+    '举报提交': 'bg-red-400/15 text-red-500',
+    '审核通过': 'bg-emerald-400/15 text-emerald-500',
+    '审核驳回': 'bg-amber-400/15 text-amber-600',
+    '用户封禁': 'bg-red-400/15 text-red-500',
+    '公报发送': 'bg-indigo-400/15 text-indigo-500'
+  }
+  return map[t] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
+}
+
+function exportReport() {
+  toast.push('导出运营日报开发中', 'info')
+}
+
+onMounted(async () => {
+  const [s, l, o] = await Promise.all([getAdminStats(), getAdminActivityLog(), getAdminOnlineUsers()])
+  const sd = s && s.data ? s.data : s
+  const ld = l && l.data ? l.data : l
+  const od = o && o.data ? o.data : o
+  if (sd) stats.value = { ...stats.value, ...sd }
+  logs.value = Array.isArray(ld) ? ld : (ld.items || ld.list || [])
+  onlineUsers.value = Array.isArray(od) ? od : (od.items || od.list || [])
+})
+</script>

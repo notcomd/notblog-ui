@@ -1,0 +1,60 @@
+{
+  "data": [
+    {
+      "id": "page-explorer-overview",
+      "title": "探索器总览",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1784018491305,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/explorer-overview.html",
+        "interactions": [
+          {
+            "domId": "nav-api-debug",
+            "targetPageId": "page-api-debug"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-api-debug",
+      "title": "接口调试",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1784018491305,
+      "canvasData": {
+        "x": 480,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/api-debug.html",
+        "interactions": [
+          {
+            "domId": "nav-overview",
+            "targetPageId": "page-explorer-overview",
+            "hideEdge": true
+          }
+        ]
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "tablet",
+    "projectName": "Dev Explorer",
+    "designLibrary": {
+      "name": "极简",
+      "id": "dl_builtin_minimalist",
+      "version": null,
+      "scope": "built-in-global",
+      "path": "c:/Users/notco/.trae-cn/design_libraries/dl_builtin_minimalist",
+      "versionSource": "metadata.json"
+    }
+  }
+}

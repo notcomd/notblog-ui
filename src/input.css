@@ -1,0 +1,106 @@
+/* Tailwind CSS */
+@import "tailwindcss";
+
+@plugin "daisyui";
+
+/* ⚠️ dark: 变体必须跟随 data-theme 而非系统偏好（Tailwind 4 默认 media 策略，
+   系统深色偏好会让浅色主题下的 dark:text-* 文字变白，与页面主题脱节——2026-08 用户实测发现） */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* ===== 圆角统一策略：全局固定 10px（2026-08 调整：5% 自适应 → 20px 过大 → 10px） ===== */
+.rounded-\[5\%\] {
+  border-radius: 10px !important;
+}
+
+/* daisyUI 组件（btn/input/card/modal/alert 等）圆角变量统一 10px */
+:root,
+[data-theme] {
+  --radius-selector: 10px;
+  --radius-field: 10px;
+  --radius-box: 10px;
+}
+
+/* 主题切换平滑过渡 */
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, fill 0.35s ease !important;
+}
+
+/* 玻璃拟态（浅色） */
+@utility glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+@utility glass-card {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+}
+
+/* 玻璃拟态（暗色） */
+html[data-theme="dark"] .glass {
+  background: rgba(24, 24, 27, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .glass-card {
+  background: rgba(24, 24, 27, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+/* 暗色模式文字统一纯白（提升对比度与可读性） */
+html[data-theme="dark"] .text-zinc-100,
+html[data-theme="dark"] .text-zinc-200,
+html[data-theme="dark"] .text-zinc-300,
+html[data-theme="dark"] .text-zinc-400,
+html[data-theme="dark"] .text-zinc-500,
+html[data-theme="dark"] .text-zinc-600,
+html[data-theme="dark"] .text-zinc-700,
+html[data-theme="dark"] .text-zinc-800,
+html[data-theme="dark"] .text-zinc-900 {
+  color: #ffffff;
+}
+
+
+/* 应用柔和渐变背景（奶白 → 暖橘 → 薄荷绿 微光） */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(135deg, #fdfaf3 0%, #fdf6ec 30%, #f0faf6 70%, #f7fbf7 100%);
+  background-attachment: fixed;
+}
+
+html[data-theme="dark"] body {
+  background: linear-gradient(135deg, #18181b 0%, #1c1917 40%, #101f1b 100%);
+  background-attachment: fixed;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 卡片 hover 上浮 + 点击轻触反馈 */
+.card-lift {
+  transition: transform 0.25s ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-4px);
+}
+
+.card-lift:active {
+  transform: scale(0.98);
+}
+
+/* 行数截断工具（配合 Tailwind line-clamp） */
+.text-2lines {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

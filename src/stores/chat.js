@@ -1,0 +1,287 @@
+import { ref } from 'vue'
+import { defineStore } from 'pinia'
+import {
+  getSessions, getMessages, getFriends, getGroups, getUnreadCount, MessageType
+} from '@/api/chat'
+import { connectSignalR, isConnected } from '@/socket/signalr'
+
+export const useChatStore = defineStore('chat', () => {
+  // ===== 状态 =====
+  const sessions = ref([])              // 会话列表（未读置顶 + 最近活跃排序）
+  const friends = ref([])               // 好友列表
+  const groups = ref([])                // 群列表
+  const messages = ref({})              // { sessionId: [MessageDto] }
+  const activeSessionId = ref('')
+  const unreadTotal = ref(0)            // 铃铛未读数
+  const onlineUsers = ref({})           // { userId: true/false } 在线状态（SignalR 事件驱动）
+  const typing = ref({})                // { sessionId: userId } 正在输入
+  const connected = ref(false)
+  const messageLoading = ref(false)
+  const hasMoreMessages = ref({})       // { sessionId: bool }
+
+  // ===== 会话 =====
+  async function loadSessions() {
+    try {
+      const res = await getSessions()
+      const data = res && res.data ? res.data : res
+      const list = data.items || data.list || data || []
+      sessions.value = sortSessions(list)
+    } catch (e) {
+      console.error('加载会话失败:', e)
+    }
+  }
+
+  function sortSessions(list) {
+    return [...list].sort((a, b) => {
+      // 置顶优先
+      if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1
+      // 未读其次
+      if ((a.unreadCount || 0) > 0 !== (b.unreadCount || 0) > 0) return (a.unreadCount || 0) > 0 ? -1 : 1
+      // 最近活跃
+      return (b.lastMessageTime || b.createdTime || 0) - (a.lastMessageTime || a.createdTime || 0)
+    })
+  }
+
+  async function loadFriends() {
+    try {
+      const res = await getFriends()
+      const data = res && res.data ? res.data : res
+      friends.value = data.items || data.list || data || []
+    } catch (e) {
+      console.error('加载好友失败:', e)
+    }
+  }
+
+  async function loadGroups() {
+    try {
+      const res = await getGroups()
+      const data = res && res.data ? res.data : res
+      groups.value = data.items || data.list || data || []
+    } catch (e) {
+      console.error('加载群组失败:', e)
+    }
+  }
+
+  async function loadUnread() {
+    try {
+      const res = await getUnreadCount()
+      const data = res && res.data ? res.data : res
+      unreadTotal.value = (data && (data.total !== undefined ? data.total : data.unreadCount)) || 0
+    } catch (e) { /* 静默 */ }
+  }
+
+  // ===== 消息 =====
+  async function openSession(sessionId) {
+    if (activeSessionId.value === sessionId) return
+    activeSessionId.value = sessionId
+    if (!messages.value[sessionId]) {
+      await loadMessages(sessionId, true)
+    }
+  }
+
+  async function loadMessages(sessionId, reset = false) {
+    if (messageLoading.value) return
+    messageLoading.value = true
+    try {
+      const page = reset ? 1 : (Math.floor((messages.value[sessionId] || []).length / 30) + 1)
+      const res = await getMessages(sessionId, { page, pageSize: 30 })
+      const data = res && res.data ? res.data : res
+      const list = data.items || data.list || []
+      if (reset) {
+        messages.value[sessionId] = list
+      } else if (list.length) {
+        messages.value[sessionId] = [...list.reverse(), ...(messages.value[sessionId] || [])]
+      }
+      hasMoreMessages.value[sessionId] = list.length >= 30
+    } catch (e) {
+      console.error('加载消息失败:', e)
+    } finally {
+      messageLoading.value = false
+    }
+  }
+
+  async function sendText(sessionId, content) {
+    const me = currentUserId()
+    const msg = {
+      messageId: 'local-' + Date.now(),
+      sessionId,
+      senderId: me,
+      receiverId: null,
+      messageType: MessageType.Text,
+      status: 1,
+      content,
+      sentTime: Date.now()
+    }
+    pushMessage(msg)
+    bumpSession(sessionId, content)
+
+    try {
+      const conn = await connectSignalR()
+      await conn.invoke('SendMessage', sessionId, {
+        sessionId,
+        messageType: MessageType.Text,
+        content,
+        fileId: null,
+        thumbnailFileId: null,
+        duration: null,
+        caption: null,
+        latitude: null,
+        longitude: null,
+        locationName: null,
+        linkUrl: null,
+        linkTitle: null,
+        linkDescription: null,
+        expressionCode: null,
+        replyToMessageId: null
+      })
+    } catch (e) {
+      console.error('发送消息失败:', e)
+    }
+    return msg
+  }
+
+  async function sendTyping(sessionId) {
+    if (!isConnected()) return
+    try {
+      const conn = await connectSignalR()
+      await conn.invoke('SendTypingIndicator', sessionId)
+    } catch (e) { /* 静默 */ }
+  }
+
+  async function markSessionRead(sessionId) {
+    const list = messages.value[sessionId] || []
+    if (!list.length) return
+    try {
+      const conn = await connectSignalR()
+      for (const m of list) {
+        if (m.senderId !== currentUserId()) {
+          await conn.invoke('MarkAsRead', m.messageId)
+          m.isRead = true
+        }
+      }
+    } catch (e) { /* 静默 */ }
+  }
+
+  // ===== 内部工具 =====
+  function currentUserId() {
+    // 当前用户 ID 从 JWT payload 解析
+    const t = localStorage.getItem('token')
+    try {
+      const payload = JSON.parse(decodeURIComponent(escape(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))))
+      return payload.sub || ''
+    } catch (e) {
+      return ''
+    }
+  }
+
+  function peerIdOf(sessionId) {
+    const s = sessions.value.find(x => x.sessionId === sessionId)
+    const me = currentUserId()
+    if (!s || !s.participants) return 'u-002'
+    return s.participants.find(p => p !== me) || 'u-002'
+  }
+
+  function sessionName(sessionId) {
+    const s = sessions.value.find(x => x.sessionId === sessionId)
+    if (s && s.sessionName) return s.sessionName
+    // 单聊：从好友列表找
+    const peerId = peerIdOf(sessionId)
+    const f = friends.value.find(x => String(x.friendId) === String(peerId))
+    return f ? f.friendName : '会话'
+  }
+
+  function pushMessage(msg) {
+    const list = messages.value[msg.sessionId] || []
+    // 去重（本地乐观消息与服务器回执）
+    if (list.some(m => m.messageId === msg.messageId)) return
+    messages.value[msg.sessionId] = [...list, msg]
+  }
+
+  function bumpSession(sessionId, content) {
+    const s = sessions.value.find(x => x.sessionId === sessionId)
+    if (s) {
+      s.lastMessageContent = content
+      s.lastMessageTime = Date.now()
+      sessions.value = sortSessions(sessions.value)
+    }
+  }
+
+  function clearUnread(sessionId) {
+    const s = sessions.value.find(x => x.sessionId === sessionId)
+    if (s && s.unreadCount) {
+      s.unreadCount = 0
+      sessions.value = sortSessions(sessions.value)
+      loadUnread()
+    }
+  }
+
+  // ===== SignalR 事件绑定 =====
+  async function initRealtime() {
+    if (connected.value) return
+    try {
+      const conn = await connectSignalR()
+
+      conn.on('ReceiveMessage', (message) => {
+        pushMessage(message)
+        bumpSession(message.sessionId, message.content || '[附件消息]')
+        if (message.sessionId !== activeSessionId.value) {
+          const s = sessions.value.find(x => x.sessionId === message.sessionId)
+          if (s) {
+            s.unreadCount = (s.unreadCount || 0) + 1
+            sessions.value = sortSessions(sessions.value)
+          }
+          loadUnread()
+        }
+      })
+
+      conn.on('MessageRecalled', (messageId) => {
+        for (const sessionId of Object.keys(messages.value)) {
+          const list = messages.value[sessionId]
+          const m = list.find(x => x.messageId === messageId)
+          if (m) m.isRecalled = true
+        }
+      })
+
+      conn.on('UserOnline', (userId) => {
+        onlineUsers.value[String(userId)] = true
+      })
+
+      conn.on('UserOffline', (userId) => {
+        onlineUsers.value[String(userId)] = false
+      })
+
+      conn.on('TypingIndicator', (sessionId, userId) => {
+        typing.value[sessionId] = String(userId)
+        // 3 秒后清除
+        setTimeout(() => {
+          if (typing.value[sessionId] === String(userId)) delete typing.value[sessionId]
+        }, 3000)
+      })
+
+      conn.on('UnreadCountUpdated', (sessionId, count) => {
+        const s = sessions.value.find(x => x.sessionId === sessionId)
+        if (s) s.unreadCount = count
+        loadUnread()
+      })
+
+      connected.value = true
+      console.log('SignalR 已连接')
+    } catch (e) {
+      console.error('SignalR 初始化失败:', e)
+    }
+  }
+
+  function removeSession(sessionId) {
+    sessions.value = sessions.value.filter(s => s.sessionId !== sessionId)
+    delete messages.value[sessionId]
+    if (activeSessionId.value === sessionId) activeSessionId.value = null
+  }
+
+  return {
+    sessions, friends, groups, messages, activeSessionId, unreadTotal,
+    onlineUsers, typing, connected, messageLoading, hasMoreMessages,
+    loadSessions, loadFriends, loadGroups, loadUnread, openSession,
+    loadMessages, sendText, sendTyping, markSessionRead, clearUnread,
+    sessionName, peerIdOf, initRealtime, removeSession
+  }
+})

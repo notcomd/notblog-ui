@@ -1,0 +1,96 @@
+<template>
+  <div class="relative">
+    <!-- 3列等宽网格（<1200px 自适应 2 列） -->
+    <!-- 瀑布流：columns 多列交错（视频 1:1 与图文 9:16 混排无空隙，视觉更自然） -->
+    <div class="columns-2 xl:columns-3 gap-5">
+      <div v-for="post in posts" :key="post.tweetGuid" class="break-inside-avoid mb-5">
+        <PostCard :post="post" />
+      </div>
+    </div>
+
+    <!-- 加载中：骨架屏（瀑布流，模拟图文/视频交错比例） -->
+    <div v-if="loading" class="columns-2 xl:columns-3 gap-5 mt-5">
+      <div v-for="i in 6" :key="i" class="break-inside-avoid mb-5">
+        <div class="glass-card overflow-hidden animate-pulse">
+          <div class="bg-zinc-200/70 dark:bg-zinc-800/70" :class="i % 4 === 3 ? 'aspect-square' : 'aspect-[9/16]'"></div>
+          <div class="p-4 space-y-2">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70"></div>
+              <div class="h-3 flex-1 rounded bg-zinc-200/70 dark:bg-zinc-800/70"></div>
+            </div>
+            <div class="h-3 w-4/5 rounded bg-zinc-200/70 dark:bg-zinc-800/70"></div>
+            <div class="h-3 w-3/5 rounded bg-zinc-200/70 dark:bg-zinc-800/70"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 空状态 -->
+    <div v-if="!loading && posts.length === 0" class="py-24 flex flex-col items-center gap-4">
+      <div class="text-6xl">🌱</div>
+      <p class="text-zinc-500 dark:text-zinc-400">{{ emptyText }}</p>
+    </div>
+
+    <!-- 触底加载更多 -->
+    <div v-if="hasMore && !loading" ref="sentinel" class="h-10"></div>
+    <div v-if="!hasMore && posts.length > 0" class="py-8 text-center text-sm text-zinc-400">— 已经到底啦 —</div>
+  </div>
+</template>
+
+<script setup>
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import PostCard from './PostCard.vue'
+
+const props = defineProps({
+  // 数据加载函数：(page, size) => Promise<{ list, total, page, size }>
+  loader: { type: Function, required: true },
+  emptyText: { type: String, default: '还没有内容，快来发布第一条吧～' }
+})
+
+const posts = ref([])
+const loading = ref(false)
+const page = ref(0)
+const size = 9
+const hasMore = ref(true)
+const sentinel = ref(null)
+let observer = null
+
+async function loadMore(reset = false) {
+  if (loading.value) return
+  if (reset) {
+    posts.value = []
+    page.value = 0
+    hasMore.value = true
+  }
+  if (!hasMore.value) return
+
+  loading.value = true
+  try {
+    const res = await props.loader({ page: page.value + 1, pageSize: size })
+    const data = res && res.data ? res.data : res
+    const list = data.list || data.items || []
+    posts.value = reset ? list : [...posts.value, ...list]
+    page.value = data.page || page.value + 1
+    hasMore.value = list.length >= size && (posts.value.length < (data.total || Infinity))
+  } catch (e) {
+    console.error('加载信息流失败:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadMore(true)
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) loadMore()
+  }, { rootMargin: '200px' })
+  if (sentinel.value) observer.observe(sentinel.value)
+})
+
+onUnmounted(() => {
+  if (observer) observer.disconnect()
+})
+
+// loader 变化（如频道切换）时重置
+watch(() => props.loader, () => loadMore(true))
+</script>

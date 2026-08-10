@@ -1,0 +1,403 @@
+{
+  "project": {
+    "name": "Dev Explorer",
+    "path": "f:/NotBlog_UI/notblog-ui/dev-explorer",
+    "operation": "create",
+    "deviceType": "desktop",
+    "language": "zh-CN",
+    "dashboardMode": false,
+    "replicationMode": null,
+    "sourceUrl": null,
+    "visualSpecExcerpt": null,
+    "styleDefinitionBrief": null,
+    "designRead": "dev-tool explorer / developers / technical-minimal / information-dense / avoid centered max-width whitespace",
+    "designDials": {
+      "layoutVariance": 4,
+      "motionIntensity": 2,
+      "visualDensity": 4
+    },
+    "styleContinuityAnchors": {
+      "colorSystem": {
+        "primaryColorRole": "monochrome zinc — #18181b near-black as primary for fills/active states; white surfaces; gray borders",
+        "brandHuePolicy": "single monochrome brand scale, no secondary/accent hue; status uses green/red only for semantic feedback",
+        "stateColors": "success #16a34a, destructive #dc2626 for status pills and alerts only"
+      },
+      "shapeSystem": "radius 12px standard, 6px small, 16px large; 1px borders structural not decorative; near-flat surfaces with minimal shadow",
+      "typographySystem": "Geist sans for UI, Geist Mono for code/data/numbers, DM Serif Display for editorial emphasis (sparingly)",
+      "spacingSystem": "4px base unit; compact dashboard density; tight cards, measured gutters, compact navigation",
+      "componentLanguage": "border-led cards not shadow-led; dense calm buttons; quiet navigation with weight shifts; sidebar as first-class tonal pattern",
+      "surfaceAndDepth": "flat surfaces, border contrast over elevation; shadow-sm max for cards; no decorative shadows",
+      "imageryAndIconography": "no photographs; CSS-mask SVG icons from library; monochrome iconography inheriting currentColor",
+      "interactionTone": "subtle hover bg shifts; active states use primary fill; no dramatic motion; developer-tool restraint"
+    },
+    "sharedProjectShellContract": {
+      "navigationShell": "fixed left sidebar w-60 with workspace selector + nav items (总览/接口调试/日志/设置); top bar h-14 with breadcrumb + search + command palette hint + user avatar; full-bleed layout filling entire canvas width — NO centered max-width container, NO side padding gaps",
+      "primaryColorSystem": "monochrome zinc; #18181b primary fill for active nav/primary buttons; #fafafa muted surfaces; #e4e4e7 borders",
+      "typographySystem": "Geist sans 14px body, Geist Mono for code/paths/metrics, text-xs 12px for labels, text-lg for page titles",
+      "radiusScale": "radius-md 12px for cards/containers, radius-sm 6px for small elements/pills, radius-lg 16px for large panels",
+      "surfaceDepthModel": "white surface with 1px border; no shadow on static elements; shadow-sm only on dropdowns/popovers",
+      "ctaStyle": "primary button: bg #18181b text #fafafa radius 6px dense padding; secondary: border + surface; ghost: transparent hover muted",
+      "alignmentRules": "left-aligned content; toolbar rows aligned to grid; monospace numbers right-aligned in tables; consistent 4px spacing rhythm"
+    },
+    "generationTree": null
+  },
+  "designSource": {
+    "operatingMode": "library-bound",
+    "libraryIdentity": {
+      "name": "极简",
+      "id": "dl_builtin_minimalist",
+      "version": null,
+      "scope": "built-in-global",
+      "path": "c:/Users/notco/.trae-cn/design_libraries/dl_builtin_minimalist",
+      "versionSource": "metadata.json"
+    },
+    "libraryPath": "c:/Users/notco/.trae-cn/design_libraries/dl_builtin_minimalist",
+    "cssFilePath": "c:/Users/notco/.trae-cn/design_libraries/dl_builtin_minimalist/colors_and_type.css",
+    "brandPrefix": "minimal",
+    "themeMode": "light",
+    "designDecisionSummary": "Monochrome zinc palette (#18181b primary, #ffffff surface, #e4e4e7 border). Geist sans + Geist Mono + DM Serif Display. 12px radius. 4px spacing. Flat surfaces with border contrast. 6 component families: button, card, table, chart, navigation, sidebar.",
+    "componentContractKind": "legacy-json",
+    "forbiddenInventedComponents": [],
+    "allowedComponents": [
+      "button",
+      "card",
+      "chart",
+      "navigation",
+      "sidebar",
+      "table"
+    ],
+    "styleConstraints": {
+      "radiusMax": 16,
+      "spacingBase": 4,
+      "fontSizeBody": 14,
+      "fontSizeMin": 11,
+      "controlHeightDefault": 34,
+      "controlHeightLarge": 40
+    },
+    "productContext": {
+      "kitType": "minimal-dashboard-design",
+      "productType": "developer tool / API explorer"
+    },
+    "iconAssets": {
+      "source": "assets/icons",
+      "projectIconDir": "assets/icons/dl_builtin_minimalist",
+      "libraryKey": "dl_builtin_minimalist",
+      "renderMethod": "css-mask",
+      "pathTemplate": "../assets/icons/dl_builtin_minimalist/{name}.svg",
+      "availableNames": [
+        "arrow-down",
+        "arrow-left",
+        "arrow-right",
+        "arrow-up",
+        "box",
+        "check",
+        "chevron-down",
+        "chevron-left",
+        "chevron-right",
+        "chevron-up",
+        "chevrons-down-up",
+        "chevrons-up-down",
+        "circle-alert",
+        "circle-check",
+        "circle-minus",
+        "circle-pause",
+        "circle-play",
+        "circle-plus",
+        "circle-question-mark",
+        "external-link",
+        "file",
+        "folder-open",
+        "folder",
+        "funnel",
+        "grip",
+        "heart",
+        "house",
+        "mail",
+        "map-pin",
+        "message-circle-more",
+        "mouse-pointer-click",
+        "pen-line",
+        "send-horizontal",
+        "star",
+        "tag",
+        "thumbs-down",
+        "thumbs-up",
+        "trash-2",
+        "triangle-alert",
+        "user"
+      ],
+      "totalCount": 38,
+      "coloringRule": "currentColor by default; override with Library token when needed"
+    },
+    "actualTokenNameReference": [
+      {
+        "semanticPurpose": "Primary fill / active state",
+        "tokenName": "color-primary"
+      },
+      {
+        "semanticPurpose": "Primary foreground (text on primary)",
+        "tokenName": "color-primary-foreground"
+      },
+      {
+        "semanticPurpose": "Page background",
+        "tokenName": "background"
+      },
+      {
+        "semanticPurpose": "Card surface",
+        "tokenName": "card"
+      },
+      {
+        "semanticPurpose": "Card foreground text",
+        "tokenName": "card-foreground"
+      },
+      {
+        "semanticPurpose": "Muted surface",
+        "tokenName": "muted"
+      },
+      {
+        "semanticPurpose": "Muted foreground text",
+        "tokenName": "muted-foreground"
+      },
+      {
+        "semanticPurpose": "Foreground text",
+        "tokenName": "foreground"
+      },
+      {
+        "semanticPurpose": "Border",
+        "tokenName": "border"
+      },
+      {
+        "semanticPurpose": "Strong border",
+        "tokenName": "color-border-strong"
+      },
+      {
+        "semanticPurpose": "Surface white",
+        "tokenName": "color-surface"
+      },
+      {
+        "semanticPurpose": "Surface muted",
+        "tokenName": "color-surface-muted"
+      },
+      {
+        "semanticPurpose": "Text color",
+        "tokenName": "color-text"
+      },
+      {
+        "semanticPurpose": "Muted text",
+        "tokenName": "color-text-muted"
+      },
+      {
+        "semanticPurpose": "Input border",
+        "tokenName": "input"
+      },
+      {
+        "semanticPurpose": "Focus ring",
+        "tokenName": "ring"
+      },
+      {
+        "semanticPurpose": "Sidebar background",
+        "tokenName": "sidebar"
+      },
+      {
+        "semanticPurpose": "Sidebar foreground",
+        "tokenName": "sidebar-foreground"
+      },
+      {
+        "semanticPurpose": "Sidebar primary",
+        "tokenName": "sidebar-primary"
+      },
+      {
+        "semanticPurpose": "Sidebar primary foreground",
+        "tokenName": "sidebar-primary-foreground"
+      },
+      {
+        "semanticPurpose": "Sidebar accent",
+        "tokenName": "sidebar-accent"
+      },
+      {
+        "semanticPurpose": "Sidebar border",
+        "tokenName": "sidebar-border"
+      },
+      {
+        "semanticPurpose": "Success state",
+        "tokenName": "success"
+      },
+      {
+        "semanticPurpose": "Destructive state",
+        "tokenName": "destructive"
+      },
+      {
+        "semanticPurpose": "Chart color 1",
+        "tokenName": "chart-1"
+      },
+      {
+        "semanticPurpose": "Chart color 2",
+        "tokenName": "chart-2"
+      },
+      {
+        "semanticPurpose": "Chart color 3",
+        "tokenName": "chart-3"
+      },
+      {
+        "semanticPurpose": "Chart color 4",
+        "tokenName": "chart-4"
+      },
+      {
+        "semanticPurpose": "Chart color 5",
+        "tokenName": "chart-5"
+      },
+      {
+        "semanticPurpose": "Brand scale 50-900",
+        "tokenName": "brand-50 through brand-900"
+      },
+      {
+        "semanticPurpose": "Radius standard",
+        "tokenName": "radius"
+      },
+      {
+        "semanticPurpose": "Radius small",
+        "tokenName": "radius-sm"
+      },
+      {
+        "semanticPurpose": "Radius medium",
+        "tokenName": "radius-md"
+      },
+      {
+        "semanticPurpose": "Radius large",
+        "tokenName": "radius-lg"
+      },
+      {
+        "semanticPurpose": "Base spacing",
+        "tokenName": "space-4"
+      },
+      {
+        "semanticPurpose": "Sans font",
+        "tokenName": "font-sans"
+      },
+      {
+        "semanticPurpose": "Mono font",
+        "tokenName": "font-mono"
+      },
+      {
+        "semanticPurpose": "Serif font",
+        "tokenName": "font-serif"
+      },
+      {
+        "semanticPurpose": "Shadow small",
+        "tokenName": "shadow-sm"
+      },
+      {
+        "semanticPurpose": "Shadow medium",
+        "tokenName": "shadow-md"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "nodeId": "page-explorer-overview",
+      "slug": "explorer-overview",
+      "title": "探索器总览",
+      "htmlSrc": "pages/explorer-overview.html",
+      "pageIndex": 1,
+      "stateGroupId": null,
+      "stateRole": null,
+      "baseStatePageId": null,
+      "sharedShellContract": [],
+      "mutableRegions": [],
+      "derivedFromHtmlSrc": null,
+      "derivationType": "original",
+      "sourcePageId": null,
+      "sourceHtmlSrc": null,
+      "pageType": "information-dense",
+      "businessScenario": "Developer explorer dashboard — workspace overview with file tree sidebar, metric cards, recent activity table, and code snippet panel",
+      "visualNorthStar": "Full-bleed three-column dev-tool dashboard: left file-tree sidebar, center metrics+activity, right live status panel — no centered max-width, fills entire canvas",
+      "compositionPattern": "Three-column full-bleed: fixed sidebar (w-60) + flexible center (flex-1) + fixed right panel (w-80). Top bar spans full width. Content fills 100% canvas width with zero side margins.",
+      "continuityAnchors": [
+        "left sidebar with workspace selector and nav items",
+        "top bar with breadcrumb + search + command-K hint",
+        "monochrome zinc palette with border-led cards",
+        "Geist Mono for code/metrics/paths",
+        "full-bleed layout no side whitespace"
+      ],
+      "libraryRestraintMode": false,
+      "uiKitPath": "c:/Users/notco/.trae-cn/design_libraries/dl_builtin_minimalist/ui_kits/dashboard/index.html",
+      "componentPlan": [
+        "sidebar",
+        "card",
+        "table",
+        "navigation",
+        "button"
+      ],
+      "imagePlan": [],
+      "chartsRequired": false,
+      "miniProgramStyle": false,
+      "qualityRisks": [
+        "must avoid centered max-width container",
+        "three-column must fill full canvas width",
+        "code blocks need monospace treatment"
+      ]
+    },
+    {
+      "nodeId": "page-api-debug",
+      "slug": "api-debug",
+      "title": "接口调试",
+      "htmlSrc": "pages/api-debug.html",
+      "pageIndex": 2,
+      "stateGroupId": null,
+      "stateRole": null,
+      "baseStatePageId": null,
+      "sharedShellContract": [],
+      "mutableRegions": [],
+      "derivedFromHtmlSrc": null,
+      "derivationType": "original",
+      "sourcePageId": null,
+      "sourceHtmlSrc": null,
+      "pageType": "information-dense",
+      "businessScenario": "API explorer debug interface — endpoint tree sidebar, request builder with parameters/headers/body, response panel with status/headers/JSON body",
+      "visualNorthStar": "Full-bleed three-column API explorer: left endpoint tree, center request builder with method badge + path + params table + code editor, right response viewer with status + JSON — fills entire canvas width",
+      "compositionPattern": "Three-column full-bleed: fixed sidebar (w-60) + flexible center (flex-1) + fixed right panel (w-96). Top bar spans full width. All panels fill 100% canvas height.",
+      "continuityAnchors": [
+        "left sidebar with workspace selector and nav items",
+        "top bar with breadcrumb + search + command-K hint",
+        "monochrome zinc palette with border-led cards",
+        "Geist Mono for code/paths/JSON",
+        "full-bleed layout no side whitespace"
+      ],
+      "libraryRestraintMode": false,
+      "uiKitPath": "c:/Users/notco/.trae-cn/design_libraries/dl_builtin_minimalist/ui_kits/dashboard/index.html",
+      "componentPlan": [
+        "sidebar",
+        "table",
+        "card",
+        "navigation",
+        "button"
+      ],
+      "imagePlan": [],
+      "chartsRequired": false,
+      "miniProgramStyle": false,
+      "qualityRisks": [
+        "must avoid centered max-width container",
+        "three-column must fill full canvas width",
+        "JSON response needs syntax-highlight-like monochrome treatment",
+        "method badges (GET/POST) need distinct but monochrome treatment"
+      ]
+    }
+  ],
+  "assets": [],
+  "wiringPlan": [
+    {
+      "sourceNodeId": "page-explorer-overview",
+      "domId": "nav-api-debug",
+      "targetPageId": "page-api-debug"
+    }
+  ],
+  "hiddenInteractionPlan": [
+    {
+      "sourceNodeId": "page-api-debug",
+      "domId": "nav-overview",
+      "targetPageId": "page-explorer-overview",
+      "hideEdge": true,
+      "reason": "return to overview"
+    }
+  ]
+}
