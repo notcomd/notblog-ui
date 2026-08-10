@@ -8,38 +8,8 @@
         <p class="text-sm text-zinc-500 dark:text-zinc-300">创建您的账户，开始记录与分享</p>
       </div>
 
-      <!-- 注册方式Tab切换 -->
-      <div class="flex mb-6 bg-amber-50 dark:bg-zinc-800/70 rounded-[5%] p-1 gap-1">
-        <button
-          class="flex-1 py-2 text-sm font-medium rounded-[5%] transition-all duration-200"
-          :class="registerMode === 'email' ? 'bg-white text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
-          @click="switchRegisterMode('email')"
-        >
-          <span class="flex items-center justify-center gap-1.5">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            邮箱注册
-          </span>
-        </button>
-        <button
-          class="flex-1 py-2 text-sm font-medium rounded-[5%] transition-all duration-200"
-          :class="registerMode === 'phone' ? 'bg-white text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
-          @click="switchRegisterMode('phone')"
-        >
-          <span class="flex items-center justify-center gap-1.5">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-            </svg>
-            手机注册
-          </span>
-        </button>
-      </div>
-
       <!-- ==================== 邮箱注册表单 ==================== -->
-      <form v-show="registerMode === 'email'" @submit.prevent="handleEmailRegister" novalidate>
+      <form @submit.prevent="handleEmailRegister" novalidate>
         <!-- 邮箱输入框 -->
         <div class="mb-4">
           <label for="reg-email" class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide mb-1.5">
@@ -176,134 +146,6 @@
         </button>
       </form>
 
-      <!-- ==================== 手机注册表单 ==================== -->
-      <form v-show="registerMode === 'phone'" @submit.prevent="handlePhoneRegister" novalidate>
-        <!-- 手机号输入框 -->
-        <div class="mb-4">
-          <label for="reg-phone" class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide mb-1.5">
-            手机号码
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400 dark:text-zinc-400">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-            </span>
-            <input
-              type="tel"
-              id="reg-phone"
-              v-model="regPhoneNumber"
-              class="w-full pl-10 pr-4 py-2.5 bg-amber-50/50 border rounded-[5%] text-sm text-zinc-700 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
-              :class="errors.regPhoneNumber ? 'border-red-300 focus:border-red-400 focus:ring-red-300 dark:border-red-400/70 dark:focus:ring-red-400/50' : 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50'"
-              :disabled="phoneLoading"
-              placeholder="请输入您的手机号码"
-              maxlength="11"
-              autocomplete="tel"
-            >
-          </div>
-          <p v-if="errors.regPhoneNumber" class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-            <svg class="h-3 w-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            {{ errors.regPhoneNumber }}
-          </p>
-        </div>
-
-        <!-- 短信验证码 -->
-        <div class="mb-4">
-          <label for="reg-phone-code" class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide mb-1.5">
-            短信验证码
-          </label>
-          <div class="flex gap-2">
-            <input
-              type="text"
-              id="reg-phone-code"
-              v-model="regPhoneCode"
-              class="flex-1 py-2.5 px-4 bg-amber-50/50 border rounded-[5%] text-sm text-zinc-700 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
-              :class="errors.regPhoneCode ? 'border-red-300 focus:border-red-400 focus:ring-red-300 dark:border-red-400/70 dark:focus:ring-red-400/50' : 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50'"
-              :disabled="phoneLoading"
-              placeholder="请输入验证码"
-              maxlength="6"
-            >
-            <button
-              type="button"
-              class="px-4 py-2.5 text-xs font-medium rounded-[5%] whitespace-nowrap transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1"
-              :class="phoneCodeCountdown > 0 ? 'bg-amber-100 text-amber-500 cursor-not-allowed dark:bg-zinc-800 dark:text-amber-300' : 'bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:brightness-110 focus:ring-amber-400 active:scale-[0.97]'"
-              :disabled="phoneCodeCountdown > 0 || phoneLoading"
-              @click="sendPhoneCode"
-            >
-              {{ phoneCodeCountdown > 0 ? `${phoneCodeCountdown}s 后重发` : '获取验证码' }}
-            </button>
-          </div>
-          <p v-if="errors.regPhoneCode" class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-            <svg class="h-3 w-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            {{ errors.regPhoneCode }}
-          </p>
-        </div>
-
-        <!-- 设置密码 -->
-        <div class="mb-5">
-          <label for="reg-phone-password" class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide mb-1.5">
-            设置密码
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400 dark:text-zinc-400">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </span>
-            <input
-              :type="showRegPhonePassword ? 'text' : 'password'"
-              id="reg-phone-password"
-              v-model="regPhonePassword"
-              class="w-full pl-10 pr-12 py-2.5 bg-amber-50/50 border rounded-[5%] text-sm text-zinc-700 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
-              :class="errors.regPhonePassword ? 'border-red-300 focus:border-red-400 focus:ring-red-300 dark:border-red-400/70 dark:focus:ring-red-400/50' : 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50'"
-              :disabled="phoneLoading"
-              placeholder="请设置密码（至少8位）"
-              autocomplete="new-password"
-            >
-            <button
-              type="button"
-              class="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 dark:text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-100 transition-colors duration-200"
-              @click="showRegPhonePassword = !showRegPhonePassword"
-              :disabled="phoneLoading"
-              tabindex="-1"
-              :aria-label="showRegPhonePassword ? '隐藏密码' : '显示密码'"
-            >
-              <svg v-if="!showRegPhonePassword" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              <svg v-else class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
-              </svg>
-            </button>
-          </div>
-          <p v-if="errors.regPhonePassword" class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-            <svg class="h-3 w-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            {{ errors.regPhonePassword }}
-          </p>
-        </div>
-
-        <!-- 手机注册按钮 -->
-        <button
-          type="submit"
-          class="w-full py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium rounded-[5%] transition-all duration-200 flex justify-center items-center focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1"
-          :class="phoneLoading ? 'opacity-70 cursor-not-allowed' : 'hover:brightness-110 active:scale-[0.98]'"
-          :disabled="phoneLoading"
-        >
-          <span v-if="phoneLoading" class="mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-          手机注册
-        </button>
-      </form>
-
       <!-- ==================== 分隔线 ==================== -->
       <div class="my-6 flex items-center gap-3">
         <div class="flex-1 h-px bg-amber-200 dark:bg-zinc-600"></div>
@@ -406,14 +248,6 @@ defineProps({
 
 const emit = defineEmits(['showLoginForm'])
 
-// ==================== 注册模式切换 ====================
-const registerMode = ref('email') // 'email' | 'phone'
-
-const switchRegisterMode = (mode) => {
-  registerMode.value = mode
-  clearErrors()
-}
-
 // ==================== 邮箱注册状态 ====================
 const email = ref('')
 const password = ref('')
@@ -423,24 +257,9 @@ const emailLoading = ref(false)
 const emailCodeCountdown = ref(0)
 let emailCodeTimer = null
 
-// ==================== 手机注册状态 ====================
-const regPhoneNumber = ref('')
-const regPhoneCode = ref('')
-const regPhonePassword = ref('')
-const showRegPhonePassword = ref(false)
-const phoneLoading = ref(false)
-const phoneCodeCountdown = ref(0)
-let phoneCodeTimer = null
-
 // ==================== 通用状态 ====================
 const errorMessage = ref('')
 const errors = ref({})
-
-// ==================== 错误清除 ====================
-const clearErrors = () => {
-  errors.value = {}
-  errorMessage.value = ''
-}
 
 // ==================== 切换到登录 ====================
 const handleLoginClick = () => {
@@ -578,91 +397,6 @@ const handleEmailRegister = async () => {
       || '注册失败，请稍后重试'
   } finally {
     emailLoading.value = false
-  }
-}
-
-// ==================== 手机验证码倒计时 ====================
-const startPhoneCodeCountdown = () => {
-  phoneCodeCountdown.value = 60
-  if (phoneCodeTimer) clearInterval(phoneCodeTimer)
-  phoneCodeTimer = setInterval(() => {
-    phoneCodeCountdown.value--
-    if (phoneCodeCountdown.value <= 0) {
-      clearInterval(phoneCodeTimer)
-      phoneCodeTimer = null
-    }
-  }, 1000)
-}
-
-// ==================== 发送手机验证码 ====================
-const sendPhoneCode = () => {
-  errors.value.regPhoneNumber = ''
-
-  const phoneRegex = /^1[3-9]\d{9}$/
-  if (!phoneRegex.test(regPhoneNumber.value)) {
-    errors.value.regPhoneNumber = '请输入有效的手机号码'
-    return
-  }
-
-  phoneLoading.value = true
-
-  try {
-    console.log('发送手机验证码到:', regPhoneNumber.value)
-    startPhoneCodeCountdown()
-  } catch (error) {
-    errorMessage.value = '验证码发送失败，请稍后重试'
-    console.error('发送手机验证码错误:', error)
-  } finally {
-    phoneLoading.value = false
-  }
-}
-
-// ==================== 手机注册提交 ====================
-const handlePhoneRegister = async () => {
-  errors.value = {}
-  errorMessage.value = ''
-
-  let isValid = true
-  const phoneRegex = /^1[3-9]\d{9}$/
-
-  if (!phoneRegex.test(regPhoneNumber.value)) {
-    errors.value.regPhoneNumber = '请输入有效的手机号码'
-    isValid = false
-  }
-
-  if (!regPhoneCode.value || regPhoneCode.value.length < 4) {
-    errors.value.regPhoneCode = '请输入正确的验证码'
-    isValid = false
-  }
-
-  if (!regPhonePassword.value || regPhonePassword.value.length < 8) {
-    errors.value.regPhonePassword = '密码长度至少为8位'
-    isValid = false
-  }
-
-  if (!isValid) return
-
-  phoneLoading.value = true
-
-  try {
-    console.log('手机注册', {
-      phone: regPhoneNumber.value,
-      code: regPhoneCode.value,
-      password: regPhonePassword.value
-    })
-
-    // TODO: 对接手机注册API
-    // const response = await phoneRegister({
-    //   phone: regPhoneNumber.value,
-    //   code: regPhoneCode.value,
-    //   password: regPhonePassword.value,
-    // })
-    // if (response.data && response.data.code === 200) router.push('/login')
-  } catch (error) {
-    errorMessage.value = '手机注册失败，请稍后重试'
-    console.error('手机注册错误:', error)
-  } finally {
-    phoneLoading.value = false
   }
 }
 

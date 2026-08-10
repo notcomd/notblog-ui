@@ -5,41 +5,11 @@
       <!-- 标题 -->
       <div class="mb-6">
         <h1 class="text-3xl font-bold text-zinc-800 dark:text-zinc-100 mb-2">登入 NotBlog</h1>
-        <p class="text-sm text-zinc-500 dark:text-zinc-300">欢迎回来，请选择登录方式</p>
-      </div>
-
-      <!-- 登录方式Tab切换 -->
-      <div class="flex mb-6 bg-amber-50 dark:bg-zinc-800/70 rounded-[5%] p-1 gap-1">
-        <button
-          class="flex-1 py-2 text-sm font-medium rounded-[5%] transition-all duration-200"
-          :class="loginMode === 'email' ? 'bg-white text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
-          @click="switchLoginMode('email')"
-        >
-          <span class="flex items-center justify-center gap-1.5">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            邮箱登录
-          </span>
-        </button>
-        <button
-          class="flex-1 py-2 text-sm font-medium rounded-[5%] transition-all duration-200"
-          :class="loginMode === 'phone' ? 'bg-white text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200'"
-          @click="switchLoginMode('phone')"
-        >
-          <span class="flex items-center justify-center gap-1.5">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-            </svg>
-            手机验证
-          </span>
-        </button>
+        <p class="text-sm text-zinc-500 dark:text-zinc-300">欢迎回来</p>
       </div>
 
       <!-- ==================== 邮箱登录表单 ==================== -->
-      <form v-show="loginMode === 'email'" @submit.prevent="handleEmailPasswordSubmit" novalidate>
+      <form @submit.prevent="handleEmailPasswordSubmit" novalidate>
         <!-- 邮箱输入框 -->
         <div class="mb-4">
           <label for="email" class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide mb-1.5">
@@ -155,86 +125,6 @@
         </button>
       </form>
 
-      <!-- ==================== 手机验证登录表单 ==================== -->
-      <form v-show="loginMode === 'phone'" @submit.prevent="handlePhoneVerificationLogin" novalidate>
-        <!-- 手机号输入框 -->
-        <div class="mb-4">
-          <label for="phone-number" class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide mb-1.5">
-            手机号码
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400 dark:text-zinc-400">
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-            </span>
-            <input
-              type="tel"
-              id="phone-number"
-              v-model="phoneNumber"
-              class="w-full pl-10 pr-4 py-2.5 bg-amber-50/50 border rounded-[5%] text-sm text-zinc-700 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
-              :class="errors.phoneNumber ? 'border-red-300 focus:border-red-400 focus:ring-red-300 dark:border-red-400/70 dark:focus:ring-red-400/50' : 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50'"
-              :disabled="phoneLoading"
-              placeholder="请输入您的手机号码"
-              maxlength="11"
-              autocomplete="tel"
-            >
-          </div>
-          <p v-if="errors.phoneNumber" class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-            <svg class="h-3 w-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            {{ errors.phoneNumber }}
-          </p>
-        </div>
-
-        <!-- 短信验证码 -->
-        <div class="mb-5">
-          <label for="phone-code" class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide mb-1.5">
-            短信验证码
-          </label>
-          <div class="flex gap-2">
-            <input
-              type="text"
-              id="phone-code"
-              v-model="phoneCode"
-              class="flex-1 py-2.5 px-4 bg-amber-50/50 border rounded-[5%] text-sm text-zinc-700 placeholder-amber-300 transition-all duration-200 focus:outline-none focus:ring-1 dark:bg-zinc-800/60 dark:border-zinc-600/60 dark:text-zinc-100 dark:placeholder-zinc-500"
-              :class="errors.phoneCode ? 'border-red-300 focus:border-red-400 focus:ring-red-300 dark:border-red-400/70 dark:focus:ring-red-400/50' : 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50'"
-              :disabled="phoneLoading"
-              placeholder="请输入验证码"
-              maxlength="6"
-            >
-            <button
-              type="button"
-              class="px-4 py-2.5 text-xs font-medium rounded-[5%] whitespace-nowrap transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1"
-              :class="phoneCodeCountdown > 0 ? 'bg-amber-100 text-amber-500 cursor-not-allowed dark:bg-zinc-800 dark:text-amber-300' : 'bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:brightness-110 focus:ring-amber-400 active:scale-[0.97]'"
-              :disabled="phoneCodeCountdown > 0 || phoneLoading"
-              @click="handleSendPhoneCode"
-            >
-              {{ phoneCodeCountdown > 0 ? `${phoneCodeCountdown}s 后重发` : '获取验证码' }}
-            </button>
-          </div>
-          <p v-if="errors.phoneCode" class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
-            <svg class="h-3 w-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-            </svg>
-            {{ errors.phoneCode }}
-          </p>
-        </div>
-
-        <!-- 手机验证登录按钮 -->
-        <button
-          type="submit"
-          class="w-full py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium rounded-[5%] transition-all duration-200 flex justify-center items-center focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1"
-          :class="phoneLoading ? 'opacity-70 cursor-not-allowed' : 'hover:brightness-110 active:scale-[0.98]'"
-          :disabled="phoneLoading"
-        >
-          <span v-if="phoneLoading" class="mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-          手机验证登入
-        </button>
-      </form>
-
       <!-- ==================== 分隔线 ==================== -->
       <div class="my-6 flex items-center gap-3">
         <div class="flex-1 h-px bg-amber-200 dark:bg-zinc-600"></div>
@@ -336,17 +226,8 @@ defineProps({
 const emit = defineEmits([
   'showLoginForm',
   'showRegisterForm',
-  'submitEmailLogin',
-  'phoneCodeSent'
+  'submitEmailLogin'
 ])
-
-// ==================== 登录模式切换 ====================
-const loginMode = ref('email') // 'email' | 'phone'
-
-const switchLoginMode = (mode) => {
-  loginMode.value = mode
-  clearErrors()
-}
 
 // ==================== 邮箱登录状态 ====================
 const email = ref('')
@@ -355,22 +236,9 @@ const rememberMe = ref(false)
 const showPassword = ref(false)
 const loading = ref(false)
 
-// ==================== 手机验证登录状态 ====================
-const phoneNumber = ref('')
-const phoneCode = ref('')
-const phoneLoading = ref(false)
-const phoneCodeCountdown = ref(0)
-let phoneCodeTimer = null
-
 // ==================== 通用状态 ====================
 const errorMessage = ref('')
 const errors = ref({})
-
-// ==================== 错误清除 ====================
-const clearErrors = () => {
-  errors.value = {}
-  errorMessage.value = ''
-}
 
 // ==================== 注册页跳转 ====================
 const handleRegisterClick = () => {
@@ -435,91 +303,6 @@ const handleEmailPasswordSubmit = async () => {
     console.error('邮箱登录错误:', error)
   } finally {
     loading.value = false
-  }
-}
-
-// ==================== 手机验证码倒计时 ====================
-const startPhoneCodeCountdown = () => {
-  phoneCodeCountdown.value = 60
-  if (phoneCodeTimer) clearInterval(phoneCodeTimer)
-  phoneCodeTimer = setInterval(() => {
-    phoneCodeCountdown.value--
-    if (phoneCodeCountdown.value <= 0) {
-      clearInterval(phoneCodeTimer)
-      phoneCodeTimer = null
-    }
-  }, 1000)
-}
-
-// ==================== 发送手机验证码 ====================
-const handleSendPhoneCode = () => {
-  errors.value.phoneNumber = ''
-
-  const phoneRegex = /^1[3-9]\d{9}$/
-  if (!phoneRegex.test(phoneNumber.value)) {
-    errors.value.phoneNumber = '请输入有效的手机号码'
-    return
-  }
-
-  phoneLoading.value = true
-
-  try {
-    // 调用发送验证码API
-    console.log('发送手机验证码到:', phoneNumber.value)
-    startPhoneCodeCountdown()
-
-    // emit 事件通知父组件验证码已发送
-    emit('phoneCodeSent', { phoneNumber: phoneNumber.value })
-  } catch (error) {
-    errorMessage.value = '验证码发送失败，请稍后重试'
-    console.error('发送验证码错误:', error)
-  } finally {
-    phoneLoading.value = false
-  }
-}
-
-// ==================== 手机验证登录 ====================
-const validatePhoneForm = () => {
-  errors.value = {}
-  let valid = true
-
-  const phoneRegex = /^1[3-9]\d{9}$/
-  if (!phoneRegex.test(phoneNumber.value)) {
-    errors.value.phoneNumber = '请输入有效的手机号码'
-    valid = false
-  }
-
-  if (!phoneCode.value || phoneCode.value.length < 4) {
-    errors.value.phoneCode = '请输入正确的验证码'
-    valid = false
-  }
-
-  return valid
-}
-
-const handlePhoneVerificationLogin = async () => {
-  errorMessage.value = ''
-
-  if (!validatePhoneForm()) return
-
-  phoneLoading.value = true
-
-  try {
-    const loginData = {
-      type: 'phone',
-      phoneNumber: phoneNumber.value,
-      code: phoneCode.value
-    }
-    console.log('handlePhoneVerificationLogin 回调触发', loginData)
-
-    // TODO: 对接手机验证登录API
-    // const response = await phoneLogin({ phone: phoneNumber.value, code: phoneCode.value })
-    // 登录成功后跳转
-  } catch (error) {
-    errorMessage.value = '手机验证登录失败，请稍后重试'
-    console.error('手机验证登录错误:', error)
-  } finally {
-    phoneLoading.value = false
   }
 }
 
