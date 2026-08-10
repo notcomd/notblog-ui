@@ -18,13 +18,18 @@
       </div>
       <!-- 视频播放按钮悬浮层 -->
       <div v-if="isVideo" class="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/10 transition-colors group">
-        <div class="w-14 h-14 rounded-full bg-white/85 backdrop-blur flex items-center justify-center group-hover:scale-110 transition-transform">
+        <div class="w-14 h-14 rounded-full bg-white/95 flex items-center justify-center group-hover:scale-110 transition-transform">
           <svg class="w-6 h-6 text-zinc-800 ml-1 dark:text-zinc-100" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
         </div>
       </div>
+      <!-- 私密徽标（仅自己可见） -->
+      <span v-if="post.visibility === 'Private'" class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[10px] flex items-center gap-1" title="仅自己可见">
+        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+        私密
+      </span>
       <!-- 更多操作 -->
       <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
-        <button class="w-8 h-8 rounded-full bg-black/40 backdrop-blur text-white flex items-center justify-center" @click.stop="openMore">
+        <button class="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center" @click.stop="openMore">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
         </button>
       </div>

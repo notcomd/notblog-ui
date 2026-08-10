@@ -55,11 +55,11 @@
               </div>
             </div>
             <!-- 退出频道（二次确认） -->
-            <button v-if="!confirmingLeave" class="px-3 h-9 rounded-[5%] text-xs font-medium bg-white/20 backdrop-blur text-white border border-white/40 hover:bg-white/30 active:scale-95 transition-all" @click="confirmingLeave = true">退出频道</button>
+            <button v-if="!confirmingLeave" class="px-3 h-9 rounded-[5%] text-xs font-medium bg-white/30 text-white border border-white/40 hover:bg-white/40 active:scale-95 transition-all" @click="confirmingLeave = true">退出频道</button>
             <div v-else class="flex items-center gap-2">
               <span class="text-xs text-white drop-shadow">确定退出？</span>
               <button class="px-3 h-9 rounded-[5%] text-xs font-medium bg-red-500 text-white shadow hover:bg-red-600 active:scale-95 transition-all" @click="doLeave">确认</button>
-              <button class="px-3 h-9 rounded-[5%] text-xs font-medium bg-white/20 backdrop-blur text-white border border-white/40 hover:bg-white/30 active:scale-95 transition-all" @click="confirmingLeave = false">取消</button>
+              <button class="px-3 h-9 rounded-[5%] text-xs font-medium bg-white/30 text-white border border-white/40 hover:bg-white/40 active:scale-95 transition-all" @click="confirmingLeave = false">取消</button>
             </div>
           </div>
         </div>
@@ -79,7 +79,7 @@
     </div>
 
     <!-- ===== 加入频道对话框（邀请码/链接） ===== -->
-    <div v-if="joinOpen" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/30 backdrop-blur-sm" @click.self="joinOpen = false">
+    <div v-if="joinOpen" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/30" @click.self="joinOpen = false">
       <div class="glass-card p-6 w-96">
         <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-4">加入频道</h3>
         <p class="text-xs text-zinc-400 mb-3">输入频道邀请码即可加入</p>

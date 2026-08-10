@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="emit('close')">
+  <div class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40" @click.self="emit('close')">
     <div class="glass-card flex flex-col max-h-[85vh]" :class="widthClass">
       <!-- 头部 -->
       <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-200/60 dark:border-zinc-700/60 shrink-0">

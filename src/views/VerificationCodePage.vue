@@ -5,7 +5,7 @@
       <div class="bg-white rounded-[5%] p-8 transition-all duration-300">
         <!-- 返回按钮 -->
         <button
-          class="mb-6 flex items-center text-sm text-amber-600 hover:text-amber-800 transition-colors duration-200"
+          class="mb-6 flex items-center text-sm text-zinc-500 hover:text-zinc-700 transition-colors duration-200"
           @click="handleGoBack"
         >
           <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,17 +16,17 @@
 
         <!-- 标题 -->
         <div class="mb-6">
-          <h1 class="text-2xl font-bold text-amber-900 mb-2">验证您的身份</h1>
-          <p class="text-sm text-amber-600">
+          <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-2">验证您的身份</h1>
+          <p class="text-sm text-zinc-500 dark:text-zinc-300">
             我们已向
-            <span class="font-semibold text-amber-800">{{ maskedTarget }}</span>
+            <span class="font-semibold text-zinc-700 dark:text-zinc-200">{{ maskedTarget }}</span>
             发送了验证码
           </p>
         </div>
 
         <!-- 验证码输入区域（9 位数字+英文混合） -->
         <div class="mb-6">
-          <label class="block text-xs font-semibold text-amber-700 tracking-wide mb-3">
+          <label class="block text-xs font-semibold text-zinc-600 dark:text-zinc-200 tracking-wide mb-3">
             请输入 9 位验证码（数字和字母混合）
           </label>
 
@@ -38,17 +38,17 @@
           />
 
           <p v-if="errorMessage" class="mt-2 text-xs text-red-500 text-center">{{ errorMessage }}</p>
-          <p class="mt-2 text-[11px] text-amber-400 text-center">验证码区分大小写，请按邮件内容原样输入</p>
+          <p class="mt-2 text-[11px] text-zinc-400 dark:text-zinc-400 text-center">验证码区分大小写，请按邮件内容原样输入</p>
         </div>
 
         <!-- 倒计时 & 重新发送 -->
         <div class="mb-6 text-center">
-          <p v-if="countdown > 0" class="text-sm text-amber-500">
+          <p v-if="countdown > 0" class="text-sm text-zinc-500 dark:text-zinc-300">
             {{ countdown }} 秒后可重新发送
           </p>
           <button
             v-else
-            class="text-sm text-amber-700 font-medium hover:text-amber-900 underline underline-offset-2 decoration-amber-300 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="text-sm text-amber-600 font-medium hover:text-amber-700 dark:text-amber-400 underline underline-offset-2 decoration-amber-300 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="resendLoading"
             @click="handleResendCode"
           >
@@ -72,7 +72,7 @@
         </button>
 
         <!-- 提示信息 -->
-        <p class="mt-4 text-xs text-center text-amber-400">
+        <p class="mt-4 text-xs text-center text-zinc-400 dark:text-zinc-400">
           没有收到验证码？请检查垃圾邮件文件夹或确认输入的联系方式是否正确
         </p>
       </div>

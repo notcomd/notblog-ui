@@ -27,7 +27,7 @@
       />
 
       <!-- 中央播放按钮 -->
-      <button v-if="paused" class="absolute inset-0 m-auto w-16 h-16 rounded-full bg-white/85 backdrop-blur flex items-center justify-center hover:scale-110 transition-transform" @click="togglePlay">
+      <button v-if="paused" class="absolute inset-0 m-auto w-16 h-16 rounded-full bg-white/95 flex items-center justify-center hover:scale-110 transition-transform" @click="togglePlay">
         <svg class="w-7 h-7 text-zinc-800 ml-1 dark:text-zinc-100" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
       </button>
 

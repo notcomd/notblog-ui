@@ -57,7 +57,7 @@ const VALID = /^[A-Za-z0-9]$/
 const displayChars = computed(() => (props.modelValue || '').split('').slice(0, props.length))
 
 function cellClass(index) {
-  const base = 'bg-amber-50/60 dark:bg-zinc-800/60 border-amber-200 dark:border-zinc-700 text-amber-900 dark:text-zinc-100'
+  const base = 'bg-amber-50/60 dark:bg-zinc-800/60 border-amber-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-100'
   if (props.error) return 'border-red-400 bg-red-50/50 dark:bg-red-500/10 text-red-500'
   if (displayChars.value[index]) return 'border-amber-400 dark:border-amber-500/60 ' + base
   if (focused.value && index === displayChars.value.length) return 'border-amber-500 ring-2 ring-amber-300/50 ' + base

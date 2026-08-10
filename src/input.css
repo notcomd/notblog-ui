@@ -27,31 +27,32 @@ html.theme-transition *::after {
   transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, fill 0.35s ease !important;
 }
 
-/* 玻璃拟态（浅色） */
+/* ===== 卡片容器（2026-08 用户要求：去毛玻璃，纯色卡片） =====
+   原为玻璃拟态（backdrop-blur 20-24px + 半透明），用户反馈全页面毛玻璃过多：
+   去掉 backdrop-filter、背景提到 95% 不透明，仅保留极淡透感与边框。
+   类名 glass / glass-card 不变（约 120 处引用不动），改这里即可全局生效 */
 @utility glass {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: none; /* 覆盖 daisyUI 内置 .glass 的 blur(var(--glass-blur,40px))——类名重名冲突 */
+  -webkit-backdrop-filter: none;
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 @utility glass-card {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 10px;
 }
 
-/* 玻璃拟态（暗色） */
+/* 暗色 */
 html[data-theme="dark"] .glass {
-  background: rgba(24, 24, 27, 0.6);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(24, 24, 27, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 html[data-theme="dark"] .glass-card {
-  background: rgba(24, 24, 27, 0.72);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(24, 24, 27, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 /* 暗色模式文字统一纯白（提升对比度与可读性） */
 html[data-theme="dark"] .text-zinc-100,
