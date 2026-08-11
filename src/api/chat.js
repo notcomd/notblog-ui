@@ -24,9 +24,15 @@ export function createSession(friendId) {
   return service.post('/api/sessions', { sessionType: 'Private', friendId })
 }
 
-// 已读：POST /api/messages/{id}/read
+// 创建群聊会话：POST /api/sessions { sessionType: 'Group', groupId, sessionName } -> ApiResponse<Guid>
+// 建群后调用（后端建群不自动创建会话），返回群会话 ID
+export function createGroupSession(groupId, sessionName) {
+  return service.post('/api/sessions', { sessionType: 'Group', groupId, sessionName })
+}
+
+// 已读：PUT /api/messages/{id}/read（⚠️ 后端是 PUT，曾误写 POST 会 405）
 export function markRead(messageId) {
-  return service.post(`/api/messages/${messageId}/read`)
+  return service.put(`/api/messages/${messageId}/read`)
 }
 
 // 未读总数：GET /api/sessions/unread-count
