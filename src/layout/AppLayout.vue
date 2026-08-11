@@ -3,13 +3,13 @@
     <!-- 背景图系统：图片层 + 渐变压暗层 + 蒙层（无背景图时不渲染；管理端布局不含此组件） -->
     <BackgroundLayer />
     <!-- 内容层：relative z-10 抬升到背景图层（z-0）之上（负 z-index 会被 body 背景 canvas 盖住，不可用） -->
-    <div class="relative z-10">
-      <!-- 顶栏（全局固定）；详情页时置灰/模糊化但保持可见 -->
-      <TopBar :blurred="isDetail" />
-      <!-- 左导航 + 右内容 双栏（个人主页与主页面公用同一布局，SideNav 导航项随路由切换） -->
-      <div class="flex pt-16">
-        <SideNav :blurred="isDetail" />
-        <main class="flex-1 min-w-0 px-6 py-6 overflow-y-auto h-[calc(100vh-4rem)]">
+    <div class="relative z-10 flex">
+      <!-- 左侧功能栏（100vh 全高，顶部含 Logo；个人主页与主页面公用同一布局，导航项随路由切换） -->
+      <SideNav :blurred="isDetail" />
+      <!-- 右侧：顶栏 + 内容区（顶栏不再横跨全屏，Logo 已移至左侧功能栏） -->
+      <div class="flex-1 min-w-0 flex flex-col">
+        <TopBar :blurred="isDetail" />
+        <main class="flex-1 min-h-0 px-6 py-6 overflow-y-auto">
           <router-view v-slot="{ Component }">
             <transition name="page-fade" mode="out-in">
               <keep-alive :include="cachedViews">

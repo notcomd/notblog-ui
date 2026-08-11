@@ -1,34 +1,31 @@
 <template>
-  <header class="fixed top-0 left-0 right-0 z-50 glass border-b border-white/40 dark:border-white/10 transition-all duration-300" :class="blurred ? 'opacity-60 saturate-50 pointer-events-none' : ''">
-    <div class="h-16 px-5 flex items-center gap-4">
-      <!-- 左侧 Logo -->
-      <router-link to="/home" class="flex items-center gap-2 shrink-0">
-        <div class="w-9 h-9 rounded-[5%] bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3l7 4v5c0 4.4-3 7.9-7 9-4-1.1-7-4.6-7-9V7l7-4z" />
-          </svg>
-        </div>
-        <span class="text-lg font-bold tracking-wide text-zinc-800 dark:text-zinc-100">轻芒 · 兴趣部落</span>
-      </router-link>
-
-      <!-- 中部：全局搜索 -->
-      <div class="flex-1 max-w-md mx-auto">
-        <div class="relative group">
-          <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4.3-4.3" />
-          </svg>
-          <input
-            v-model="keyword"
-            class="w-full h-10 pl-11 pr-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
-            placeholder="搜兴趣、找好友、看热门..."
-            @keyup.enter="onSearch"
-          />
-        </div>
+  <header class="sticky top-0 z-50 transition-all duration-300" :class="blurred ? 'opacity-60 saturate-50 pointer-events-none' : ''">
+    <div class="h-16 px-5 flex items-center">
+      <!-- 左上：当前功能标题（随功能栏激活项变化，如：广场/频道/会话/探索、个人空间 Tab） -->
+      <div v-if="titleItem" class="shrink-0">
+        <span class="text-lg font-bold tracking-wide text-zinc-800 dark:text-zinc-100">{{ titleItem.label }}</span>
       </div>
-
-      <!-- 右侧 -->
-      <div class="flex items-center gap-3 shrink-0">
+      <!-- 广场页信息流切换（并入顶部栏，仅 /home 显示）：热门 | 最新 -->
+      <div v-if="isHome" class="flex items-center ml-6 shrink-0">
+        <button
+          class="relative px-3 pb-1 text-sm font-medium transition-colors flex items-center"
+          :class="feedTab.tab === 'hot' ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
+          @click="onTabSwitch('hot')"
+        >
+          热门
+          <span v-if="feedTab.tab === 'hot'" class="absolute left-3 right-3 bottom-0 h-0.5 rounded-full bg-amber-500"></span>
+        </button>
+        <button
+          class="relative px-3 pb-1 text-sm font-medium transition-colors flex items-center"
+          :class="feedTab.tab === 'latest' ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
+          @click="onTabSwitch('latest')"
+        >
+          <span v-if="!auth.isLoggedIn()" class="mr-1">🔒</span>最新
+          <span v-if="feedTab.tab === 'latest'" class="absolute left-3 right-3 bottom-0 h-0.5 rounded-full bg-amber-500"></span>
+        </button>
+      </div>
+      <!-- 右侧操作区（Logo 与搜索功能均已在左侧功能栏；按钮组靠右） -->
+      <div class="flex items-center gap-3 shrink-0 ml-auto">
         <!-- 消息铃铛（点击下拉通知面板） -->
         <div class="relative">
           <button class="w-10 h-10 rounded-[5%] flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="消息" @click.stop="onBellClick">
@@ -157,25 +154,51 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 defineProps({
   blurred: { type: Boolean, default: false }
 })
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
+import { useFeedTabStore } from '@/stores/feedTab'
 import SkinPanel from '@/components/common/SkinPanel.vue'
 import NotificationPanel from '@/components/common/NotificationPanel.vue'
 import { getMyUserInfo } from '@/api/userinfo'
 import { getNotificationUnreadCount } from '@/api/notification'
 import { SAMPLE_NOTIFICATIONS } from '@/utils/notifications'
+import { MAIN_NAV_ITEMS, buildSpaceNavItems } from '@/layout/navItems'
 
 const auth = useAuthStore()
 const skinOpen = ref(false)
 const toast = useToastStore()
 const router = useRouter()
+const route = useRoute()
 
-const keyword = ref('')
+// 左上角功能标题：与功能栏激活项一致（主页面导航 / 个人空间 Tab），单一事实源见 navItems.js
+const titleItem = computed(() => {
+  if (route.path.startsWith('/users/')) {
+    const isSelf = !!auth.user && String(auth.user.id) === String(route.params.id || '')
+    const tab = route.query.tab || 'home'
+    return buildSpaceNavItems(route.params.id || '', isSelf).find(i => i.to.query.tab === tab) || null
+  }
+  return MAIN_NAV_ITEMS.find(i => route.path === i.to.path || route.path.startsWith(i.to.path + '/')) || null
+})
+
+// 广场页信息流切换（热门/最新）：仅 /home 显示，状态存 feedTab store 供 HomeView 消费
+const feedTab = useFeedTabStore()
+const isHome = computed(() => route.path === '/home')
+
+function onTabSwitch(t) {
+  // 最新 Tab 需要登录
+  if (t === 'latest' && !auth.isLoggedIn()) {
+    toast.push('请先登录后再查看最新动态', 'info')
+    router.push('/login')
+    return
+  }
+  feedTab.switchTab(t)
+}
+
 const unread = ref(0) // 通知未读数（GET /api/notifications/unread-count）
 const notifOpen = ref(false) // 通知下拉面板
 const avatarFallback = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#fbbf24"/><text x="50" y="62" font-size="40" text-anchor="middle" fill="white">芒</text></svg>')
@@ -275,11 +298,6 @@ function onBellClick() {
     return
   }
   notifOpen.value = !notifOpen.value
-}
-
-function onSearch() {
-  if (!keyword.value.trim()) return
-  toast.push(`搜索「${keyword.value.trim()}」功能开发中`, 'info')
 }
 
 function onLogout() {
