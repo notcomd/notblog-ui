@@ -1,59 +1,97 @@
 <template>
   <aside
-    class="sticky top-16 h-[calc(100vh-4rem)] flex flex-col items-center py-5 gap-2 shrink-0 transition-[width,opacity] duration-[250ms] ease"
+    class="sticky top-0 h-screen flex flex-col items-center py-6 gap-3 shrink-0 bg-white dark:bg-zinc-900 border-r border-zinc-200/60 dark:border-zinc-800/60 transition-[width,opacity] duration-[250ms] ease"
     :class="[collapsed ? 'w-[72px]' : 'w-[220px]', blurred ? 'opacity-60 saturate-50' : '']"
   >
-    <nav class="flex flex-col items-center gap-1.5 w-full px-3">
+    <!-- 顶部 Logo（pl-6 让图标与导航项图标对齐 x=24；文字展开从左向右显示、收缩从右向左擦除） -->
+    <router-link
+      to="/home"
+      class="flex items-center gap-2 rounded-[5%] shrink-0 mb-1 w-full pl-6 pr-3"
+    >
+      <svg class="w-7 h-7 shrink-0 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3l7 4v5c0 4.4-3 7.9-7 9-4-1.1-7-4.6-7-9V7l7-4z" />
+      </svg>
+      <span class="wipe-text text-lg font-bold tracking-wide text-zinc-800 dark:text-zinc-100 whitespace-nowrap" :class="{ 'wipe-hidden': collapsed }">轻芒 · 兴趣部落</span>
+    </router-link>
+
+    <!-- 搜索功能：展开态为输入框，收缩态为图标入口（点击展开并聚焦） -->
+    <div class="w-full px-3">
+      <div v-if="!collapsed" class="relative">
+        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.3-4.3" />
+        </svg>
+        <input
+          ref="searchInput"
+          v-model="keyword"
+          class="w-full h-10 pl-10 pr-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
+          placeholder="搜兴趣、找好友、看热门..."
+          @keyup.enter="onSearch"
+        />
+      </div>
+      <button
+        v-else
+        class="w-11 h-11 rounded-[5%] flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors"
+        title="搜索"
+        @click="expandAndFocus"
+      >
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.3-4.3" />
+        </svg>
+      </button>
+    </div>
+
+    <nav class="flex flex-col items-center gap-2 w-full px-3">
       <!-- 主导航 -->
       <router-link
         v-for="item in navItems"
         :key="item.to.path + (item.to.query ? item.to.query.tab : '')"
         :to="item.to"
-        class="flex items-center gap-3 rounded-[5%] transition-all duration-200 relative group"
-        :class="[ collapsed ? 'w-11 h-11 justify-center' : 'w-full px-3 h-11', isActive(item) ? 'bg-gradient-to-r from-amber-400/15 to-orange-400/10 text-amber-600 dark:text-amber-400 font-medium ' : 'text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 hover:translate-x-0.5' ]"
+        class="flex items-center gap-3 rounded-[5%] transition-all duration-200 relative group w-full px-3 h-11"
+        :class="[isActive(item) ? 'bg-gradient-to-r from-amber-400/15 to-orange-400/10 text-amber-600 dark:text-amber-400 font-medium ' : 'text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 hover:translate-x-0.5']"
       >
         <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path :d="item.icon" />
         </svg>
         <!-- 收缩时悬停文字提示 -->
         <span v-if="collapsed" class="absolute left-full ml-3 px-2 py-1 rounded-[5%] bg-zinc-800 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">{{ item.label }}</span>
-        <transition name="nav-label">
-          <span v-if="!collapsed" class="text-sm">{{ item.label }}</span>
-        </transition>
+        <span class="wipe-text text-sm" :class="{ 'wipe-hidden': collapsed }">{{ item.label }}</span>
       </router-link>
 
-      <!-- 发布按钮（收缩后变 FAB） -->
+      <!-- 发布按钮（与其他功能选项统一样式：透明底 + 图标文字 + hover 背景 + 收缩 tooltip） -->
       <button
-        class="mt-2 w-11 h-11 rounded-[5%] bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center hover: hover: hover:-translate-y-0.5 active:scale-95 transition-all"
-        :class="collapsed ? '' : 'self-start ml-2'"
-        :title="collapsed ? '发布' : ''"
+        class="mt-3 w-full px-3 h-11 flex items-center gap-3 rounded-[5%] transition-all duration-200 relative group text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 hover:translate-x-0.5"
         @click="onPublish"
       >
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+        <span v-if="collapsed" class="absolute left-full ml-3 px-2 py-1 rounded-[5%] bg-zinc-800 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">发布</span>
+        <span class="wipe-text text-sm" :class="{ 'wipe-hidden': collapsed }">发布</span>
       </button>
     </nav>
 
-    <!-- 底部收缩控制 -->
+    <!-- 底部收缩控制（与其他功能选项统一样式：w-full px-3 h-11 + hover 背景 + wipe 文字） -->
     <div class="mt-auto w-full px-3">
       <button
-        class="rounded-[5%] flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all"
-        :class="collapsed ? 'w-10 h-10 mx-auto' : 'w-full h-10'"
+        class="w-full px-3 h-11 flex items-center gap-3 rounded-[5%] transition-all duration-200 text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60"
         :title="collapsed ? '展开侧边栏' : '收缩侧边栏'"
         @click="collapsed = !collapsed"
       >
-        <svg class="w-5 h-5 transition-transform duration-300" :class="collapsed ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="w-5 h-5 shrink-0 transition-transform duration-300" :class="collapsed ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" />
         </svg>
-        <span v-if="!collapsed" class="text-xs">收缩侧边栏</span>
+        <span class="wipe-text text-xs" :class="{ 'wipe-hidden': collapsed }">收缩侧边栏</span>
       </button>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toast'
+import { MAIN_NAV_ITEMS, buildSpaceNavItems } from '@/layout/navItems'
 
 defineProps({
   blurred: { type: Boolean, default: false }
@@ -66,29 +104,11 @@ const auth = useAuthStore()
 // 个人主页：SideNav 导航项切换为空间工具栏（作品/收藏/我的仓库/安全），与主页面公用同一布局
 const isUserSpace = computed(() => route.path.startsWith('/users/'))
 
-const mainNavItems = [
-  { to: { path: '/home' }, label: '主页', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6' },
-  { to: { path: '/circles' }, label: '频道', icon: 'M3 21v-4m0 0V5a2 2 0 0 1 2-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 0 0-2 2zm9-13.5V9m0 4.5V19' },
-  { to: { path: '/chat' }, label: '会话', icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
-  { to: { path: '/explore' }, label: '探索', icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm0-7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm7-2h2m-2-6l-1.4 1.4M5 5l1.4 1.4M3 12h2' }
-]
+const isSelf = computed(() => !!auth.user && String(auth.user.id) === String(route.params.id || ''))
 
-const spaceNavItems = computed(() => {
-  const id = route.params.id || ''
-  // 收藏/安全是个人私密功能，他人主页不显示（他人只保留：主页/作品/公开仓库）
-  const isSelf = !!auth.user && String(auth.user.id) === String(id)
-  const tabItems = [
-    { key: 'home', label: '主页', icon: 'M3 12l9-9 9 9M5 10v10a1 1 0 0 0 1 1h3m10-11v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6' },
-    { key: 'works', label: '作品', icon: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z' },
-    { key: 'favorites', label: '收藏', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
-    { key: 'files', label: isSelf ? '我的仓库' : '公开仓库', icon: 'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z' },
-    { key: 'security', label: '安全', icon: 'M12 17v2M7 11V7a5 5 0 0 1 10 0v4M5 11h14a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1z' }
-  ]
-  return (isSelf ? tabItems : tabItems.filter(t => !['favorites', 'security'].includes(t.key)))
-    .map(t => ({ to: { path: `/users/${id}`, query: { tab: t.key } }, label: t.label, icon: t.icon }))
-})
+const spaceNavItems = computed(() => buildSpaceNavItems(route.params.id || '', isSelf.value))
 
-const navItems = computed(() => (isUserSpace.value ? spaceNavItems.value : mainNavItems))
+const navItems = computed(() => (isUserSpace.value ? spaceNavItems.value : MAIN_NAV_ITEMS))
 
 function isActive(item) {
   if (isUserSpace.value) {
@@ -100,6 +120,23 @@ function isActive(item) {
 
 const collapsed = ref(false)
 
+// ==================== 搜索功能（展开态输入框 / 收缩态图标入口） ====================
+const keyword = ref('')
+const searchInput = ref(null)
+const toast = useToastStore()
+
+function onSearch() {
+  if (!keyword.value.trim()) return
+  toast.push(`搜索「${keyword.value.trim()}」功能开发中`, 'info')
+}
+
+// 收缩态点击搜索图标：先展开功能栏，再聚焦输入框
+async function expandAndFocus() {
+  collapsed.value = false
+  await nextTick()
+  searchInput.value && searchInput.value.focus()
+}
+
 function onPublish() {
   // 发布入口 → 工作台（四个类型选择 + 未发布作品管理）
   router.push('/workspace')
@@ -107,17 +144,15 @@ function onPublish() {
 </script>
 
 <style scoped>
-/* 导航文字消失效果：收缩时向左滑出淡出（与侧栏收回方向一致），展开时从左滑入淡入；
-   与宽度动画同步（0.25s），开始即开始、结束即结束，展开时微延迟 50ms 让宽度先动 */
-.nav-label-enter-active {
-  transition: opacity 0.25s ease 0.05s, transform 0.25s ease 0.05s;
+/* 文字擦除效果：展开时 max-width 0→200px（从左向右显示），收缩时 200px→0（从右向左擦除）。
+   与功能栏宽度动画同步（0.25s ease）。收缩态宽度为 0 不占位 → 图标不被 flex 压缩、文字不溢出 */
+.wipe-text {
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 200px;
+  transition: max-width 0.25s ease;
 }
-.nav-label-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
-}
-.nav-label-enter-from,
-.nav-label-leave-to {
-  opacity: 0;
-  transform: translateX(-16px);
+.wipe-hidden {
+  max-width: 0;
 }
 </style>
