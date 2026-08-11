@@ -165,10 +165,11 @@ export const useChatStore = defineStore('chat', () => {
   // ===== 内部工具 =====
   function currentUserId() {
     // 当前用户 ID 从 JWT payload 解析
+    // ⚠️ Identity 签发的 JWT claim 名是完整 URI（.NET 10 不压缩），payload 无 sub
     const t = localStorage.getItem('token')
     try {
       const payload = JSON.parse(decodeURIComponent(escape(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))))
-      return payload.sub || ''
+      return payload.sub || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || ''
     } catch (e) {
       return ''
     }
@@ -282,6 +283,6 @@ export const useChatStore = defineStore('chat', () => {
     onlineUsers, typing, connected, messageLoading, hasMoreMessages,
     loadSessions, loadFriends, loadGroups, loadUnread, openSession,
     loadMessages, sendText, sendTyping, markSessionRead, clearUnread,
-    sessionName, peerIdOf, initRealtime, removeSession
+    sessionName, peerIdOf, currentUserId, initRealtime, removeSession
   }
 })
