@@ -1,7 +1,8 @@
 <template>
-  <div class="max-w-[1400px] mx-auto flex gap-5">
-    <!-- ===== 左：我的频道列表（1:2 分栏的 1） ===== -->
-    <div class="w-64 shrink-0 flex flex-col glass-card p-3 h-[calc(100vh-7.5rem)]">
+  <!-- 根容器固定视口高度（同 ChatView）：页面不滚动，左侧列表固定，右侧内容内部滚动 -->
+  <div class="max-w-[1400px] mx-auto flex gap-5 h-[calc(100vh-7.5rem)]">
+    <!-- ===== 左：我的频道列表（1:2 分栏的 1，固定不随滑动） ===== -->
+    <div class="w-64 shrink-0 flex flex-col glass-card p-3 h-full min-h-0">
       <div class="px-2 pb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
         <svg class="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21v-4m0 0V5a2 2 0 0 1 2-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 0 0-2 2z" /></svg>
         我的频道
@@ -26,21 +27,31 @@
           <p class="text-xs">还没有加入任何频道</p>
         </div>
       </div>
-      <!-- 底部固定：加入频道按钮（在列表内，不随滚动） -->
-      <div class="pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60">
-        <button class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-[5%] text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 active:scale-[0.98] transition-all" @click="joinOpen = true">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+      <!-- 底部固定：创建频道 + 加入频道（一行并排，在列表内不随滚动） -->
+      <div class="pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60 flex gap-2">
+        <button class="flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-[0.98] transition-all" @click="createMode = true">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+          创建频道
+        </button>
+        <button class="flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-[5%] text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 active:scale-[0.98] transition-all" @click="joinOpen = true">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
           加入频道
         </button>
       </div>
     </div>
 
-    <!-- ===== 右：频道主视窗（1:2 分栏的 2） ===== -->
-    <div class="flex-1 min-w-0">
+    <!-- ===== 右：频道主视窗（创建频道面板复用主视窗；内容内部滚动） ===== -->
+    <div class="flex-1 min-w-0 flex flex-col min-h-0">
+      <CircleCreatePanel v-if="createMode" class="glass-card" @close="createMode = false" @created="onCreated" />
+
+      <template v-else>
+      <div class="flex-1 min-h-0 overflow-y-auto">
       <div v-if="current" class="glass-card overflow-hidden">
-        <!-- Banner 头图 -->
+        <!-- Banner 头图（封面优先，回退头像） -->
         <div class="h-40 relative bg-gradient-to-r from-amber-200/70 via-orange-200/60 to-emerald-200/70 dark:from-amber-500/20 dark:via-orange-500/15 dark:to-emerald-500/20">
-          <img v-if="current.avatarUrl" :src="current.avatarUrl" alt="" class="absolute inset-0 w-full h-full object-cover opacity-25" @error="hideImg" />
+          <img v-if="current.coverUrl && !currentCoverIsVideo" :src="current.coverUrl" alt="" class="absolute inset-0 w-full h-full object-cover opacity-25" @error="hideImg" />
+          <video v-else-if="current.coverUrl" :src="current.coverUrl" autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-25"></video>
+          <img v-else-if="current.avatarUrl" :src="current.avatarUrl" alt="" class="absolute inset-0 w-full h-full object-cover opacity-25" @error="hideImg" />
           <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
           <div class="absolute bottom-4 left-5 right-5 flex items-end justify-between">
             <div class="flex items-center gap-3">
@@ -76,6 +87,8 @@
         <div class="text-6xl">🏕️</div>
         <p class="text-zinc-500 dark:text-zinc-400">从左侧选择一个频道开始浏览</p>
       </div>
+      </div>
+      </template>
     </div>
 
     <!-- ===== 加入频道对话框（邀请码/链接） ===== -->
@@ -107,6 +120,7 @@ export default { name: 'CirclesView' }
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import PostGrid from '@/components/post/PostGrid.vue'
+import CircleCreatePanel from '@/components/circle/CircleCreatePanel.vue'
 import { getMyCircles, getCircle, getCirclePosts, joinCircle, leaveCircle } from '@/api/circle'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
@@ -118,6 +132,7 @@ const circles = ref([])
 const current = ref(null)
 const loading = ref(false)
 const confirmingLeave = ref(false)
+const createMode = ref(false)
 const joinOpen = ref(false)
 const joinInput = ref('')
 const joining = ref(false)
@@ -128,6 +143,9 @@ const roleText = computed(() => {
   const map = { Owner: '圈主', Admin: '管理员', Member: '成员' }
   return map[current.value.myRole] || '成员'
 })
+
+// 封面是否为视频（动态封面）
+const currentCoverIsVideo = computed(() => /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test((current.value && current.value.coverUrl) || ''))
 
 function circleLoader(params) {
   return getCirclePosts(current.value.circleGuid, params)
@@ -159,6 +177,18 @@ async function select(c) {
     const d = res && res.data ? res.data : res
     if (d && d.circleGuid) current.value = { ...c, ...d }
   } catch (e) { /* 使用列表数据兜底 */ }
+}
+
+// 创建成功：退出面板 → 刷新列表 → 选中新频道
+async function onCreated(guid) {
+  createMode.value = false
+  await loadCircles()
+  if (guid) {
+    const found = circles.value.find(c => String(c.circleGuid) === String(guid))
+    if (found) select(found)
+  } else if (circles.value.length && !current.value) {
+    select(circles.value[0])
+  }
 }
 
 async function doLeave() {
