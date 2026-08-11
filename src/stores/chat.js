@@ -16,7 +16,7 @@ export const useChatStore = defineStore('chat', () => {
   const onlineUsers = ref({})           // { userId: true/false } 在线状态（SignalR 事件驱动）
   const typing = ref({})                // { sessionId: userId } 正在输入
   const connected = ref(false)
-  const messageLoading = ref(false)
+  const messageLoading = ref({})       // { sessionId: bool } 消息加载锁（按会话粒度，曾为全局 bool 锁）
   const hasMoreMessages = ref({})       // { sessionId: bool }
 
   // ===== 会话 =====
@@ -72,7 +72,14 @@ export const useChatStore = defineStore('chat', () => {
 
   // ===== 消息 =====
   async function openSession(sessionId) {
-    if (activeSessionId.value === sessionId) return
+    if (activeSessionId.value === sessionId) {
+      // ⚠️ 已激活但消息为空（首次加载失败/被并发锁吞掉）→ 补加载；
+      //    否则该会话永远打不开，必须刷新重置 store 才能重试（用户反馈「点击会话要刷新才出现内容」）
+      if (!messages.value[sessionId] || !messages.value[sessionId].length) {
+        await loadMessages(sessionId, true)
+      }
+      return
+    }
     activeSessionId.value = sessionId
     if (!messages.value[sessionId]) {
       await loadMessages(sessionId, true)
@@ -80,8 +87,9 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   async function loadMessages(sessionId, reset = false) {
-    if (messageLoading.value) return
-    messageLoading.value = true
+    // 按会话粒度锁（曾为全局锁：会话 A 加载中点击会话 B 会被静默吞掉 → B 永远空白）
+    if (messageLoading.value[sessionId]) return
+    messageLoading.value[sessionId] = true
     try {
       const page = reset ? 1 : (Math.floor((messages.value[sessionId] || []).length / 30) + 1)
       const res = await getMessages(sessionId, { page, pageSize: 30 })
@@ -96,7 +104,7 @@ export const useChatStore = defineStore('chat', () => {
     } catch (e) {
       console.error('加载消息失败:', e)
     } finally {
-      messageLoading.value = false
+      messageLoading.value[sessionId] = false
     }
   }
 
