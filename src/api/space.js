@@ -21,10 +21,10 @@ export function unlinkAccount(provider, providerUserId) {
   return service.delete('/api/identity/auth/oauth/unlink', { params: { provider, providerUserId } })
 }
 
-// ===== 修改密码（Identity：/api/identity/ready/ChangeByPassword，需认证） =====
+// ===== 修改密码（Identity：/api/identity/ready/identity/ChangeByPassword，需认证） =====
 // body: { email, password(旧), newPassword, code(可空，邮箱验证码方式) }
 export function changePassword(payload) {
-  return service.post('/api/identity/ready/ChangeByPassword', {
+  return service.post('/api/identity/ready/identity/ChangeByPassword', {
     email: payload.email,
     password: payload.oldPassword,
     newPassword: payload.newPassword,

@@ -118,11 +118,19 @@
                   </div>
                 </div>
 
-                <!-- 硬币 -->
+                <!-- 硬币 + 每日签到（POST /api/user-info/sign-in，+250 经验） -->
                 <div class="mt-2.5 flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-200">
                   <svg class="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v10M9.5 9.5c.5-.7 1.4-1 2.5-1s2 .3 2.5 1c.6.8.2 1.8-1.2 2.3-1.8.6-2.4 1.5-1.8 2.4.5.8 1.5 1.1 2.5 1s2-.4 2.5-1.2" /></svg>
                   <span class="font-medium">{{ userInfo ? userInfo.coins : 0 }}</span>
                   <span class="text-xs text-zinc-400">硬币</span>
+                  <span class="flex-1"></span>
+                  <button
+                    v-if="userInfo && !userInfo.signedInToday"
+                    class="h-7 px-2.5 rounded-[5%] text-[11px] font-medium bg-amber-400/15 text-amber-600 dark:text-amber-300 hover:bg-amber-400/25 transition-colors disabled:opacity-40"
+                    :disabled="signingIn"
+                    @click="onSignIn"
+                  >{{ signingIn ? '签到中...' : '每日签到 +250经验' }}</button>
+                  <span v-else-if="userInfo && userInfo.signedInToday" class="text-[11px] text-zinc-400">今日已签到 ✓</span>
                 </div>
               </div>
 
@@ -164,7 +172,7 @@ import { useToastStore } from '@/stores/toast'
 import { useFeedTabStore } from '@/stores/feedTab'
 import SkinPanel from '@/components/common/SkinPanel.vue'
 import NotificationPanel from '@/components/common/NotificationPanel.vue'
-import { getMyUserInfo } from '@/api/userinfo'
+import { getMyUserInfo, signIn } from '@/api/userinfo'
 import { getNotificationUnreadCount } from '@/api/notification'
 import { SAMPLE_NOTIFICATIONS } from '@/utils/notifications'
 import { MAIN_NAV_ITEMS, buildSpaceNavItems } from '@/layout/navItems'
@@ -231,6 +239,28 @@ async function loadUserInfo() {
   } catch (e) {
     // 接口失败不阻塞界面，下拉显示默认值（Lv.1 / 0 币）
     userInfo.value = null
+  }
+}
+
+// 每日签到（POST /api/user-info/sign-in → SignInResultDto{level, experience, coins, upgradedLevels}）
+const signingIn = ref(false)
+async function onSignIn() {
+  if (signingIn.value || !auth.isLoggedIn()) return
+  signingIn.value = true
+  try {
+    const res = await signIn()
+    const d = (res && res.data) || null
+    await loadUserInfo()
+    if (d && d.upgradedLevels > 0) {
+      toast.push(`签到成功，+250 经验，等级提升至 Lv.${d.level}！`, 'success')
+    } else {
+      toast.push('签到成功，+250 经验', 'success')
+    }
+  } catch (e) {
+    const m = e && e.message && e.message !== 'Error' ? e.message : ''
+    toast.push(m || '签到失败，请稍后重试', 'error')
+  } finally {
+    signingIn.value = false
   }
 }
 

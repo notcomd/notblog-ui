@@ -71,7 +71,7 @@ export function getMarkdownReviews(guid, params = {}) {
 }
 
 export function getMarkdownReview(guid, reviewGuid) {
-  return service.get(`/api/markdown/${guid}/reviews/${reviewGuid}`)
+  return service.get(`/api/markdown/${guid}/reviews/detail/${reviewGuid}`)
 }
 
 export function getMarkdownReviewChildren(guid, reviewGuid) {

@@ -76,7 +76,7 @@ export function unpinTweet(tweetGuid) {
   return service.post(`/api/tweets/${tweetGuid}/unpin`)
 }
 
-// 打赏：POST /api/tweets/{tweetGuid}/coin
-export function coinTweet(tweetGuid, amount) {
-  return service.post(`/api/tweets/${tweetGuid}/coin`, { amount })
+// 打赏：POST /api/tweets/{tweetGuid}/coin（无请求体，投币数由后端决定）
+export function coinTweet(tweetGuid, _amount) {
+  return service.post(`/api/tweets/${tweetGuid}/coin`)
 }
