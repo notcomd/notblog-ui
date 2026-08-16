@@ -320,7 +320,7 @@ async function publish() {
   if (publishing.value) return
   publishing.value = true
   try {
-    const payload = { content: content.value.trim(), fileIds: images.value.map(i => i.fileId), visibility: visibility.value }
+    const payload = { content: content.value.trim(), fileIds: images.value.map(i => i.fileId), fileUri:images.value.map(i=>i.preview),visibility: visibility.value }
     const res = circleGuid.value
       ? await createCirclePost({ circleGuid: circleGuid.value, ...payload })
       : await createTweet(payload)

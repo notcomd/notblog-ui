@@ -10,19 +10,19 @@
         <label class="text-xs text-zinc-400 block mb-1.5">发送范围</label>
         <div class="grid grid-cols-3 gap-2">
           <button v-for="s in scopes" :key="s.value" class="py-2.5 rounded-[5%] text-sm font-medium transition-all"
-            :class="scope === s.value ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'"
+            :class="scope === s.value ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'"
             @click="scope = s.value">{{ s.label }}</button>
         </div>
       </div>
       <!-- 消息标题 -->
       <div>
         <label class="text-xs text-zinc-400 block mb-1.5">消息标题（最多 30 字）</label>
-        <input v-model="form.title" maxlength="30" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="请输入标题" />
+        <input v-model="form.title" maxlength="30" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="请输入标题" />
       </div>
       <!-- 消息内容 -->
       <div>
         <label class="text-xs text-zinc-400 block mb-1.5">消息内容</label>
-        <textarea v-model="form.content" rows="5" class="w-full resize-none rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="输入消息内容，支持链接和图片（富文本开发中）"></textarea>
+        <textarea v-model="form.content" rows="5" class="w-full resize-none rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3.5 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="输入消息内容，支持链接和图片（富文本开发中）"></textarea>
       </div>
       <!-- 消息类型 -->
       <div>
@@ -33,7 +33,7 @@
             @click="form.type = t.value">{{ t.label }}</button>
         </div>
       </div>
-      <button class="w-full h-11 rounded-[5%] bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="!form.title.trim() || !form.content.trim() || sending" @click="send">
+      <button class="w-full h-11 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="!form.title.trim() || !form.content.trim() || sending" @click="send">
         {{ sending ? '发送中...' : '发送公报' }}
       </button>
     </div>
@@ -80,7 +80,7 @@ const scopes = [
   { value: 'circle', label: '指定社区' }
 ]
 const msgTypes = [
-  { value: '公告', label: '📌 公告', active: 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow' },
+  { value: '公告', label: '📌 公告', active: 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' },
   { value: '警告', label: '⚠️ 警告', active: 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' },
   { value: '活动推广', label: '🎉 活动推广', active: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow' }
 ]
@@ -92,7 +92,7 @@ const announcements = ref([])
 
 function typeClass(t) {
   return {
-    '公告': 'bg-blue-400/15 text-blue-500',
+    '公告': 'bg-blue-400/15 text-amber-600',
     '警告': 'bg-amber-400/15 text-amber-600 dark:text-amber-400',
     '活动推广': 'bg-emerald-400/15 text-emerald-500'
   }[t] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'

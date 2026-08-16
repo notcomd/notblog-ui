@@ -12,9 +12,10 @@ export function getSession(sessionId) {
   return service.get(`/api/sessions/${sessionId}`)
 }
 
-// 会话消息：GET /api/sessions/{sessionId}/messages?page&pageSize
+// 会话消息：GET /api/messages/sessions/{sessionId}/messages?page&pageSize
+// ⚠️ 2026-08-13 契约核对：挂 MessagesApi（/api/messages 前缀），旧 /api/sessions/{id}/messages 已不存在
 export function getMessages(sessionId, params = {}) {
-  return service.get(`/api/sessions/${sessionId}/messages`, { params })
+  return service.get(`/api/messages/sessions/${sessionId}/messages`, { params })
 }
 
 // 创建单聊会话：POST /api/sessions { sessionType: 'Private', friendId } -> ApiResponse<Guid>
@@ -54,22 +55,27 @@ export function getGroups() {
 
 // ==================== 会话管理 ====================
 
-// 置顶/取消置顶：PUT /api/sessions/{id}/pin
+// 置顶/取消置顶：PUT /api/sessions/{id}/pin?pin=true|false（query 参数，后端 SetPinStatusAsync）
 export function pinSession(sessionId) {
-  return service.put(`/api/sessions/${sessionId}/pin`)
+  return service.put(`/api/sessions/${sessionId}/pin`, null, { params: { pin: true } })
 }
 
 export function unpinSession(sessionId) {
-  return service.delete(`/api/sessions/${sessionId}/pin`)
+  return service.put(`/api/sessions/${sessionId}/pin`, null, { params: { pin: false } })
 }
 
-// 免打扰/恢复：PUT /api/sessions/{id}/mute
+// 免打扰/恢复：PUT /api/sessions/{id}/mute?mute=true|false（query 参数，后端 SetMuteStatusAsync）
 export function muteSession(sessionId) {
-  return service.put(`/api/sessions/${sessionId}/mute`)
+  return service.put(`/api/sessions/${sessionId}/mute`, null, { params: { mute: true } })
 }
 
 export function unmuteSession(sessionId) {
-  return service.delete(`/api/sessions/${sessionId}/mute`)
+  return service.put(`/api/sessions/${sessionId}/mute`, null, { params: { mute: false } })
+}
+
+// 置顶会话列表：GET /api/sessions/pinned
+export function getPinnedSessions() {
+  return service.get('/api/sessions/pinned')
 }
 
 // 删除会话：DELETE /api/sessions/{id}

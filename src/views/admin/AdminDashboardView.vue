@@ -2,7 +2,7 @@
   <div class="max-w-[1400px] mx-auto space-y-6">
     <!-- 4列统计卡片 -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-      <div class="glass-card p-5 bg-gradient-to-br from-blue-500/10 to-indigo-500/5 hover: transition-all cursor-pointer" @click="router.push('/admin/users')">
+      <div class="glass-card p-5 bg-gradient-to-br from-amber-400/10 to-orange-500/5 hover: transition-all cursor-pointer" @click="router.push('/admin/users')">
         <div class="flex items-center justify-between">
           <span class="text-3xl">👥</span>
           <span class="text-xs px-2 py-1 rounded-full font-medium" :class="stats.userGrowth >= 0 ? 'bg-emerald-400/15 text-emerald-500' : 'bg-red-400/15 text-red-500'">
@@ -44,7 +44,7 @@
     <!-- 快捷操作区 -->
     <div class="glass-card p-4 flex items-center gap-3">
       <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 shrink-0">快捷操作：</span>
-      <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover: active:scale-95 transition-all" @click="router.push('/admin/announcements')">📢 发布系统公告</button>
+      <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all" @click="router.push('/admin/announcements')">📢 发布系统公告</button>
       <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: active:scale-95 transition-all" @click="exportReport">📊 导出运营日报</button>
     </div>
 
@@ -52,13 +52,13 @@
     <div class="glass-card p-5">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100">最近动态</h3>
-        <button class="text-xs text-blue-500 hover:text-blue-600 transition-colors" @click="toast.push('全部日志开发中（操作日志缺口）', 'info')">查看全部 →</button>
+        <button class="text-xs text-amber-600 hover:text-amber-600 transition-colors" @click="toast.push('全部日志开发中（操作日志缺口）', 'info')">查看全部 →</button>
       </div>
       <div class="space-y-2.5">
         <div v-for="log in logs" :key="log.id" class="flex items-center gap-3 px-3 py-2 rounded-[5%] hover:bg-white/50 dark:hover:bg-zinc-800/40 transition-colors">
           <span class="text-xs px-2 py-1 rounded-full shrink-0" :class="typeClass(log.type)">{{ log.type }}</span>
           <span class="text-sm text-zinc-600 dark:text-zinc-300 flex-1 truncate">
-            <span class="font-medium">{{ log.actor }}</span> 对 <span class="text-blue-500">{{ log.target }}</span> 执行了操作
+            <span class="font-medium">{{ log.actor }}</span> 对 <span class="text-amber-600">{{ log.target }}</span> 执行了操作
           </span>
           <span class="text-xs text-zinc-400 shrink-0">{{ relativeTime(log.time) }}</span>
         </div>
@@ -104,12 +104,12 @@ const showOnline = ref(false)
 function typeClass(t) {
   const map = {
     '用户注册': 'bg-emerald-400/15 text-emerald-500',
-    '内容发布': 'bg-blue-400/15 text-blue-500',
+    '内容发布': 'bg-blue-400/15 text-amber-600',
     '举报提交': 'bg-red-400/15 text-red-500',
     '审核通过': 'bg-emerald-400/15 text-emerald-500',
     '审核驳回': 'bg-amber-400/15 text-amber-600',
     '用户封禁': 'bg-red-400/15 text-red-500',
-    '公报发送': 'bg-indigo-400/15 text-indigo-500'
+    '公报发送': 'bg-indigo-400/15 text-amber-600'
   }
   return map[t] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
 }

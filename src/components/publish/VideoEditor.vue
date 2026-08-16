@@ -91,6 +91,7 @@
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createTweet, createCirclePost, uploadImage } from '@/api/publish'
+import { uploadVideo } from '@/api/publish'
 import { saveDraft, removeDraft } from '@/utils/drafts'
 import { unwrap } from '@/utils/response'
 import { useToastStore } from '@/stores/toast'
@@ -114,12 +115,14 @@ const coverUploading = ref(false)
 const publishing = ref(false)
 const savingDraft = ref(false)
 const draftId = ref('')
+const videoFileId = ref('')  // 发布用视频文件 fileId
 const videoInput = ref(null)
 const coverInput = ref(null)
 
 watch(() => props.draft, (d) => {
   if (!d) return
   draftId.value = d.id
+  videoFileId.value = d.videoFileId || ''
   videoUrl.value = d.videoUrl || ''
   coverUrl.value = d.coverUrl || d.cover || ''
   coverFileId.value = d.coverFileId || ''
@@ -135,22 +138,43 @@ function pickVideo() {
 function pickCover() {
   if (!coverUploading.value && coverInput.value) coverInput.value.click()
 }
-function clearVideo() {
-  videoUrl.value = ''
-}
 function clearCover() {
   coverUrl.value = ''
   coverFileId.value = ''
 }
 
-function onVideoFile(e) {
+// 清除视频时同时清除已上传的 fileId
+function clearVideo() {
+  videoUrl.value = ''
+  videoFileId.value = ''
+}
+
+
+// 真实上传视频文件到后端（≤10MB 直传 /api/files/upload、>10MB 分片），保存 fileId 用于发布
+async function onVideoFile(e) {
   const file = e.target.files && e.target.files[0]
   e.target.value = ''
   if (!file) return
   if (file.size > 500 * 1024 * 1024) { toast.push('视频不能超过 500MB', 'error'); return }
-  videoUrl.value = URL.createObjectURL(file)
-  videoUploading.value = false
-  toast.push('视频已载入（上传接口见后端 /api/files/upload）', 'info')
+  videoUploading.value = true
+  try {
+    const data = await uploadVideo(file, (p) => {
+      // 可扩展：显示上传进度
+      console.log('视频上传进度:', p)
+    })
+    const fileId = (data && (data.fileId || data.file_id)) || ''
+    const fileUri = (data && (data.fileUri || data.file_url || data.url)) || ''
+    if (!fileId) throw new Error('上传未返回 fileId')
+    videoFileId.value = fileId
+    videoUrl.value = fileUri || URL.createObjectURL(file)
+    toast.push('视频上传成功', 'success')
+  } catch (err) {
+    videoFileId.value = ''
+    videoUrl.value = URL.createObjectURL(file)
+    toast.push('视频上传失败，当前仅本地预览，发布将失败', 'error')
+  } finally {
+    videoUploading.value = false
+  }
 }
 
 async function onCoverPick(e) {
@@ -191,6 +215,7 @@ function saveAsDraft() {
       title: firstLine(content.value),
       content: content.value,
       videoUrl: videoUrl.value,
+        videoFileId: videoFileId.value,
       cover: coverUrl.value,
       coverUrl: coverUrl.value,
       coverFileId: coverFileId.value,
@@ -204,11 +229,18 @@ function saveAsDraft() {
   }
 }
 
+// 发布视频：必须包含视频文件 fileId，封面 fileId 作为封面资源一并提交
 async function publish() {
   if (publishing.value) return
+  if (!videoFileId.value) {
+    toast.push('请先上传视频文件', 'error')
+    return
+  }
   publishing.value = true
   try {
-    const payload = { content: content.value.trim(), fileIds: coverFileId.value ? [coverFileId.value] : [], visibility: visibility.value }
+    const fileIds = [videoFileId.value]
+    if (coverFileId.value) fileIds.push(coverFileId.value)
+    const payload = { content: content.value.trim(), fileIds, visibility: visibility.value }
     const res = circleGuid.value
       ? await createCirclePost({ circleGuid: circleGuid.value, ...payload })
       : await createTweet(payload)
@@ -224,4 +256,5 @@ async function publish() {
     publishing.value = false
   }
 }
+
 </script>

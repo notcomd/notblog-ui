@@ -8,7 +8,7 @@
       <div class="flex items-center gap-3 text-sm">
         <span class="px-3 py-1.5 rounded-full bg-red-500/10 text-red-500 font-medium">待处理 {{ pendingCount }} 条</span>
         <span class="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 font-medium">已处理 {{ resolvedCount }} 条</span>
-        <button v-if="selected.length" class="px-3 h-9 rounded-[5%] text-xs bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 transition-colors" @click="batchResolve">✓ 批量标记已处理（{{ selected.length }}）</button>
+        <button v-if="selected.length" class="px-3 h-9 rounded-[5%] text-xs bg-amber-500/10 text-amber-600 hover:bg-amber-1000/20 transition-colors" @click="batchResolve">✓ 批量标记已处理（{{ selected.length }}）</button>
       </div>
     </div>
 
@@ -38,7 +38,7 @@
         </span>
       </template>
       <template #actions="{ row }">
-        <button class="px-2.5 h-8 rounded-[5%] text-xs text-blue-500 hover:bg-blue-500/10 transition-colors" @click="viewDetail(row)">查看详情</button>
+        <button class="px-2.5 h-8 rounded-[5%] text-xs text-amber-600 hover:bg-amber-500/10 transition-colors" @click="viewDetail(row)">查看详情</button>
         <button v-if="row.status === 'Pending'" class="px-2.5 h-8 rounded-[5%] text-xs text-emerald-500 hover:bg-emerald-500/10 transition-colors" @click="openResolve(row)">标记处理</button>
       </template>
     </AdminTable>
@@ -90,16 +90,16 @@
         <p class="text-sm text-zinc-500 dark:text-zinc-400">选择对「{{ resolveTarget.targetTitle }}」的处理结果：</p>
         <div class="grid grid-cols-3 gap-2">
           <button v-for="opt in resolveOptions" :key="opt.value" class="py-2.5 rounded-[5%] text-sm font-medium transition-all"
-            :class="resolveAction === opt.value ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'"
+            :class="resolveAction === opt.value ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'"
             @click="resolveAction = opt.value">
             {{ opt.label }}
           </button>
         </div>
-        <textarea v-model="resolveNote" rows="2" class="w-full resize-none rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="处理备注（选填）"></textarea>
+        <textarea v-model="resolveNote" rows="2" class="w-full resize-none rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="处理备注（选填）"></textarea>
       </div>
       <template #footer>
         <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all dark:text-zinc-400" @click="resolveTarget = null">取消</button>
-        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white active:scale-95 transition-all" @click="doResolve">确认处理</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all" @click="doResolve">确认处理</button>
       </template>
     </AdminModal>
   </div>
@@ -149,7 +149,7 @@ const pendingCount = computed(() => reports.value.filter(r => r.status === 'Pend
 const resolvedCount = computed(() => reports.value.filter(r => r.status !== 'Pending').length)
 
 function categoryClass(c) {
-  const map = ['bg-red-400/15 text-red-500', 'bg-orange-400/15 text-orange-500', 'bg-amber-400/15 text-amber-600', 'bg-blue-400/15 text-blue-500', 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400']
+  const map = ['bg-red-400/15 text-red-500', 'bg-orange-400/15 text-orange-500', 'bg-amber-400/15 text-amber-600', 'bg-blue-400/15 text-amber-600', 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400']
   return map[c] || map[4]
 }
 
@@ -194,7 +194,7 @@ async function doResolve() {
 }
 
 function batchResolve() {
-  toast.push(`已批量标记 ${selected.value.length} 条举报为已处理（演示）`, 'success')
+  toast.push('批量处理举报尚未接入后端，操作未执行', 'error')
   selected.value = []
   load(page.value)
 }

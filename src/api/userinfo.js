@@ -15,6 +15,21 @@ export function updateBackgroundCover(url) {
   return service.put('/api/user-info/me/background', { backgroundCoverUrl: url })
 }
 
+// 每日签到：POST /api/user-info/sign-in（+250 经验，每日一次）-> ApiResponse<SignInResultDto>
+export function signIn() {
+  return service.post('/api/user-info/sign-in')
+}
+
+// 增加硬币：POST /api/user-info/me/coins/add { amount }
+export function addCoins(amount) {
+  return service.post('/api/user-info/me/coins/add', { amount })
+}
+
+// 消耗硬币：POST /api/user-info/me/coins/consume { amount }（余额不足 400）
+export function consumeCoins(amount) {
+  return service.post('/api/user-info/me/coins/consume', { amount })
+}
+
 // ===== 背景封面上传（图片/动态图/视频 ≤20MB） =====
 // 通道选择：≤10MB 直传 /api/files/upload-image（图片）或 /api/files/upload（小文件，均限 10MB）；
 //          >10MB 自动走分片通道 /api/files/chunk/*（init → 逐片 upload → merge，FileMd5 后端可空不计算）

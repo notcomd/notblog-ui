@@ -11,36 +11,26 @@ export function getAdminActivityLog() {
 }
 
 // ==================== 用户管理 ====================
-// 用户列表：真实用 Identity GetUserAllAsync（无鉴权，返回完整 User 实体）
-export function getAdminUsers(params = {}) {
-  return service.get('/api/identity/manger/user-manager/GetUserAllAsync').then(res => {
-    const data = res && res.data ? res.data : res
-    const list = Array.isArray(data) ? data : (data.items || data.list || [])
-    // 客户端过滤/分页（后端返回全量）
-    const kw = (params.keyword || '').toLowerCase()
-    let filtered = list
-    if (kw) filtered = filtered.filter(u => (u.userName || '').toLowerCase().includes(kw) || (u.userEmail || '').toLowerCase().includes(kw) || (u.userGuid || '').includes(kw))
-    const page = params.page || 1
-    const pageSize = params.pageSize || 10
-    const items = filtered.slice((page - 1) * pageSize, page * pageSize)
-    return { ...res, data: { items, totalCount: filtered.length, page, pageSize } }
-  })
+// ⚠️ 原实现调用无鉴权 Identity GetUserAllAsync，会泄露完整 User 实体（含 PasswordHash）。
+// 已从前端移除；需后端提供安全的鉴权管理接口后再恢复。
+export function getAdminUsers() {
+  return Promise.resolve({ data: { items: [], totalCount: 0, page: 1, pageSize: 10 } })
 }
 
 // ⚠️ 封禁/删除用户后端无端点（缺口 #1/#2），先用 mock
 export function addAdminUser() {
-  // ⚠️ 后端缺口：无添加用户端点
-  return Promise.resolve({ data: {} })
+  // ⚠️ 后端缺口：无添加用户端点；禁止 mock 成功，避免误操作
+  return Promise.reject(new Error('添加用户功能尚未接入后端，操作未执行'))
 }
 
 export function banAdminUser() {
-  // ⚠️ 后端缺口：无封禁用户端点
-  return Promise.resolve({ data: {} })
+  // ⚠️ 后端缺口：无封禁用户端点；禁止 mock 成功，避免误操作
+  return Promise.reject(new Error('封禁用户功能尚未接入后端，操作未执行'))
 }
 
 export function deleteAdminUser() {
-  // ⚠️ 后端缺口：无删除用户端点
-  return Promise.resolve({ data: {} })
+  // ⚠️ 后端缺口：无删除用户端点；禁止 mock 成功，避免误操作
+  return Promise.reject(new Error('删除用户功能尚未接入后端，操作未执行'))
 }
 
 export function getAdminOnlineUsers() {
@@ -64,13 +54,13 @@ export function rejectTweet(tweetGuid, reason) {
 
 // ⚠️ 屏蔽/删除内容后端无管理端点
 export function blockTweet() {
-  // ⚠️ 后端缺口：无屏蔽内容端点
-  return Promise.resolve({ data: {} })
+  // ⚠️ 后端缺口：无屏蔽内容端点；禁止 mock 成功，避免误操作
+  return Promise.reject(new Error('屏蔽内容功能尚未接入后端，操作未执行'))
 }
 
 export function deleteTweet() {
-  // ⚠️ 后端缺口：无删除内容端点
-  return Promise.resolve({ data: {} })
+  // ⚠️ 后端缺口：无删除内容端点；禁止 mock 成功，避免误操作
+  return Promise.reject(new Error('删除内容功能尚未接入后端，操作未执行'))
 }
 
 // ==================== 举报管理（后端完整：AuditApi） ====================
@@ -95,8 +85,8 @@ export function getAdminCircleMembers(circleGuid) {
 }
 
 export function banCircle() {
-  // ⚠️ 后端缺口：无封禁社区端点
-  return Promise.resolve({ data: {} })
+  // ⚠️ 后端缺口：无封禁社区端点；禁止 mock 成功，避免误操作
+  return Promise.reject(new Error('封禁社区功能尚未接入后端，操作未执行'))
 }
 
 export function dissolveCircle(circleGuid) {
@@ -118,8 +108,8 @@ export function getAdminFiles() {
 }
 
 export function deleteAdminFile() {
-  // ⚠️ 后端缺口：无删除文件端点
-  return Promise.resolve({ data: {} })
+  // ⚠️ 后端缺口：无删除文件端点；禁止 mock 成功，避免误操作
+  return Promise.reject(new Error('删除文件功能尚未接入后端，操作未执行'))
 }
 
 // ==================== 公报（后端缺口 #3，全 mock） ====================
@@ -129,11 +119,11 @@ export function getAnnouncements() {
 }
 
 export function sendAnnouncement() {
-  // ⚠️ 后端缺口：无公报发送端点
-  return Promise.resolve({ data: {} })
+  // ⚠️ 后端缺口：无公报发送端点；禁止 mock 成功，避免误操作
+  return Promise.reject(new Error('公报发送功能尚未接入后端，操作未执行'))
 }
 
 export function recallAnnouncement() {
-  // ⚠️ 后端缺口：无公报撤回端点
-  return Promise.resolve({ data: {} })
+  // ⚠️ 后端缺口：无公报撤回端点；禁止 mock 成功，避免误操作
+  return Promise.reject(new Error('公报撤回功能尚未接入后端，操作未执行'))
 }

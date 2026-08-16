@@ -6,8 +6,8 @@ import { getToken } from '@/utils/auth'
 import AppLayout from '@/layout/AppLayout.vue'
 import HomeView from '@/views/HomeView.vue'
 import ExploreView from '@/views/ExploreView.vue'
-import CirclesView from '@/views/CirclesView.vue'
-import ChatView from '@/views/ChatView.vue'
+import CirclePage from '@/views/CirclePage.vue'
+import ChatPage from '@/views/ChatPage.vue'
 import UserSpaceView from '@/views/UserSpaceView.vue'
 import PostDetailView from '@/views/PostDetailView.vue'
 import PublishView from '@/views/PublishView.vue'
@@ -39,9 +39,9 @@ const routes = [
     children: [
       { path: 'home', name: 'Home', component: HomeView },
       { path: 'explore', name: 'Explore', component: ExploreView, meta: { requiresAuth: true } },
-      { path: 'circles', name: 'Circles', component: CirclesView, meta: { requiresAuth: true } },
-      { path: 'chat', name: 'Chat', component: ChatView, meta: { requiresAuth: true } },
-      { path: 'chat/:sessionId', name: 'ChatSession', component: ChatView, meta: { requiresAuth: true } },
+      { path: 'circles', name: 'Circles', component: CirclePage, meta: { requiresAuth: true } },
+      { path: 'chat', name: 'Chat', component: ChatPage, meta: { requiresAuth: true } },
+      { path: 'chat/:sessionId', name: 'ChatSession', component: ChatPage, meta: { requiresAuth: true } },
       { path: 'users/:id', name: 'UserSpace', component: UserSpaceView, meta: { requiresAuth: true } },
       { path: 'posts/:id', name: 'PostDetail', component: PostDetailView, meta: { requiresAuth: true } },
       { path: 'publish', name: 'Publish', component: PublishView, meta: { requiresAuth: true } },

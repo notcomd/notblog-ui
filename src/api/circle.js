@@ -1,5 +1,11 @@
 import service from '@/axios'
 
+// 频道发现列表：GET /api/circles?keyword=&page=&pageSize= -> ApiResponse<PagedResult<CircleDto>>
+// ⚠️ 2026-08-13 新增对接（后端「圈子发现列表」，原推荐广场缺口已补）
+export function getDiscoverCircles(params = {}) {
+  return service.get('/api/circles', { params })
+}
+
 // 我的频道列表：GET /api/circles/my -> ApiResponse<List<CircleDto>>
 export function getMyCircles() {
   return service.get('/api/circles/my')
@@ -43,6 +49,58 @@ export function joinCircle(payload) {
 // 退出频道：DELETE /api/circles/{circleGuid}/members/{userGuid}
 export function leaveCircle(circleGuid, userGuid) {
   return service.delete(`/api/circles/${circleGuid}/members/${userGuid}`)
+}
+
+// 频道成员列表：GET /api/circles/{circleGuid}/members -> ApiResponse<PagedResult<CircleMemberDto{userGuid,role,nickname,joinTime}>>
+export function getCircleMembers(circleGuid, params = {}) {
+  return service.get(`/api/circles/${circleGuid}/members`, { params })
+}
+
+// 设置/取消管理员：POST /api/circles/{circleGuid}/members/{userGuid}/role { role: 'Admin' | 'Member' }（仅圈主）
+export function setCircleMemberRole(circleGuid, userGuid, role) {
+  return service.post(`/api/circles/${circleGuid}/members/${userGuid}/role`, { role })
+}
+
+// 生成邀请：POST /api/circles/{circleGuid}/invitations { type: 'code'|'link'|'direct', inviteeGuid?, ttlHours? }
+// -> CircleInvitationResult{inviteGuid, code, token}；direct 必须带 inviteeGuid；默认 7 天
+export function generateCircleInvitation(circleGuid, payload = {}) {
+  return service.post(`/api/circles/${circleGuid}/invitations`, { type: 'code', ...payload })
+}
+
+// 邀请码列表：GET /api/circles/{circleGuid}/invitations -> PagedResult<CircleInvitationDto{inviteGuid, code, status, expireTime}>
+export function getCircleInvitations(circleGuid, params = {}) {
+  return service.get(`/api/circles/${circleGuid}/invitations`, { params })
+}
+
+// 作废邀请码：DELETE /api/circles/{circleGuid}/invitations/{inviteGuid}
+export function revokeCircleInvitation(circleGuid, inviteGuid) {
+  return service.delete(`/api/circles/${circleGuid}/invitations/${inviteGuid}`)
+}
+
+// 我收到的直邀列表：GET /api/circles/invitations/my -> PagedResult<CircleInvitationDto>
+// CircleInvitationDto{inviteGuid, circleGuid, circleName, inviterGuid, inviteeGuid, code, token, type, status, expireTime, createTime}
+export function getMyCircleInvitations(params = {}) {
+  return service.get('/api/circles/invitations/my', { params })
+}
+
+// 接受直邀：POST /api/circles/invitations/{inviteGuid}/accept -> ApiResponse<Guid>（返回圈子 Guid）
+export function acceptCircleInvitation(inviteGuid) {
+  return service.post(`/api/circles/invitations/${inviteGuid}/accept`)
+}
+
+// 拒绝直邀：POST /api/circles/invitations/{inviteGuid}/reject
+export function rejectCircleInvitation(inviteGuid) {
+  return service.post(`/api/circles/invitations/${inviteGuid}/reject`)
+}
+
+// 解散频道：DELETE /api/circles/{circleGuid}（仅圈主）
+export function dissolveCircle(circleGuid) {
+  return service.delete(`/api/circles/${circleGuid}`)
+}
+
+// 转让频道：POST /api/circles/{circleGuid}/transfer { newOwnerGuid }（仅圈主）
+export function transferCircle(circleGuid, newOwnerGuid) {
+  return service.post(`/api/circles/${circleGuid}/transfer`, { newOwnerGuid })
 }
 
 // 创建频道：POST /api/circles { name, description?, avatarUrl?, coverUrl?, maxMembers? }

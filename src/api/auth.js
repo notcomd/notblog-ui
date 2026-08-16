@@ -1,23 +1,23 @@
 import service from '@/axios'
 import { setToken, setRefreshToken, removeToken, removeRefreshToken } from '@/utils/auth'
 
-// ==================== 邮箱注册/登录（后端 Identity：/api/identity/ready/*） ====================
+// ==================== 邮箱注册/登录（后端 Identity：/api/identity/ready/identity/*） ====================
 
-// 注册：POST /api/identity/ready/Register { userEmail, userPassword, verificationCode }
+// 注册：POST /api/identity/ready/identity/Register { userEmail, userPassword, verificationCode }
 // 成功返回 200 { message: '注册成功' }；用户已存在/验证码错误返回 400
 export function register(data) {
-  return service.post('/api/identity/ready/Register', {
+  return service.post('/api/identity/ready/identity/Register', {
     userEmail: data.email,
     userPassword: data.password,
     verificationCode: data.code
   })
 }
 
-// 邮箱登录：POST /api/identity/ready/Login { email, password, code, ... }
+// 邮箱登录：POST /api/identity/ready/identity/Login { email, password, code, ... }
 // code 为空 = 纯密码登录；传 code = 密码 + 邮箱验证码两步登录（后端校验并一次性消费）
 // 成功返回 { accessToken, refreshToken, tokenType, expiresAt, claims }；失败返回 200 + 空 body（null）
 export function login({ email, password, code = '' }) {
-  return service.post('/api/identity/ready/Identity/Login', {
+  return service.post('/api/identity/ready/identity/Login', {
     email,
     password,
     code,
@@ -39,9 +39,9 @@ export function confirmEmailCode(email, code) {
   return service.post('/api/identity/ready/email-verifications/confirm', { email, code })
 }
 
-// 刷新 Token：POST /api/identity/ready/refresh { refreshToken }
+// 刷新 Token：POST /api/identity/ready/identity/refresh { refreshToken }
 export function refreshToken(token) {
-  return service.post('/api/identity/ready/refresh', { refreshToken: token })
+  return service.post('/api/identity/ready/identity/refresh', { refreshToken: token })
 }
 
 // ==================== OAuth 第三方登录（后端 Identity：/api/identity/auth/oauth/*） ====================
@@ -82,20 +82,17 @@ export function clearAuth() {
 
 // ==================== 用户信息 / 头像 / 退出 ====================
 
-// 用户信息兜底：GET /api/identity/manger/user-manager/GetUserInfo?userQuery={email}
-// ⚠️ 无鉴权端点（返回完整 User 实体含 PasswordHash，仅开发兜底用）
-export function getUserInfoByEmail(email) {
-  return service.get('/api/identity/manger/user-manager/GetUserInfo', { params: { userQuery: email } })
-}
+// ⚠️ 原 getUserInfoByEmail 调用无鉴权 Identity 接口，会返回完整 User 实体含 PasswordHash。
+// 已从前端移除；需要后端提供安全的“按邮箱搜索用户”鉴权接口后再恢复。
 
-// 头像上传：POST /api/avatar/upload（multipart: file）
+// 头像上传：POST /api/identity/avatar/upload（multipart: file）-> UploadAvatarResult{fileId,fileUri,...}
 export function uploadAvatar(file) {
   const form = new FormData()
   form.append('file', file)
-  return service.post('/api/avatar/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+  return service.post('/api/identity/avatar/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } })
 }
 
-// 退出登录：POST /api/identity/Logout
+// 退出登录：POST /api/identity/ready/identity/Logout
 export function logout() {
-  return service.post('/api/identity/Logout')
+  return service.post('/api/identity/ready/identity/Logout')
 }

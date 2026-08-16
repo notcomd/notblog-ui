@@ -4,7 +4,7 @@
     <header class="fixed top-0 left-0 right-0 z-50 glass border-b border-white/40 dark:border-white/10">
       <div class="h-16 px-5 flex items-center gap-4">
         <router-link to="/admin" class="flex items-center gap-2 shrink-0">
-          <div class="w-9 h-9 rounded-[5%] bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
+          <div class="w-9 h-9 rounded-[5%] bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
             <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
             </svg>
@@ -19,7 +19,7 @@
         <div class="flex-1 max-w-md mx-auto">
           <div class="relative">
             <svg class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
-            <input v-model="keyword" class="w-full h-10 pl-11 pr-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="搜索用户ID、内容标题、社区名称..." @keyup.enter="onSearch" />
+            <input v-model="keyword" class="w-full h-10 pl-11 pr-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="搜索用户ID、内容标题、社区名称..." @keyup.enter="onSearch" />
           </div>
         </div>
 
@@ -41,16 +41,16 @@
               <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">运营-小林</span>
             </button>
             <div class="absolute right-0 top-full mt-2 w-44 glass-card p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-              <button class="w-full flex items-center gap-2 px-3 py-2 rounded-[5%] text-sm text-zinc-700 dark:text-zinc-200 hover:bg-blue-50 dark:hover:bg-zinc-800 transition-colors" @click="toast.push('个人中心开发中', 'info')">
+              <button class="w-full flex items-center gap-2 px-3 py-2 rounded-[5%] text-sm text-zinc-700 dark:text-zinc-200 hover:bg-amber-100 dark:hover:bg-zinc-800 transition-colors" @click="toast.push('个人中心开发中', 'info')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                 个人中心
               </button>
-              <button class="w-full flex items-center gap-2 px-3 py-2 rounded-[5%] text-sm text-zinc-700 dark:text-zinc-200 hover:bg-blue-50 dark:hover:bg-zinc-800 transition-colors" @click="toast.push('操作日志开发中', 'info')">
+              <button class="w-full flex items-center gap-2 px-3 py-2 rounded-[5%] text-sm text-zinc-700 dark:text-zinc-200 hover:bg-amber-100 dark:hover:bg-zinc-800 transition-colors" @click="toast.push('操作日志开发中', 'info')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" /></svg>
                 操作日志
               </button>
               <div class="h-px bg-zinc-200 dark:bg-zinc-700 my-1"></div>
-              <router-link to="/home" class="flex items-center gap-2 px-3 py-2 rounded-[5%] text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-zinc-800 transition-colors">
+              <router-link to="/home" class="flex items-center gap-2 px-3 py-2 rounded-[5%] text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-zinc-800 transition-colors">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1V10" /></svg>
                 返回用户端
               </router-link>
@@ -75,7 +75,7 @@
             :key="item.path"
             :to="item.path"
             class="flex items-center gap-3 rounded-[5%] transition-all duration-200 relative group w-full"
-            :class="[collapsed ? 'w-11 h-11 justify-center mx-auto' : 'px-3 h-11', isActive(item.path) ? 'bg-gradient-to-r from-blue-500/15 to-indigo-500/10 text-blue-600 dark:text-blue-400 font-medium ' : 'text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 hover:translate-x-0.5']"
+            :class="[collapsed ? 'w-11 h-11 justify-center mx-auto' : 'px-3 h-11', isActive(item.path) ? 'bg-gradient-to-r from-amber-400/15 to-orange-500/10 text-amber-600 dark:text-amber-400 font-medium ' : 'text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 hover:translate-x-0.5']"
           >
             <span class="text-lg shrink-0">{{ item.icon }}</span>
             <span v-if="!collapsed" class="text-sm">{{ item.label }}</span>

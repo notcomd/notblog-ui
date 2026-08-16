@@ -1,0 +1,498 @@
+<template>
+  <!-- 会话侧边栏：消息 / 好友 / 群聊 列表 + 通知 + 会话操作 -->
+  <div class="w-80 shrink-0 flex flex-col glass-card p-3 min-h-0">
+    <!-- 列表头部 -->
+    <div class="flex items-center justify-between shrink-0 px-1 pb-2">
+      <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{{ tabTitle }}</span>
+      <div v-if="tab === 'messages'" class="flex items-center gap-2">
+        <span v-if="msgUnread > 0" class="text-xs text-zinc-400">未读 {{ msgUnread > 99 ? '99+' : msgUnread }}</span>
+        <button
+          class="h-7 px-2.5 rounded-[5%] text-xs font-medium transition-colors inline-flex items-center gap-1 shrink-0"
+          :class="msgUnread > 0 ? 'bg-amber-400/15 text-amber-600 dark:text-amber-300 hover:bg-amber-400/25' : 'text-zinc-400 cursor-default'"
+          :disabled="msgUnread === 0 || allReadBusy"
+          @click="markAllRead"
+        >{{ allReadBusy ? '处理中...' : '✓ 一键已读' }}</button>
+      </div>
+      <div v-else class="relative shrink-0">
+        <button class="w-7 h-7 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60" title="更多" @click="listMoreOpen = !listMoreOpen">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+        </button>
+        <div v-if="listMoreOpen" class="fixed inset-0 z-40" @click="listMoreOpen = false"></div>
+        <div v-if="listMoreOpen" class="absolute right-0 top-full mt-1 w-40 glass-card p-1.5 z-50">
+          <button v-for="a in listMoreActions" :key="a.key" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70 transition-colors" @click="onListMoreAction(a)">{{ a.label }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 列表区 -->
+    <div class="flex-1 overflow-y-auto space-y-1 min-h-0">
+      <div v-if="visibleSessions.length === 0 && !sessionsLoading" class="py-12 flex flex-col items-center gap-2 text-zinc-400">
+        <div class="text-4xl">{{ emptyIcon }}</div>
+        <p class="text-xs">{{ emptyText }}</p>
+      </div>
+
+      <button
+        v-for="s in visibleSessions"
+        :key="s.sessionId || s.notifyGuid"
+        class="w-full flex items-center gap-3 px-3 py-2 rounded-[5%] transition-all text-left"
+        :class="isActiveRow(s) ? 'bg-gradient-to-r from-amber-400/15 to-orange-400/10' : 'hover:bg-white/60 dark:hover:bg-zinc-800/60'"
+        @click="onItemClick(s)"
+        @contextmenu.prevent="openRowContextMenu(s, $event)"
+      >
+        <div class="relative shrink-0">
+          <img v-if="!isNotify(s)" :src="sessionAvatar(s)" alt="" class="w-11 h-11 rounded-[5%] object-cover border border-white/60 dark:border-white/10" @error="hideImg" />
+          <div v-else class="w-11 h-11 rounded-[5%] flex items-center justify-center" :class="notificationMeta(s.type).bg">
+            <svg class="w-5 h-5" :class="notificationMeta(s.type).fg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="notificationMeta(s.type).icon"></svg>
+          </div>
+          <span v-if="!isNotify(s) && !s.groupId" class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-zinc-800" :class="isRowOnline(s) ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600'"></span>
+        </div>
+
+        <span v-if="tab === 'messages'" class="flex-1 min-w-0 h-11 flex flex-col justify-center gap-0.5">
+          <span class="flex items-center justify-between gap-2 min-w-0">
+            <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ isNotify(s) ? notificationMeta(s.type).name : sessionTitle(s) }}</span>
+            <span class="text-xs text-zinc-400 shrink-0">{{ rowTime(s) }}</span>
+          </span>
+          <span class="flex items-center justify-between gap-2 min-w-0">
+            <span class="text-xs text-zinc-400 truncate">{{ isNotify(s) ? notifyText(s) : (s.lastMessageContent || '暂无消息') }}</span>
+            <span v-if="rowUnread(s) > 0" class="min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">{{ rowUnread(s) > 99 ? '99+' : rowUnread(s) }}</span>
+          </span>
+        </span>
+        <span v-else class="flex-1 min-w-0 flex items-center justify-between gap-2">
+          <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ sessionTitle(s) }}</span>
+          <span v-if="rowUnread(s) > 0" class="min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">{{ rowUnread(s) > 99 ? '99+' : rowUnread(s) }}</span>
+        </span>
+
+        <span v-if="!isNotify(s)" class="relative shrink-0" @click.stop>
+          <button class="w-6 h-6 rounded-[5%] flex items-center justify-center text-zinc-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60" @click="sessionMenuTarget = sessionMenuTarget === s.sessionId ? null : s.sessionId">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+          </button>
+          <div v-if="sessionMenuTarget === s.sessionId" class="absolute right-0 top-full mt-1 w-36 glass-card p-1.5 z-50">
+            <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="togglePin(s)">{{ s.isPinned ? '取消置顶' : '📌 置顶' }}</button>
+            <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="toggleMute(s)">{{ s.isMuted ? '恢复提醒' : '🔕 免打扰' }}</button>
+            <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10" @click="removeSession(s)">🗑 删除会话</button>
+          </div>
+        </span>
+      </button>
+    </div>
+
+    <!-- 底部 Tab 切换 -->
+    <div class="mt-2 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60 flex gap-1">
+      <button v-for="b in BOTTOM_TABS" :key="b.key" class="flex-1 py-2 rounded-[5%] text-sm font-medium transition-all inline-flex items-center justify-center gap-1.5"
+        :class="tab === b.key ? 'bg-amber-400/15 text-amber-600 dark:text-amber-300' : 'text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
+        @click="switchTab(b.key)"
+      >
+        <span>{{ b.label }}</span>
+        <span v-if="b.key === 'messages' && msgUnread > 0" class="min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{{ msgUnread > 99 ? '99+' : msgUnread }}</span>
+      </button>
+    </div>
+
+    <!-- 右键菜单 -->
+    <div v-if="ctxMenu" class="fixed inset-0 z-40" @click="ctxMenu = null" @contextmenu.prevent="ctxMenu = null"></div>
+    <div v-if="ctxMenu" class="fixed z-50 w-40 glass-card p-1.5" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }">
+      <button v-if="!isNotify(ctxMenu.s) && rowUnread(ctxMenu.s) > 0" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="markOneRead(ctxMenu.s)">✓ 设为已读</button>
+      <button v-if="isNotify(ctxMenu.s) && !ctxMenu.s.isRead" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="markOneRead(ctxMenu.s)">✓ 设为已读</button>
+      <button v-if="!isNotify(ctxMenu.s)" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="onCtxPin">📌 {{ ctxMenu.s.isPinned ? '取消置顶' : '置顶' }}</button>
+      <button v-if="!isNotify(ctxMenu.s)" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10" @click="onCtxDelete">🗑 删除会话</button>
+    </div>
+
+    <!-- 添加好友弹窗 -->
+    <div v-if="addFriendOpen" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/30" @click.self="addFriendOpen = false">
+      <div class="glass-card p-6 w-[26rem]">
+        <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-1">添加好友</h3>
+        <p class="text-xs text-zinc-400 mb-4">输入对方邮箱查找用户并发起好友请求</p>
+        <div class="flex gap-2">
+          <input v-model="addEmail" type="email" class="flex-1 min-w-0 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="对方邮箱" @keydown.enter.exact.prevent="onLookupEnter" />
+          <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium" :disabled="addLoading || !addEmail.trim()" @click="lookupUser">查找</button>
+        </div>
+        <div class="mt-4">
+          <div v-if="addLoading" class="py-8 text-center text-xs text-zinc-400">查找中...</div>
+          <div v-else-if="addNotFound" class="py-8 text-center text-xs text-zinc-400">未找到该用户，请确认邮箱是否正确</div>
+          <div v-else-if="addUser" class="flex items-center gap-3 p-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60">
+            <img :src="addUser.imageCover || demoAvatar((addUser.userName || '友').charAt(0), '#a1a1aa')" alt="" class="w-12 h-12 rounded-[5%] object-cover" @error="hideImg" />
+            <span class="flex-1 min-w-0 text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate">{{ addUser.userName || '未命名用户' }}</span>
+            <span v-if="addUserIsSelf" class="shrink-0 text-xs px-2 py-1 rounded-[5%] bg-zinc-100 dark:bg-zinc-800 text-zinc-500">不能添加自己</span>
+            <span v-else-if="addUserIsFriend" class="shrink-0 text-xs px-2 py-1 rounded-[5%] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">已是好友</span>
+            <button v-else class="h-9 px-3.5 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-medium" :disabled="addSending" @click="sendAddRequest">发送好友请求</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 搜索好友弹窗 -->
+    <div v-if="friendSearchOpen" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/30" @click.self="friendSearchOpen = false">
+      <div class="glass-card p-6 w-[26rem] max-h-[85vh] flex flex-col">
+        <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-3">搜索好友</h3>
+        <div class="flex gap-2">
+          <input v-model="friendKeyword" class="flex-1 min-w-0 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="按备注搜索好友" @keydown.enter.exact.prevent="onFriendSearchEnter" />
+          <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium" :disabled="friendSearching || !friendKeyword.trim()" @click="doFriendSearch">搜索</button>
+        </div>
+        <div class="mt-4 flex-1 min-h-0 overflow-y-auto space-y-1">
+          <div v-if="friendSearching" class="py-8 text-center text-xs text-zinc-400">搜索中...</div>
+          <div v-else-if="friendSearched && friendResults.length === 0" class="py-8 text-center text-xs text-zinc-400">未找到匹配的好友</div>
+          <button v-for="f in friendResults" :key="f.friendshipId || f.friendId" class="w-full flex items-center gap-3 px-3 py-2 rounded-[5%] transition-all text-left hover:bg-white/60 dark:hover:bg-zinc-800/60" @click="openFriendChat(f)">
+            <img :src="f.friendAvatar || demoAvatar('友', '#a1a1aa')" alt="" class="w-10 h-10 rounded-[5%] object-cover" @error="hideImg" />
+            <span class="flex-1 min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ friendDisplayName(f) }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+// 会话侧边栏：负责会话/好友/群聊列表、通知列表、会话操作、添加/搜索好友
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useChatStore } from '@/stores/chat'
+import { useToastStore } from '@/stores/toast'
+import {
+  pinSession, unpinSession, muteSession, unmuteSession, deleteSession,
+  createSession, sendFriendRequest, searchFriends,
+  getUnreadMessages, markRead
+} from '@/api/chat'
+import { getNotifications, markNotificationRead, markAllNotificationsRead } from '@/api/notification'
+import { notificationMeta, SAMPLE_NOTIFICATIONS } from '@/utils/notifications'
+
+const chat = useChatStore()
+const toast = useToastStore()
+const router = useRouter()
+
+const BOTTOM_TABS = [
+  { key: 'messages', label: '消息' },
+  { key: 'friends', label: '好友' },
+  { key: 'groups', label: '群聊' }
+]
+
+const tab = ref('messages')
+const tabTitle = computed(() => (tab.value === 'friends' ? '好友' : tab.value === 'groups' ? '群聊' : '消息'))
+const sessionsLoading = ref(true)
+const notifItems = ref([])
+const listMoreOpen = ref(false)
+const sessionMenuTarget = ref(null)
+const ctxMenu = ref(null)
+const allReadBusy = ref(false)
+
+const myId = computed(() => chat.currentUserId ? chat.currentUserId() : '')
+const displaySessions = computed(() => sessionsLoading.value ? [] : chat.sessions)
+const friendSessions = computed(() => displaySessions.value.filter(s => !s.groupId))
+const groupSessions = computed(() => displaySessions.value.filter(s => !!s.groupId))
+const messageItems = computed(() => {
+  const t = x => (x.lastMessageTime || x.createdTime || x.createTime || 0)
+  return [...displaySessions.value, ...notifItems.value].sort((a, b) => t(b) - t(a))
+})
+const visibleSessions = computed(() => {
+  if (tab.value === 'groups') return groupSessions.value
+  if (tab.value === 'messages') return messageItems.value
+  return friendSessions.value
+})
+const msgUnread = computed(() => messageItems.value.reduce((sum, s) => sum + rowUnread(s), 0))
+const emptyText = computed(() => {
+  if (tab.value === 'groups') return '暂无群聊，去频道页创建或加入吧'
+  if (tab.value === 'messages') return '暂无消息，和好友聊聊吧'
+  return '暂无会话，去好友列表发起聊天吧'
+})
+const emptyIcon = computed(() => (tab.value === 'groups' ? '👥' : tab.value === 'messages' ? '🔔' : '💬'))
+
+function switchTab(t) {
+  tab.value = t
+  sessionMenuTarget.value = null
+  listMoreOpen.value = false
+  ctxMenu.value = null
+}
+
+function isNotify(s) { return !!s.notifyGuid }
+function rowUnread(s) { return isNotify(s) ? (s.isRead ? 0 : 1) : (s.unreadCount || 0) }
+function rowTime(s) { return timeText(s.lastMessageTime || s.createdTime || s.createTime) }
+function notifyText(n) { return ((n.title ? n.title + '：' : '') + (n.content || '')).replace(/\s+/g, ' ').trim() }
+function isActiveRow(s) {
+  if (isNotify(s)) return false
+  return chat.activeSessionId === s.sessionId
+}
+
+function timeText(t) {
+  const d = new Date(t)
+  const now = new Date()
+  const sameDay = d.toDateString() === now.toDateString()
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return sameDay ? `${hh}:${mm}` : `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`
+}
+
+function demoAvatar(char, bg) {
+  return 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="${bg}"/><text x="50" y="62" font-size="40" text-anchor="middle" fill="#fff" font-family="sans-serif">${char}</text></svg>`)
+}
+
+function sessionTitle(s) {
+  if (s.sessionName) return s.sessionName
+  const peerId = chat.peerIdOf(s.sessionId)
+  const f = chat.friends.find(x => String(x.friendId) === String(peerId))
+  return f ? f.friendName : '会话'
+}
+
+function sessionAvatar(s) {
+  if (s.avatarUrl) return s.avatarUrl
+  if (s.groupId) {
+    const g = chat.groups.find(x => String(x.id) === String(s.groupId))
+    if (g && g.avatarUrl) return g.avatarUrl
+  }
+  const peerId = chat.peerIdOf(s.sessionId)
+  const f = chat.friends.find(x => String(x.friendId) === String(peerId))
+  return f ? f.friendAvatar : 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#d6d3d1"/><text x="50" y="60" font-size="36" text-anchor="middle" fill="white">💬</text></svg>')
+}
+
+function isOnline(s) {
+  const peerId = chat.peerIdOf(s.sessionId)
+  return chat.onlineUsers[String(peerId)] === true
+}
+function isRowOnline(s) { return isOnline(s) }
+
+const listMoreActions = computed(() => {
+  if (tab.value === 'groups') {
+    return [
+      { key: 'createGroup', label: '➕ 创建群聊' },
+      { key: 'searchGroup', label: '🔍 搜索群聊' }
+    ]
+  }
+  return [
+    { key: 'addFriend', label: '➕ 添加好友' },
+    { key: 'searchFriend', label: '🔍 搜索好友' }
+  ]
+})
+
+function onListMoreAction(a) {
+  listMoreOpen.value = false
+  if (a.key === 'addFriend') addFriendOpen.value = true
+  else if (a.key === 'searchFriend') friendSearchOpen.value = true
+  else if (a.key === 'createGroup') router.push({ path: '/chat', query: { action: 'createGroup' } })
+  else if (a.key === 'searchGroup') router.push({ path: '/chat', query: { action: 'searchGroup' } })
+}
+
+function onItemClick(s) {
+  if (isNotify(s)) {
+    markNotifyRead(s)
+    return
+  }
+  openChat(s)
+}
+
+async function openChat(s) {
+  sessionMenuTarget.value = null
+  const real = chat.sessions.find(x => x.sessionId === s.sessionId)
+  if (!real) return
+  await chat.openSession(real.sessionId)
+  chat.clearUnread(real.sessionId)
+  await chat.markSessionRead(real.sessionId).catch(() => {})
+  router.push('/chat/' + real.sessionId)
+}
+
+async function markNotifyRead(n) {
+  if (n.isRead) return
+  n.isRead = true
+  if (!n.isSample) {
+    try { await markNotificationRead(n.notifyGuid) } catch (e) { /* 忽略 */ }
+  }
+}
+
+function openRowContextMenu(s, e) {
+  sessionMenuTarget.value = null
+  const itemCount = isNotify(s) ? (s.isRead ? 0 : 1) : 3
+  if (!itemCount) return
+  const menuW = 160
+  const menuH = itemCount * 36 + 12
+  ctxMenu.value = {
+    s,
+    x: Math.max(0, Math.min(e.clientX, window.innerWidth - menuW - 8)),
+    y: Math.max(0, Math.min(e.clientY, window.innerHeight - menuH - 8))
+  }
+}
+
+async function markOneRead(s) {
+  ctxMenu.value = null
+  if (isNotify(s)) {
+    if (!s.isRead) {
+      s.isRead = true
+      if (!s.isSample) {
+        try { await markNotificationRead(s.notifyGuid) } catch (e) { /* 忽略 */ }
+      }
+    }
+    chat.loadUnread()
+    return
+  }
+  try {
+    const res = await getUnreadMessages()
+    const data = res && res.data ? res.data : res
+    const list = (data && (data.items || data.list || data)) || []
+    const ids = [...new Set(list.filter(m => String(m.sessionId) === String(s.sessionId)).map(m => m.messageId))].filter(Boolean)
+    await Promise.all(ids.map(id => markRead(id).catch(() => {})))
+  } catch (e) { /* 后端未就绪 */ }
+  if (s.unreadCount) s.unreadCount = 0
+  chat.loadUnread()
+  toast.push('已设为已读', 'success')
+}
+
+async function markAllRead() {
+  if (allReadBusy.value || msgUnread.value === 0) return
+  allReadBusy.value = true
+  try {
+    try {
+      const res = await getUnreadMessages()
+      const data = res && res.data ? res.data : res
+      const list = (data && (data.items || data.list || data)) || []
+      const ids = [...new Set(list.map(m => m.messageId))].filter(Boolean)
+      await Promise.all(ids.map(id => markRead(id).catch(() => {})))
+    } catch (e) { /* 忽略 */ }
+    try { await markAllNotificationsRead() } catch (e) { /* 忽略 */ }
+    chat.sessions.forEach(s => { s.unreadCount = 0 })
+    notifItems.value.forEach(n => { n.isRead = true })
+    await chat.loadUnread()
+    toast.push('已全部标为已读', 'success')
+  } finally {
+    allReadBusy.value = false
+  }
+}
+
+async function togglePin(s) {
+  try {
+    if (s.isPinned) await unpinSession(s.sessionId)
+    else await pinSession(s.sessionId)
+    s.isPinned = !s.isPinned
+    toast.push(s.isPinned ? '已置顶会话' : '已取消置顶', 'success')
+  } catch (e) {
+    toast.push('操作失败（后端未就绪）', 'error')
+  }
+}
+
+async function toggleMute(s) {
+  try {
+    if (s.isMuted) await unmuteSession(s.sessionId)
+    else await muteSession(s.sessionId)
+    s.isMuted = !s.isMuted
+    toast.push(s.isMuted ? '已开启免打扰' : '已恢复提醒', 'success')
+  } catch (e) {
+    toast.push('操作失败（后端未就绪）', 'error')
+  }
+}
+
+async function removeSession(s) {
+  try {
+    await deleteSession(s.sessionId)
+    chat.removeSession(s.sessionId)
+    toast.push('会话已删除', 'success')
+  } catch (e) {
+    toast.push('删除失败（后端未就绪）', 'error')
+  }
+}
+
+function onCtxPin() {
+  const s = ctxMenu.value && ctxMenu.value.s
+  ctxMenu.value = null
+  if (s) togglePin(s)
+}
+function onCtxDelete() {
+  const s = ctxMenu.value && ctxMenu.value.s
+  ctxMenu.value = null
+  if (s) removeSession(s)
+}
+
+// 添加好友
+const addFriendOpen = ref(false)
+const addEmail = ref('')
+const addUser = ref(null)
+const addLoading = ref(false)
+const addNotFound = ref(false)
+const addSending = ref(false)
+const addUserIsSelf = computed(() => addUser.value && String(addUser.value.userGuid) === String(myId.value))
+const addUserIsFriend = computed(() => addUser.value && chat.friends.some(f => String(f.friendId) === String(addUser.value.userGuid)))
+
+function onLookupEnter(e) {
+  if (e.isComposing || e.keyCode === 229) return
+  lookupUser()
+}
+async function lookupUser() {
+  const email = addEmail.value.trim()
+  if (!email || addLoading.value) return
+  addLoading.value = true
+  addNotFound.value = false
+  addUser.value = null
+  // 已移除无鉴权 Identity 查询；等待后端安全接口
+  addNotFound.value = true
+  addLoading.value = false
+}
+
+async function sendAddRequest() {
+  const u = addUser.value
+  if (!u || addSending.value || addUserIsSelf.value || addUserIsFriend.value) return
+  addSending.value = true
+  try {
+    await sendFriendRequest({ friendId: u.userGuid })
+    toast.push('好友请求已发送，等待对方验证', 'success')
+    addFriendOpen.value = false
+    addEmail.value = ''
+    addUser.value = null
+  } catch (e) {
+    toast.push('发送失败：' + (e.message || '请稍后重试'), 'error')
+  } finally {
+    addSending.value = false
+  }
+}
+
+// 搜索好友
+const friendSearchOpen = ref(false)
+const friendKeyword = ref('')
+const friendResults = ref([])
+const friendSearching = ref(false)
+const friendSearched = ref(false)
+function onFriendSearchEnter(e) {
+  if (e.isComposing || e.keyCode === 229) return
+  doFriendSearch()
+}
+async function doFriendSearch() {
+  const kw = friendKeyword.value.trim()
+  if (!kw || friendSearching.value) return
+  friendSearching.value = true
+  friendSearched.value = true
+  try {
+    const res = await searchFriends({ searchTerm: kw })
+    const data = res && res.data ? res.data : res
+    friendResults.value = (data && (data.items || data.list || data)) || []
+  } catch (e) {
+    friendResults.value = []
+    toast.push('搜索失败（后端未就绪）', 'error')
+  } finally {
+    friendSearching.value = false
+  }
+}
+function friendDisplayName(f) {
+  return f.friendName || f.remark || ('好友 ' + String(f.friendId).slice(0, 8))
+}
+async function openFriendChat(f) {
+  try {
+    const res = await createSession(f.friendId)
+    const d = res && res.data ? res.data : res
+    const sessionId = (d && (d.sessionId || d.id)) || (typeof d === 'string' ? d : '')
+    if (!sessionId) throw new Error('no sessionId')
+    await chat.loadSessions()
+    friendSearchOpen.value = false
+    router.push('/chat/' + sessionId)
+  } catch (e) {
+    toast.push('无法发起会话，请稍后重试', 'error')
+  }
+}
+
+async function loadNotifications() {
+  try {
+    const res = await getNotifications({ pageSize: 20 })
+    const items = (res && res.data && (res.data.items || res.data.list)) || []
+    notifItems.value = items.length ? items : SAMPLE_NOTIFICATIONS
+  } catch (e) {
+    notifItems.value = SAMPLE_NOTIFICATIONS
+  }
+}
+
+function hideImg(e) { e.target.style.visibility = 'hidden' }
+
+onMounted(async () => {
+  await Promise.all([chat.loadSessions(), chat.loadFriends(), chat.loadGroups(), chat.loadUnread(), loadNotifications()])
+  sessionsLoading.value = false
+})
+</script>
