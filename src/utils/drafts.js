@@ -16,14 +16,20 @@ export function getDraft(id) {
 
 export function saveDraft(draft) {
   const list = getDrafts()
+  let saved
   const idx = list.findIndex(d => d.id === draft.id)
   if (idx >= 0) {
-    list[idx] = { ...list[idx], ...draft, updatedAt: Date.now() }
+    saved = { ...list[idx], ...draft, updatedAt: Date.now() }
+    list[idx] = saved
   } else {
-    list.unshift({ ...draft, id: draft.id || 'd_' + Date.now(), createdAt: Date.now(), updatedAt: Date.now() })
+    // ⚠️ id 必须防同毫秒冲突：Date.now() 毫秒级 + Math.random 后缀（曾因纯时间戳
+    // 同毫秒连续保存生成相同 id → 后保存覆盖前者 → 工作台返回/显示错误草稿）
+    const newId = draft.id || 'd_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)
+    saved = { ...draft, id: newId, createdAt: Date.now(), updatedAt: Date.now() }
+    list.unshift(saved)
   }
   localStorage.setItem(KEY, JSON.stringify(list))
-  return list[0]
+  return saved
 }
 
 export function removeDraft(id) {

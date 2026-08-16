@@ -82,11 +82,8 @@ export function clearAuth() {
 
 // ==================== 用户信息 / 头像 / 退出 ====================
 
-// 用户信息兜底：GET /api/identity/manger/user-manager/GetUserInfo?userQuery={email}
-// ⚠️ 无鉴权端点（返回完整 User 实体含 PasswordHash，仅开发兜底用）
-export function getUserInfoByEmail(email) {
-  return service.get('/api/identity/manger/user-manager/GetUserInfo', { params: { userQuery: email } })
-}
+// ⚠️ 原 getUserInfoByEmail 调用无鉴权 Identity 接口，会返回完整 User 实体含 PasswordHash。
+// 已从前端移除；需要后端提供安全的“按邮箱搜索用户”鉴权接口后再恢复。
 
 // 头像上传：POST /api/identity/avatar/upload（multipart: file）-> UploadAvatarResult{fileId,fileUri,...}
 export function uploadAvatar(file) {

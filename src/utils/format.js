@@ -18,6 +18,15 @@ export function relativeTime(input) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+// 格式化日期时间：YYYY-MM-DD HH:mm
+export function formatTime(input) {
+  if (!input) return ''
+  const d = typeof input === 'number' || typeof input === 'string' ? new Date(input) : input
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 // 数字缩写：1234 -> 1.2k；12345 -> 1.2万
 export function compactNumber(n) {
   const v = Number(n) || 0
