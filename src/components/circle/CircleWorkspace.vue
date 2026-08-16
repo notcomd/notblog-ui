@@ -59,7 +59,7 @@ import CircleManagePanel from '@/components/circle/CircleManagePanel.vue'
 import CircleAnnounceTab from '@/components/circle/CircleAnnounceTab.vue'
 import CircleResourceTab from '@/components/circle/CircleResourceTab.vue'
 import CircleMemberTab from '@/components/circle/CircleMemberTab.vue'
-import { getCirclePosts, setCircleMemberRole, removeCircleMember } from '@/api/circle'
+import { getCirclePosts, setCircleMemberRole, leaveCircle } from '@/api/circle'
 import { useToastStore } from '@/stores/toast'
 
 const props = defineProps({
@@ -127,7 +127,7 @@ async function onRemoveMember(m) {
   if (!props.current) return
   try {
     if (!props.current.isSample) {
-      await removeCircleMember(props.current.circleGuid, m.userGuid)
+      await leaveCircle(props.current.circleGuid, m.userGuid)
     }
     toast.push('已移除成员 ' + (m.nickname || m.userName || ''), 'success')
   } catch (e) {
