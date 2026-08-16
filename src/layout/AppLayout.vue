@@ -46,7 +46,7 @@ const route = useRoute()
 const isDetail = computed(() => route.path.startsWith('/posts/'))
 
 // keep-alive 缓存的信息流视图（返回时保留浏览位置）
-const cachedViews = ['HomeView', 'CirclesView', 'ChatView', 'ExploreView', 'UserSpaceView']
+const cachedViews = ['HomeView', 'CirclePage', 'ChatPage', 'ExploreView', 'UserSpaceView']
 
 // ===== 回到顶部（全局；页面内部滚动容器用 data-scroll-container 标记，如 CirclesView） =====
 const mainBox = ref(null)

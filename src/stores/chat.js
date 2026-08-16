@@ -84,6 +84,8 @@ export const useChatStore = defineStore('chat', () => {
     if (!messages.value[sessionId]) {
       await loadMessages(sessionId, true)
     }
+    // 打开会话即通知服务端已读（SignalR MarkAsRead 逐条），并清零本会话未读角标
+    await markSessionRead(sessionId)
   }
 
   async function loadMessages(sessionId, reset = false) {
@@ -108,45 +110,70 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function sendText(sessionId, content) {
-    const me = currentUserId()
-    const msg = {
-      messageId: 'local-' + Date.now(),
-      sessionId,
-      senderId: me,
-      receiverId: null,
-      messageType: MessageType.Text,
-      status: 1,
-      content,
-      sentTime: Date.now()
-    }
-    pushMessage(msg)
-    bumpSession(sessionId, content)
-
-    try {
-      const conn = await connectSignalR()
-      await conn.invoke('SendMessage', sessionId, {
+    // 发送文本消息；retryMessageId 存在时表示重发失败消息（复用原 messageId，避免重复插入）
+    // 状态约定：0=发送中, 1=已发送, -1=发送失败
+    async function sendText(sessionId, content, retryMessageId = null) {
+      const me = currentUserId()
+      const messageId = retryMessageId || 'local-' + Date.now()
+      const msg = {
+        messageId,
         sessionId,
+        senderId: me,
+        receiverId: null,
         messageType: MessageType.Text,
+        status: 0,
         content,
-        fileId: null,
-        thumbnailFileId: null,
-        duration: null,
-        caption: null,
-        latitude: null,
-        longitude: null,
-        locationName: null,
-        linkUrl: null,
-        linkTitle: null,
-        linkDescription: null,
-        expressionCode: null,
-        replyToMessageId: null
-      })
-    } catch (e) {
-      console.error('发送消息失败:', e)
+        sentTime: Date.now()
+      }
+
+      const list = messages.value[sessionId] || []
+      const existing = list.find(m => m.messageId === messageId)
+      if (existing) {
+        Object.assign(existing, msg)
+      } else {
+        pushMessage(msg)
+      }
+      bumpSession(sessionId, content)
+
+      try {
+        const conn = await connectSignalR()
+        await conn.invoke('SendMessage', sessionId, {
+          sessionId,
+          messageType: MessageType.Text,
+          content,
+          fileId: null,
+          thumbnailFileId: null,
+          duration: null,
+          caption: null,
+          latitude: null,
+          longitude: null,
+          locationName: null,
+          linkUrl: null,
+          linkTitle: null,
+          linkDescription: null,
+          expressionCode: null,
+          replyToMessageId: null
+        })
+        const sent = (messages.value[sessionId] || []).find(m => m.messageId === messageId)
+        if (sent) sent.status = 1
+      } catch (e) {
+        console.error('发送消息失败:', e)
+        const failed = (messages.value[sessionId] || []).find(m => m.messageId === messageId)
+        if (failed) failed.status = -1
+        throw e
+      }
+      return msg
     }
-    return msg
-  }
+
+    // 重发失败消息
+    async function retryMessage(sessionId, messageId) {
+      const list = messages.value[sessionId] || []
+      const target = list.find(m => m.messageId === messageId)
+      if (!target || target.status !== -1) return false
+      await sendText(sessionId, target.content, target.messageId)
+      return true
+    }
+
 
   async function sendTyping(sessionId) {
     if (!isConnected()) return
@@ -290,7 +317,7 @@ export const useChatStore = defineStore('chat', () => {
     sessions, friends, groups, messages, activeSessionId, unreadTotal,
     onlineUsers, typing, connected, messageLoading, hasMoreMessages,
     loadSessions, loadFriends, loadGroups, loadUnread, openSession,
-    loadMessages, sendText, sendTyping, markSessionRead, clearUnread,
+      loadMessages, retryMessage, sendText, sendTyping, markSessionRead, clearUnread,
     sessionName, peerIdOf, currentUserId, initRealtime, removeSession
   }
 })
