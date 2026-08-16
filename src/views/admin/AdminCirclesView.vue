@@ -8,10 +8,10 @@
     <div class="flex gap-5">
       <!-- 左：社区列表 -->
       <div class="w-72 shrink-0 glass-card p-3 flex flex-col h-[calc(100vh-10rem)]">
-        <input v-model="keyword" class="h-10 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all mb-3" placeholder="按社区名称检索..." @input="filterCircles" />
+        <input v-model="keyword" class="h-10 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all mb-3" placeholder="按社区名称检索..." @input="filterCircles" />
         <div class="flex-1 overflow-y-auto space-y-1 min-h-0">
           <button v-for="c in filtered" :key="c.circleGuid" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-[5%] transition-all text-left"
-            :class="current && current.circleGuid === c.circleGuid ? 'bg-gradient-to-r from-blue-500/15 to-indigo-500/10 ' : 'hover:bg-white/60 dark:hover:bg-zinc-800/60'"
+            :class="current && current.circleGuid === c.circleGuid ? 'bg-gradient-to-r from-amber-400/15 to-orange-500/10 ' : 'hover:bg-white/60 dark:hover:bg-zinc-800/60'"
             @click="select(c)">
             <img :src="c.avatarUrl" alt="" class="w-10 h-10 rounded-[5%] object-cover border border-white/60 dark:border-white/10" @error="hideImg" />
             <span class="flex-1 min-w-0">
@@ -27,7 +27,7 @@
       <!-- 右：社区详情 -->
       <div class="flex-1 min-w-0 space-y-4">
         <div v-if="current" class="glass-card overflow-hidden">
-          <div class="h-32 relative bg-gradient-to-r from-blue-400/40 via-indigo-400/30 to-purple-400/40 dark:from-blue-500/20 dark:via-indigo-500/15 dark:to-purple-500/20">
+          <div class="h-32 relative bg-gradient-to-r from-amber-400/40 via-indigo-400/30 to-purple-400/40 dark:from-amber-400/20 dark:via-indigo-500/15 dark:to-purple-500/20">
             <div class="absolute bottom-4 left-5 flex items-center gap-3">
               <img :src="current.avatarUrl" alt="" class="w-14 h-14 rounded-[5%] object-cover border-2 border-white/70" @error="hideImg" />
               <div>
@@ -42,18 +42,18 @@
           <div class="px-5 py-3 flex gap-2 border-t border-zinc-200/60 dark:border-zinc-700/60">
             <button v-if="current.status !== 'Banned'" class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-400/15 text-amber-600 dark:text-amber-400 hover:bg-amber-400/25 active:scale-95 transition-all" @click="banCircleOpen = true">⛔ 封禁社区</button>
             <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 active:scale-95 transition-all" @click="dissolveOpen = true">🗑 解散社区</button>
-            <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all" @click="transferOpen = true">🔄 转让社区</button>
+            <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-500/10 text-amber-600 hover:bg-amber-1000/20 active:scale-95 transition-all" @click="transferOpen = true">🔄 转让社区</button>
           </div>
           <!-- Tab：成员 / 会话 -->
           <div class="px-5 pb-4">
             <div class="flex gap-1 glass p-1 rounded-[5%] w-fit mb-3">
-              <button class="px-4 py-1.5 rounded-[5%] text-sm font-medium transition-all" :class="tab === 'members' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="tab = 'members'">成员列表</button>
-              <button class="px-4 py-1.5 rounded-[5%] text-sm font-medium transition-all" :class="tab === 'sessions' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="tab = 'sessions'">会话列表</button>
+              <button class="px-4 py-1.5 rounded-[5%] text-sm font-medium transition-all" :class="tab === 'members' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="tab = 'members'">成员列表</button>
+              <button class="px-4 py-1.5 rounded-[5%] text-sm font-medium transition-all" :class="tab === 'sessions' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="tab = 'sessions'">会话列表</button>
             </div>
             <!-- 成员 -->
             <div v-if="tab === 'members'" class="space-y-2">
               <div v-for="m in members" :key="m.userGuid" class="flex items-center gap-3 px-3 py-2 rounded-[5%] bg-white/50 dark:bg-zinc-800/50">
-                <span class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs">{{ (m.userName || '?').slice(0, 1) }}</span>
+                <span class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs">{{ (m.userName || '?').slice(0, 1) }}</span>
                 <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 flex-1">{{ m.userName }}</span>
                 <span class="text-xs px-2 py-0.5 rounded-full" :class="roleClass(m.role)">{{ roleText(m.role) }}</span>
                 <span class="text-xs text-zinc-400">{{ relativeTime(m.joinTime) }}加入</span>
@@ -103,7 +103,7 @@
       </select>
       <template #footer>
         <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all dark:text-zinc-400" @click="transferOpen = false">取消</button>
-        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white active:scale-95 transition-all disabled:opacity-50" :disabled="!newOwner" @click="doTransfer">确认转让</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-50" :disabled="!newOwner" @click="doTransfer">确认转让</button>
       </template>
     </AdminModal>
   </div>
@@ -137,7 +137,7 @@ const transferOpen = ref(false)
 const newOwner = ref('')
 
 function roleClass(r) {
-  return { Owner: 'bg-amber-400/15 text-amber-600 dark:text-amber-400', Admin: 'bg-blue-400/15 text-blue-500', Member: 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400' }[r] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
+  return { Owner: 'bg-amber-400/15 text-amber-600 dark:text-amber-400', Admin: 'bg-blue-400/15 text-amber-600', Member: 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400' }[r] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
 }
 
 function roleText(r) {

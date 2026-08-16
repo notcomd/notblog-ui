@@ -7,7 +7,7 @@
 
     <!-- Tab：图文 | 视频 | 博客 -->
     <div class="flex gap-1 glass p-1 rounded-[5%] w-fit">
-      <button v-for="t in tabs" :key="t.key" class="px-5 py-2 rounded-[5%] text-sm font-medium transition-all" :class="tab === t.key ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="switchTab(t.key)">{{ t.label }}</button>
+      <button v-for="t in tabs" :key="t.key" class="px-5 py-2 rounded-[5%] text-sm font-medium transition-all" :class="tab === t.key ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="switchTab(t.key)">{{ t.label }}</button>
     </div>
 
     <!-- 筛选栏 -->
@@ -22,7 +22,7 @@
         <option value="latest">最新发布</option>
         <option value="reports">最多举报</option>
       </select>
-      <input v-model="keyword" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="按内容标题 / 作者昵称检索" @keyup.enter="load(1)" />
+      <input v-model="keyword" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="按内容标题 / 作者昵称检索" @keyup.enter="load(1)" />
       <button class="h-10 px-4 rounded-[5%] text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="load(1)">筛选</button>
       <span class="text-xs text-zinc-400 ml-auto">高举报内容自动置顶（红色警示边框）</span>
     </div>
@@ -52,7 +52,7 @@
         <span class="text-xs px-2.5 py-1 rounded-full font-medium shrink-0" :class="statusClass(t.tweetStatus)">{{ statusText(t.tweetStatus) }}</span>
         <!-- 操作 -->
         <div class="flex gap-1.5 shrink-0">
-          <button class="px-3 h-9 rounded-[5%] text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover: active:scale-95 transition-all" @click="openAudit(t)">审核</button>
+          <button class="px-3 h-9 rounded-[5%] text-xs font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all" @click="openAudit(t)">审核</button>
           <button class="px-3 h-9 rounded-[5%] text-xs bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: active:scale-95 transition-all" @click="openBlock(t)">屏蔽</button>
           <button class="px-3 h-9 rounded-[5%] text-xs bg-red-500/10 text-red-500 hover:bg-red-500/20 active:scale-95 transition-all" @click="openDelete(t)">删除</button>
         </div>
@@ -79,7 +79,7 @@
             <div class="flex gap-2 pt-1">
               <span class="text-xs px-2 py-1 rounded-full bg-zinc-400/15 text-zinc-500 dark:text-zinc-400">👁 {{ auditTarget.viewCount }}</span>
               <span class="text-xs px-2 py-1 rounded-full bg-red-400/15 text-red-500">❤️ {{ auditTarget.likeCount }}</span>
-              <span class="text-xs px-2 py-1 rounded-full bg-blue-400/15 text-blue-500">💬 {{ auditTarget.commentCount }}</span>
+              <span class="text-xs px-2 py-1 rounded-full bg-blue-400/15 text-amber-600">💬 {{ auditTarget.commentCount }}</span>
               <span v-if="(auditTarget.reportCount || 0) > 0" class="text-xs px-2 py-1 rounded-full bg-red-500/15 text-red-500">🚩 {{ auditTarget.reportCount }} 次举报</span>
             </div>
             <!-- 驳回理由 -->

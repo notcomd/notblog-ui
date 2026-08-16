@@ -12,7 +12,7 @@
         <span class="text-xs text-zinc-400">已用 42.6 GB / 100 GB</span>
       </div>
       <div class="h-2.5 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70 overflow-hidden">
-        <div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500" :style="{ width: '42.6%' }"></div>
+        <div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500" :style="{ width: '42.6%' }"></div>
       </div>
       <div class="text-[11px] text-amber-500 mt-1.5">⚠️ 剩余空间低于 60%，建议清理过期文件</div>
     </div>
@@ -20,9 +20,9 @@
     <!-- 筛选 -->
     <div class="flex flex-wrap items-center gap-3">
       <div class="flex gap-1 glass p-1 rounded-[5%]">
-        <button v-for="t in fileTypes" :key="t.key" class="px-4 py-1.5 rounded-[5%] text-sm font-medium transition-all" :class="type === t.key ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="switchType(t.key)">{{ t.label }}</button>
+        <button v-for="t in fileTypes" :key="t.key" class="px-4 py-1.5 rounded-[5%] text-sm font-medium transition-all" :class="type === t.key ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="switchType(t.key)">{{ t.label }}</button>
       </div>
-      <input v-model="keyword" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="按文件名 / 上传者检索" @keyup.enter="load" />
+      <input v-model="keyword" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="按文件名 / 上传者检索" @keyup.enter="load" />
       <button class="px-4 h-9 rounded-[5%] text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="load">搜索</button>
     </div>
 

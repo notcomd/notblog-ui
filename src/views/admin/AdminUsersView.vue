@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">用户管理</h1>
         <p class="text-sm text-zinc-400 mt-1">用户列表与管控（封禁/删除后端缺口，当前为演示数据）</p>
       </div>
-      <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover: active:scale-95 transition-all" @click="showAdd = true">＋ 添加用户</button>
+      <button disabled title="后端缺口，暂不可用" class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white/60 cursor-not-allowed transition-all" @click="showAdd = true">＋ 添加用户</button>
     </div>
 
     <AdminTable
@@ -23,7 +23,7 @@
       @page-change="load($event)"
     >
       <template #toolbar>
-        <input v-model="keyword" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" placeholder="搜索用户名 / ID / 邮箱" @keyup.enter="load(1)" />
+        <input v-model="keyword" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="搜索用户名 / ID / 邮箱" @keyup.enter="load(1)" />
         <select v-model="status" class="h-10 px-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none" @change="load(1)">
           <option value="all">全部状态</option>
           <option value="Normal">正常</option>
@@ -33,15 +33,15 @@
         <button class="h-10 px-3 rounded-[5%] text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="load(1)">搜索</button>
         <div v-if="selected.length" class="flex items-center gap-2 ml-2">
           <span class="text-xs text-zinc-400">已选 {{ selected.length }} 项</span>
-          <button class="h-8 px-3 rounded-[5%] text-xs bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors" @click="batchBan">批量封禁</button>
-          <button class="h-8 px-3 rounded-[5%] text-xs bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors" @click="batchDelete">批量删除</button>
+          <button disabled title="后端缺口，暂不可用" class="h-8 px-3 rounded-[5%] text-xs bg-red-500/10 text-red-500/50 cursor-not-allowed transition-colors" @click="batchBan">批量封禁</button>
+          <button disabled title="后端缺口，暂不可用" class="h-8 px-3 rounded-[5%] text-xs bg-red-500/10 text-red-500/50 cursor-not-allowed transition-colors" @click="batchDelete">批量删除</button>
         </div>
       </template>
 
       <template #cell-userName="{ row }">
         <div class="flex items-center gap-2.5">
           <img v-if="row.imageCover" :src="row.imageCover" alt="" class="w-9 h-9 rounded-full object-cover border border-white/60 dark:border-white/10" @error="hideImg" />
-          <span v-else class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs">{{ (row.userName || '?').slice(0, 1) }}</span>
+          <span v-else class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs">{{ (row.userName || '?').slice(0, 1) }}</span>
           <div>
             <div class="font-medium text-zinc-700 dark:text-zinc-200">{{ row.userName }}</div>
             <div class="text-[11px] text-zinc-400">{{ row.userEmail }}</div>
@@ -62,18 +62,18 @@
       </template>
 
       <template #actions="{ row }">
-        <button class="px-2.5 h-8 rounded-[5%] text-xs text-blue-500 hover:bg-blue-500/10 transition-colors" @click="viewUser(row)">查看</button>
-        <button v-if="row.status !== 'Banned'" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10 transition-colors" @click="banUser(row)">封禁</button>
-        <button class="px-2.5 h-8 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10 transition-colors" @click="deleteUser(row)">删除</button>
+        <button class="px-2.5 h-8 rounded-[5%] text-xs text-amber-600 hover:bg-amber-500/10 transition-colors" @click="viewUser(row)">查看</button>
+        <button v-if="row.status !== 'Banned'" disabled title="后端缺口，暂不可用" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500/50 cursor-not-allowed transition-colors" @click="banUser(row)">封禁</button>
+        <button disabled title="后端缺口，暂不可用" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500/50 cursor-not-allowed transition-colors" @click="deleteUser(row)">删除</button>
       </template>
     </AdminTable>
 
     <!-- 添加用户 -->
     <AdminModal v-if="showAdd" title="添加用户" @close="showAdd = false">
       <div class="space-y-3">
-        <input v-model="addForm.userName" placeholder="用户名（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" />
-        <input v-model="addForm.userEmail" placeholder="邮箱（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" />
-        <input v-model="addForm.password" type="password" placeholder="初始密码（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" />
+        <input v-model="addForm.userName" placeholder="用户名（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+        <input v-model="addForm.userEmail" placeholder="邮箱（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+        <input v-model="addForm.password" type="password" placeholder="初始密码（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
         <select v-model="addForm.role" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none">
           <option value="Member">普通用户</option>
           <option value="Admin">管理员</option>
@@ -81,7 +81,7 @@
       </div>
       <template #footer>
         <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all dark:text-zinc-400" @click="showAdd = false">取消</button>
-        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-500 text-white active:scale-95 transition-all" :disabled="!addForm.userName || !addForm.userEmail || !addForm.password" @click="submitAdd">创建</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all" :disabled="!addForm.userName || !addForm.userEmail || !addForm.password" @click="submitAdd">创建</button>
       </template>
     </AdminModal>
 
@@ -193,7 +193,7 @@ function statusClass(s) {
   return {
     Normal: 'bg-emerald-400/15 text-emerald-500',
     Banned: 'bg-red-400/15 text-red-500',
-    Online: 'bg-blue-400/15 text-blue-500'
+    Online: 'bg-blue-400/15 text-amber-600'
   }[s] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
 }
 
@@ -264,13 +264,13 @@ async function submitAdd() {
 }
 
 function batchBan() {
-  toast.push(`已批量封禁 ${selected.value.length} 个用户（演示）`, 'success')
+  toast.push('批量封禁尚未接入后端，操作未执行', 'error')
   selected.value = []
   load(1)
 }
 
 function batchDelete() {
-  toast.push(`已批量删除 ${selected.value.length} 个用户（演示）`, 'success')
+  toast.push('批量删除尚未接入后端，操作未执行', 'error')
   selected.value = []
   load(1)
 }
