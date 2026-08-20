@@ -13,7 +13,7 @@
     <div class="flex-1 overflow-y-auto py-2 px-1 space-y-1 min-h-0">
       <!-- 空状态 -->
       <div v-if="!loading && items.length === 0" class="py-16 flex flex-col items-center gap-3">
-        <div class="text-5xl">💬</div>
+        <div class="text-5xl"><svg class="w-12 h-12 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
         <p class="text-sm text-zinc-400">还没有评论，快来抢沙发吧～</p>
       </div>
       <!-- 加载中骨架 -->
@@ -39,7 +39,7 @@
     <!-- 底部固定输入框 -->
     <div class="pt-3 border-t border-zinc-200/60 dark:border-zinc-700/60">
       <div v-if="replyingTo" class="flex items-center justify-between mb-1.5 px-1">
-        <span class="text-xs text-amber-600 dark:text-amber-400">回复 @{{ replyingTo.user.userName }}</span>
+        <span class="text-xs text-amber-600 dark:text-amber-400">回复 @{{ replyName }}</span>
         <button class="text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-300" @click="replyingTo = null">取消</button>
       </div>
       <div class="flex items-end gap-2">
@@ -48,7 +48,7 @@
             v-model="draft"
             rows="2"
             class="w-full resize-none rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
-            :placeholder="replyingTo ? '回复 ' + replyingTo.user.userName + '...' : '说点什么... (支持 Enter 发送)'"
+            :placeholder="replyingTo ? '回复 ' + replyName + '...' : '说点什么... (支持 Enter 发送)'"
             @keydown.enter.exact.prevent="submit"
           ></textarea>
           <!-- Emoji 面板 -->
@@ -91,6 +91,8 @@ const hasMore = ref(true)
 const sort = ref('new')
 const draft = ref('')
 const emojiOpen = ref(false)
+// replyingTo = { root: 顶层评论, target: 被回复评论 }（回复子评论时折叠到顶层，
+// 后端限制嵌套 2 层：parentGuid 必须为顶层，replyToGuid 记录被回复对象）
 const replyingTo = ref(null)
 const sentinel = ref(null)
 let observer = null
@@ -100,6 +102,11 @@ const sortedItems = computed(() => {
     return [...items.value].sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0))
   }
   return items.value
+})
+
+const replyName = computed(() => {
+  const t = replyingTo.value && replyingTo.value.target
+  return (t && t.user && t.user.userName) || '用户'
 })
 
 async function loadMore(reset = false) {
@@ -114,10 +121,11 @@ async function loadMore(reset = false) {
   try {
     const res = await getComments(props.tweetGuid, { page: page.value + 1, pageSize: 20 })
     const data = res && res.data ? res.data : res
-    const list = data.items || data.list || []
+    const list = (data && (data.items || data.list)) || []
     items.value = reset ? list : [...items.value, ...list]
-    total.value = data.total || items.value.length
-    page.value = data.page || page.value + 1
+    // 后端 PagedResult 字段为 TotalCount（不是 total）
+    total.value = (data && (data.totalCount ?? data.total)) || items.value.length
+    page.value = (data && data.page) || page.value + 1
     hasMore.value = list.length >= 20
   } catch (e) {
     console.error('加载评论失败:', e)
@@ -130,8 +138,9 @@ function setSort(s) {
   sort.value = s
 }
 
-function startReply(comment) {
-  replyingTo.value = comment
+// 顶层评论回复自身；子评论回复折叠到顶层（CommentItem 已携带 root）
+function startReply(payload) {
+  replyingTo.value = payload
   emojiOpen.value = false
 }
 
@@ -144,19 +153,23 @@ async function submit() {
   if (!content || sending.value) return
   sending.value = true
   try {
+    const root = replyingTo.value ? replyingTo.value.root : null
+    const target = replyingTo.value ? replyingTo.value.target : null
     const payload = {
       tweetGuid: props.tweetGuid,
       content,
-      parentGuid: replyingTo.value ? replyingTo.value.commentGuid : null,
-      replyToGuid: replyingTo.value ? replyingTo.value.commentGuid : null
+      // 嵌套限制 2 层：parentGuid 恒为顶层评论；回复子评论时 replyToGuid=子评论（显示 @ 语义）
+      parentGuid: root ? root.commentGuid : null,
+      replyToGuid: target ? target.commentGuid : null
     }
-    const res = await addComment(payload)
-    const created = res && res.data && (res.data.data || res.data)
-    // 乐观更新：插入到列表顶部
-    if (created && created.commentGuid) {
-      items.value.unshift(created)
-      total.value += 1
+    // 回复顶层评论时两者同值（后端语义）；顶层新评论两者皆空
+    if (root && target && root.commentGuid === target.commentGuid) {
+      payload.parentGuid = target.commentGuid
+      payload.replyToGuid = target.commentGuid
     }
+    await addComment(payload)
+    // 后端发布接口不返回评论实体，重新加载列表以显示新评论与计数
+    await loadMore(true)
     draft.value = ''
     replyingTo.value = null
   } catch (e) {
@@ -166,11 +179,13 @@ async function submit() {
   }
 }
 
-async function removeComment(comment) {
+async function removeComment(payload) {
   try {
+    const comment = payload ? payload.target : null
+    if (!comment || !comment.commentGuid) return
     await deleteComment(comment.commentGuid)
-    items.value = items.value.filter(c => c.commentGuid !== comment.commentGuid)
-    total.value = Math.max(0, total.value - 1)
+    // 删除后重新加载（顶层删除连带子回复；子回复删除需刷新其父的回复列表）
+    await loadMore(true)
   } catch (e) {
     console.error('删除评论失败:', e)
   }

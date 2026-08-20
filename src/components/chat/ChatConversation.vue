@@ -10,6 +10,15 @@
           <div class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 truncate">{{ activeTitle }}</div>
           <div class="text-xs text-zinc-400 truncate">{{ activeSubtitle }}</div>
         </div>
+        <!-- 通话操作（私聊/群聊会话；AI/匿名会话不可通话） -->
+        <template v-if="active && canCall">
+          <button class="h-8 w-8 rounded-full bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:text-emerald-500 dark:hover:text-emerald-400 flex items-center justify-center transition-colors" title="语音通话" @click="startCall('Audio')">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </button>
+          <button class="h-8 w-8 rounded-full bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 flex items-center justify-center transition-colors" title="视频通话" @click="startCall('Video')">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          </button>
+        </template>
         <button v-if="active && active.groupId" class="h-8 px-3 rounded-[5%] text-xs bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300" @click="memberOpen = !memberOpen">成员</button>
       </div>
 
@@ -63,10 +72,12 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useChatStore } from '@/stores/chat'
 import { useToastStore } from '@/stores/toast'
+import { useCallStore } from '@/stores/call'
 import ChatGroupDialogs from '@/components/chat/ChatGroupDialogs.vue'
 
 const chat = useChatStore()
 const toast = useToastStore()
+const call = useCallStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -105,6 +116,14 @@ const members = computed(() => {
     }
   })
 })
+
+// 可通话会话：排除通知会话（notifyGuid）；后端限制私聊/群聊/频道可发起通话
+const canCall = computed(() => !!active.value && !active.value.notifyGuid)
+
+function startCall(type) {
+  if (!active.value) return
+  call.startCall(active.value.sessionId, type)
+}
 
 function demoAvatar(char, bg) {
   return 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="${bg}"/><text x="50" y="62" font-size="40" text-anchor="middle" fill="#fff" font-family="sans-serif">${char}</text></svg>`)

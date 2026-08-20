@@ -11,7 +11,7 @@
         <TopBar :blurred="isDetail" />
         <main ref="mainBox" class="flex-1 min-h-0 px-6 py-6 overflow-y-auto">
           <router-view v-slot="{ Component }">
-            <transition name="page-fade" mode="out-in">
+            <transition name="page-fade">
               <keep-alive :include="cachedViews">
                 <component :is="Component" />
               </keep-alive>
@@ -30,6 +30,9 @@
     >
       <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5" /><polyline points="5 12 12 5 19 12" /></svg>
     </button>
+
+    <!-- 语音/视频通话面板（全局，来电/通话覆盖任意页面） -->
+    <CallPanel />
   </div>
 </template>
 
@@ -39,6 +42,7 @@ import { useRoute } from 'vue-router'
 import TopBar from '@/layout/TopBar.vue'
 import SideNav from '@/layout/SideNav.vue'
 import BackgroundLayer from '@/components/common/BackgroundLayer.vue'
+import CallPanel from '@/components/chat/CallPanel.vue'
 
 const route = useRoute()
 
@@ -46,7 +50,7 @@ const route = useRoute()
 const isDetail = computed(() => route.path.startsWith('/posts/'))
 
 // keep-alive 缓存的信息流视图（返回时保留浏览位置）
-const cachedViews = ['HomeView', 'CirclePage', 'ChatPage', 'ExploreView', 'UserSpaceView']
+const cachedViews = ['HomeView', 'CirclePage', 'ChatPage', 'UserSpaceView']
 
 // ===== 回到顶部（全局；页面内部滚动容器用 data-scroll-container 标记，如 CirclesView） =====
 const mainBox = ref(null)
@@ -54,7 +58,7 @@ const showTopBtn = ref(false)
 const TOP_BTN_THRESHOLD = 400
 
 function currentScrollTop() {
-  // 内容撑高页面时滚动发生在 window；频道页等内部容器独立滚动
+  // 内容撑高页面时滚动发生在 window；社区页等内部容器独立滚动
   const inner = document.querySelector('[data-scroll-container]')
   return Math.max(
     window.scrollY || 0,

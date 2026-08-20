@@ -18,8 +18,8 @@
             </svg>
             {{ comment.likeCount || 0 }}
           </button>
-          <button class="text-xs text-zinc-400 hover:text-amber-500 transition-colors" @click="$emit('reply', comment)">回复</button>
-          <button v-if="isMine" class="text-xs text-zinc-400 hover:text-red-500 transition-colors" @click="$emit('remove', comment)">删除</button>
+          <button class="text-xs text-zinc-400 hover:text-amber-500 transition-colors" @click="onReply">回复</button>
+          <button v-if="isMine" class="text-xs text-zinc-400 hover:text-red-500 transition-colors" @click="onRemove">删除</button>
         </div>
 
         <!-- 嵌套回复：最多 3 条，超出折叠 -->
@@ -28,7 +28,8 @@
             v-for="r in visibleReplies"
             :key="r.commentGuid"
             :comment="r"
-            :reply-to-name="comment.user && comment.user.userName"
+            :root-comment="rootComment"
+            :reply-to-name="replyToNameOf(r)"
             @reply="$emit('reply', $event)"
             @remove="$emit('remove', $event)"
           />
@@ -48,28 +49,42 @@
 import { computed, ref } from 'vue'
 import { relativeTime } from '@/utils/format'
 import { getReplies } from '@/api/comment'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps({
   comment: { type: Object, required: true },
+  // 顶层评论对象：回复折叠到顶层（后端嵌套限制 2 层，子评论的「回复」转换为
+  // parentGuid=顶层 + replyToGuid=被回复评论）。不传时自身即为顶层。
+  rootComment: { type: Object, default: null },
   replyToName: { type: String, default: '' }
 })
 
-defineEmits(['reply', 'remove'])
+const auth = useAuthStore()
 
+// 真实后端 user.userGuid 与当前登录用户比对（曾写死 'me' 导致删除按钮永不显示）
 const isMine = computed(() => {
-  // 真实后端：user.userGuid 与当前登录用户比对（P5 接 auth store 后精化）
-  return props.comment.user && props.comment.user.userGuid === 'me'
+  const uid = props.comment.user && props.comment.user.userGuid
+  return !!uid && String(uid).toLowerCase() === String(auth.user && auth.user.id).toLowerCase()
 })
+
+const rootComment = computed(() => props.rootComment || props.comment)
 
 const replies = ref([])
 const repliesLoaded = ref(false)
 
 const visibleReplies = computed(() => replies.value.slice(0, 3))
 
+// 子回复显示「回复 @被回复者」，被回复者 = 该子回复的 replyToGuid 指向的评论作者；
+// 列表接口未返回作者名映射时回退显示当前父评论作者
+function replyToNameOf(r) {
+  return (r.user && r.user.userName) || (props.comment.user && props.comment.user.userName) || ''
+}
+
 async function loadReplies() {
   try {
     const res = await getReplies(props.comment.commentGuid)
-    replies.value = (res.data && (res.data.items || res.data.list)) || []
+    const data = res && res.data ? res.data : res
+    replies.value = (data && (data.items || data.list)) || []
     repliesLoaded.value = true
   } catch (e) {
     console.error('加载回复失败:', e)
@@ -92,5 +107,16 @@ function hideAvatar(e) {
 function onLike() {
   // Phase 5：评论点赞后端无端点，本地+1
   props.comment.likeCount = (props.comment.likeCount || 0) + 1
+}
+
+// 回复：顶层评论回复自身；子评论折叠到顶层（携带 root 供父级构造 parentGuid/replyToGuid）
+const emit = defineEmits(['reply', 'remove'])
+
+function onReply() {
+  emit('reply', { root: rootComment.value, target: props.comment })
+}
+
+function onRemove() {
+  emit('remove', { root: rootComment.value, target: props.comment })
 }
 </script>
