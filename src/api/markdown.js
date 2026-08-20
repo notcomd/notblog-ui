@@ -15,6 +15,23 @@ export function getMarkdownDoc(guid) {
   return service.get(`/api/markdown/${guid}`)
 }
 
+export function getMarkdownContent(guid) {
+  return service.get(`/api/markdown/${guid}/content`)
+}
+
+// ---------- 文档交互（计数） ----------
+export function viewMarkdown(guid) {
+  return service.post(`/api/markdown/${guid}/view`)
+}
+
+export function likeMarkdown(guid) {
+  return service.post(`/api/markdown/${guid}/like`)
+}
+
+export function unlikeMarkdown(guid) {
+  return service.post(`/api/markdown/${guid}/unlike`)
+}
+
 export function updateMarkdownDoc(guid, payload) {
   return service.put(`/api/markdown/${guid}`, payload)
 }

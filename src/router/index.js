@@ -5,11 +5,11 @@ import { getToken } from '@/utils/auth'
 // 部落主应用（轻芒·兴趣部落）
 import AppLayout from '@/layout/AppLayout.vue'
 import HomeView from '@/views/HomeView.vue'
-import ExploreView from '@/views/ExploreView.vue'
 import CirclePage from '@/views/CirclePage.vue'
 import ChatPage from '@/views/ChatPage.vue'
 import UserSpaceView from '@/views/UserSpaceView.vue'
 import PostDetailView from '@/views/PostDetailView.vue'
+import MarkdownDetailView from '@/views/MarkdownDetailView.vue'
 import PublishView from '@/views/PublishView.vue'
 import WorkspaceView from '@/views/WorkspaceView.vue'
 
@@ -38,12 +38,12 @@ const routes = [
     component: AppLayout,
     children: [
       { path: 'home', name: 'Home', component: HomeView },
-      { path: 'explore', name: 'Explore', component: ExploreView, meta: { requiresAuth: true } },
       { path: 'circles', name: 'Circles', component: CirclePage, meta: { requiresAuth: true } },
       { path: 'chat', name: 'Chat', component: ChatPage, meta: { requiresAuth: true } },
       { path: 'chat/:sessionId', name: 'ChatSession', component: ChatPage, meta: { requiresAuth: true } },
       { path: 'users/:id', name: 'UserSpace', component: UserSpaceView, meta: { requiresAuth: true } },
       { path: 'posts/:id', name: 'PostDetail', component: PostDetailView, meta: { requiresAuth: true } },
+      { path: 'markdown/:guid', name: 'MarkdownDetail', component: MarkdownDetailView, meta: { requiresAuth: true } },
       { path: 'publish', name: 'Publish', component: PublishView, meta: { requiresAuth: true } },
       { path: 'workspace', name: 'Workspace', component: WorkspaceView, meta: { requiresAuth: true } }
     ]
