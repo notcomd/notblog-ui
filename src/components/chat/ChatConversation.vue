@@ -104,7 +104,7 @@ const activeSubtitle = computed(() => {
 const members = computed(() => {
   const a = active.value
   if (!a || !a.groupId) return []
-  const g = chat.groups.find(x => String(x.id) === String(a.groupId))
+  const g = chat.groups.find(x => String(x.groupId) === String(a.groupId))
   const pids = (g && g.participants) || a.participants || []
   return pids.map(pid => {
     const f = chat.friends.find(x => String(x.friendId) === String(pid))

@@ -11,23 +11,25 @@
           :class="msgUnread > 0 ? 'bg-amber-400/15 text-amber-600 dark:text-amber-300 hover:bg-amber-400/25' : 'text-zinc-400 cursor-default'"
           :disabled="msgUnread === 0 || allReadBusy"
           @click="markAllRead"
-        >{{ allReadBusy ? '处理中...' : '✓ 一键已读' }}</button>
+        ><span v-if="!allReadBusy" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>一键已读</span><span v-else>处理中...</span></button>
       </div>
-      <div v-else class="relative shrink-0">
-        <button class="w-7 h-7 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60" title="更多" @click="listMoreOpen = !listMoreOpen">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+      <div v-else class="flex items-center gap-1 shrink-0">
+        <button
+          v-for="a in listMoreActions"
+          :key="a.key"
+          class="w-7 h-7 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors shrink-0"
+          :title="a.label"
+          @click="onListMoreAction(a)"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="a.icon"></svg>
         </button>
-        <div v-if="listMoreOpen" class="fixed inset-0 z-40" @click="listMoreOpen = false"></div>
-        <div v-if="listMoreOpen" class="absolute right-0 top-full mt-1 w-40 glass-card p-1.5 z-50">
-          <button v-for="a in listMoreActions" :key="a.key" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70 transition-colors" @click="onListMoreAction(a)">{{ a.label }}</button>
-        </div>
       </div>
     </div>
 
     <!-- 列表区 -->
     <div class="flex-1 overflow-y-auto space-y-1 min-h-0">
       <div v-if="visibleSessions.length === 0 && !sessionsLoading" class="py-12 flex flex-col items-center gap-2 text-zinc-400">
-        <div class="text-4xl">{{ emptyIcon }}</div>
+        <div class="text-4xl" v-html="emptyIcon"></div>
         <p class="text-xs">{{ emptyText }}</p>
       </div>
 
@@ -67,9 +69,9 @@
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
           </button>
           <div v-if="sessionMenuTarget === s.sessionId" class="absolute right-0 top-full mt-1 w-36 glass-card p-1.5 z-50">
-            <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="togglePin(s)">{{ s.isPinned ? '取消置顶' : '📌 置顶' }}</button>
-            <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="toggleMute(s)">{{ s.isMuted ? '恢复提醒' : '🔕 免打扰' }}</button>
-            <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10" @click="removeSession(s)">🗑 删除会话</button>
+            <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="togglePin(s)"><span v-if="!s.isPinned" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg>置顶</span><span v-else>取消置顶</span></button>
+            <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="toggleMute(s)"><span v-if="!s.isMuted" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/></svg>免打扰</span><span v-else>恢复提醒</span></button>
+            <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10" @click="removeSession(s)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 删除会话</button>
           </div>
         </span>
       </button>
@@ -89,10 +91,10 @@
     <!-- 右键菜单 -->
     <div v-if="ctxMenu" class="fixed inset-0 z-40" @click="ctxMenu = null" @contextmenu.prevent="ctxMenu = null"></div>
     <div v-if="ctxMenu" class="fixed z-50 w-40 glass-card p-1.5" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }">
-      <button v-if="!isNotify(ctxMenu.s) && rowUnread(ctxMenu.s) > 0" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="markOneRead(ctxMenu.s)">✓ 设为已读</button>
-      <button v-if="isNotify(ctxMenu.s) && !ctxMenu.s.isRead" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="markOneRead(ctxMenu.s)">✓ 设为已读</button>
-      <button v-if="!isNotify(ctxMenu.s)" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="onCtxPin">📌 {{ ctxMenu.s.isPinned ? '取消置顶' : '置顶' }}</button>
-      <button v-if="!isNotify(ctxMenu.s)" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10" @click="onCtxDelete">🗑 删除会话</button>
+      <button v-if="!isNotify(ctxMenu.s) && rowUnread(ctxMenu.s) > 0" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="markOneRead(ctxMenu.s)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 设为已读</button>
+      <button v-if="isNotify(ctxMenu.s) && !ctxMenu.s.isRead" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="markOneRead(ctxMenu.s)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 设为已读</button>
+      <button v-if="!isNotify(ctxMenu.s)" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="onCtxPin"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg> {{ ctxMenu.s.isPinned ? '取消置顶' : '置顶' }}</button>
+      <button v-if="!isNotify(ctxMenu.s)" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10" @click="onCtxDelete"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 删除会话</button>
     </div>
 
     <!-- 添加好友弹窗 -->
@@ -167,7 +169,6 @@ const tab = ref('messages')
 const tabTitle = computed(() => (tab.value === 'friends' ? '好友' : tab.value === 'groups' ? '群聊' : '消息'))
 const sessionsLoading = ref(true)
 const notifItems = ref([])
-const listMoreOpen = ref(false)
 const sessionMenuTarget = ref(null)
 const ctxMenu = ref(null)
 const allReadBusy = ref(false)
@@ -187,16 +188,15 @@ const visibleSessions = computed(() => {
 })
 const msgUnread = computed(() => messageItems.value.reduce((sum, s) => sum + rowUnread(s), 0))
 const emptyText = computed(() => {
-  if (tab.value === 'groups') return '暂无群聊，去频道页创建或加入吧'
+  if (tab.value === 'groups') return '暂无群聊，去社区页创建或加入吧'
   if (tab.value === 'messages') return '暂无消息，和好友聊聊吧'
   return '暂无会话，去好友列表发起聊天吧'
 })
-const emptyIcon = computed(() => (tab.value === 'groups' ? '👥' : tab.value === 'messages' ? '🔔' : '💬'))
+const emptyIcon = computed(() => (tab.value === 'groups' ? '<svg class="w-14 h-14 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' : tab.value === 'messages' ? '<svg class="w-14 h-14 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' : '<svg class="w-14 h-14 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'))
 
 function switchTab(t) {
   tab.value = t
   sessionMenuTarget.value = null
-  listMoreOpen.value = false
   ctxMenu.value = null
 }
 
@@ -232,12 +232,12 @@ function sessionTitle(s) {
 function sessionAvatar(s) {
   if (s.avatarUrl) return s.avatarUrl
   if (s.groupId) {
-    const g = chat.groups.find(x => String(x.id) === String(s.groupId))
+    const g = chat.groups.find(x => String(x.groupId) === String(s.groupId))
     if (g && g.avatarUrl) return g.avatarUrl
   }
   const peerId = chat.peerIdOf(s.sessionId)
   const f = chat.friends.find(x => String(x.friendId) === String(peerId))
-  return f ? f.friendAvatar : 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#d6d3d1"/><text x="50" y="60" font-size="36" text-anchor="middle" fill="white">💬</text></svg>')
+  return f ? f.friendAvatar : 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#d6d3d1"/><path d="M30 32h40v26H47l-11 11v-11h-6z" fill="#fff"/></svg>')
 }
 
 function isOnline(s) {
@@ -249,18 +249,17 @@ function isRowOnline(s) { return isOnline(s) }
 const listMoreActions = computed(() => {
   if (tab.value === 'groups') {
     return [
-      { key: 'createGroup', label: '➕ 创建群聊' },
-      { key: 'searchGroup', label: '🔍 搜索群聊' }
+      { key: 'createGroup', label: '创建群聊', icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><path d="M20 8v6M23 11h-6" />' },
+      { key: 'searchGroup', label: '搜索群聊', icon: '<circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />' }
     ]
   }
   return [
-    { key: 'addFriend', label: '➕ 添加好友' },
-    { key: 'searchFriend', label: '🔍 搜索好友' }
+    { key: 'addFriend', label: '添加好友', icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" />' },
+    { key: 'searchFriend', label: '搜索好友', icon: '<circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />' }
   ]
 })
 
 function onListMoreAction(a) {
-  listMoreOpen.value = false
   if (a.key === 'addFriend') addFriendOpen.value = true
   else if (a.key === 'searchFriend') friendSearchOpen.value = true
   else if (a.key === 'createGroup') router.push({ path: '/chat', query: { action: 'createGroup' } })
