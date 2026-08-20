@@ -15,8 +15,13 @@ module.exports = {
         target: 'https://localhost:5000',
         changeOrigin: true
       },
-      // SignalR 实时通道（MessageHub）
+      // SignalR 实时通道（MessageHub + CallHub 语音/视频通话信令）
       '/MessageHub': {
+        target: 'https://localhost:5000',
+        changeOrigin: true,
+        ws: true
+      },
+      '/CallHub': {
         target: 'https://localhost:5000',
         changeOrigin: true,
         ws: true
