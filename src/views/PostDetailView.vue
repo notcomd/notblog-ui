@@ -188,14 +188,14 @@
 
         <!-- 评论区（占右侧主要高度，独立滚动） -->
         <div class="glass-card p-4 h-[480px] flex flex-col min-h-0">
-          <CommentSection :tweet-guid="tweet.tweetGuid" ref="commentSection" />
+          <CommentSection :cfg="commentCfg" ref="commentSection" />
         </div>
       </div>
     </div>
 
     <!-- 加载失败 -->
     <div v-else class="py-24 flex flex-col items-center gap-4">
-      <div class="text-6xl">🍂</div>
+      <div class="text-6xl"><svg class="w-14 h-14 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
       <p class="text-zinc-500 dark:text-zinc-400">内容不存在或已被删除</p>
       <button class="px-4 py-2 rounded-[5%] glass-card text-sm text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="goBack">返回</button>
     </div>
@@ -205,9 +205,10 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import CommentSection from '@/components/post/CommentSection.vue'
+import CommentSection from '@/components/comment/CommentSection.vue'
 import VideoPlayer from '@/components/video/VideoPlayer.vue'
 import { getTweetDetail, toggleLike, toggleFavorite, recordView, shareTweet } from '@/api/tweet'
+import { getComments, addComment, deleteComment, getReplies } from '@/api/comment'
 import { getFollowing, follow, unfollow } from '@/api/follow'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
@@ -221,6 +222,31 @@ const auth = useAuthStore()
 const toast = useToastStore()
 
 const tweet = ref(null)
+
+// 评论配置（通用评论组件，tweets 后端：分页 + 排序 + 回复折叠）
+const commentCfg = {
+  idField: 'commentGuid',
+  contentField: 'content',
+  timeField: 'createTime',
+  likeCountField: 'likeCount',
+  replyCountField: 'replyCount',
+  imagesField: '',
+  images: false,
+  sortable: true,
+  replyMode: 'fold',
+  loader: (params) => getComments(tweet.value && tweet.value.tweetGuid, params),
+  creator: (payload) => addComment({ ...payload, tweetGuid: tweet.value && tweet.value.tweetGuid }),
+  remove: (id) => deleteComment(id),
+  replyLoader: (parentId) => getReplies(parentId),
+  parseList: (data) => {
+    const list = (data && (data.items || data.list)) || []
+    return { items: list, total: (data && (data.totalCount ?? data.total)) || list.length, hasMore: list.length >= 20 }
+  },
+  authorName: (c) => (c.user && c.user.userName) || '用户',
+  authorId: (c) => c.user && c.user.userGuid,
+  like: null,
+  unlike: null
+}
 
 const isMarkdown = computed(() => !!tweet.value && looksLikeMarkdown(tweet.value.content))
 const renderedMarkdown = computed(() => (tweet.value ? renderMarkdown(tweet.value.content) : ''))
@@ -410,7 +436,7 @@ function goBack() {
 }
 
 function goCircle() {
-  toast.push('频道页开发中（Phase 3）', 'info')
+  toast.push('社区页开发中（Phase 3）', 'info')
 }
 
 function goAuthor() {

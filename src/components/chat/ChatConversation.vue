@@ -69,6 +69,7 @@
 <script setup>
 // 会话主视窗：负责消息展示、发送、失败重试、输入状态、滚动加载和群聊面板切换
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { charAvatar as demoAvatar } from '@/utils/avatar'
 import { useRoute, useRouter } from 'vue-router'
 import { useChatStore } from '@/stores/chat'
 import { useToastStore } from '@/stores/toast'
@@ -125,9 +126,6 @@ function startCall(type) {
   call.startCall(active.value.sessionId, type)
 }
 
-function demoAvatar(char, bg) {
-  return 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="${bg}"/><text x="50" y="62" font-size="40" text-anchor="middle" fill="#fff" font-family="sans-serif">${char}</text></svg>`)
-}
 
 function isMine(m) {
   return String(m.senderId) === String(myId.value)

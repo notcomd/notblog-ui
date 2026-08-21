@@ -144,6 +144,7 @@
 <script setup>
 // 会话侧边栏：负责会话/好友/群聊列表、通知列表、会话操作、添加/搜索好友
 import { computed, onMounted, ref } from 'vue'
+import { charAvatar as demoAvatar } from '@/utils/avatar'
 import { useRouter } from 'vue-router'
 import { useChatStore } from '@/stores/chat'
 import { useToastStore } from '@/stores/toast'
@@ -218,9 +219,6 @@ function timeText(t) {
   return sameDay ? `${hh}:${mm}` : `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`
 }
 
-function demoAvatar(char, bg) {
-  return 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="${bg}"/><text x="50" y="62" font-size="40" text-anchor="middle" fill="#fff" font-family="sans-serif">${char}</text></svg>`)
-}
 
 function sessionTitle(s) {
   if (s.sessionName) return s.sessionName

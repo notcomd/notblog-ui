@@ -1,12 +1,12 @@
 <template>
-  <!-- 频道管理面板（复用主视窗）：基本信息/加入方式三选/审核队列/邀请码 -->
+  <!-- 社区管理面板（复用主视窗）：基本信息/加入方式三选/审核队列/邀请码 -->
   <div class="glass-card flex flex-col min-h-0">
     <!-- 头部 -->
     <div class="flex items-center gap-3 px-5 py-4 border-b border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
       <button class="w-8 h-8 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="返回" @click="$emit('close')">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
       </button>
-      <span class="text-base font-semibold text-zinc-800 dark:text-zinc-100">频道管理</span>
+      <span class="text-base font-semibold text-zinc-800 dark:text-zinc-100">社区管理</span>
       <span v-if="!isOwner" class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">管理员（仅审核/邀请，不可改信息）</span>
     </div>
 
@@ -25,11 +25,11 @@
             <input ref="coverInput" type="file" accept="image/*,video/*" class="hidden" @change="onCoverFile" />
           </div>
           <div>
-            <label class="text-xs text-zinc-400 block mb-1">频道名称</label>
+            <label class="text-xs text-zinc-400 block mb-1">社区名称</label>
             <input v-model="name" maxlength="30" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
           </div>
           <div>
-            <label class="text-xs text-zinc-400 block mb-1">频道简介</label>
+            <label class="text-xs text-zinc-400 block mb-1">社区简介</label>
             <textarea v-model="desc" rows="2" maxlength="120" class="w-full rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all p-3 resize-none"></textarea>
           </div>
         </div>
@@ -47,14 +47,14 @@
             :disabled="!isOwner"
             @click="setMode(m.key)"
           >
-            <span class="block text-xs font-medium text-zinc-700 dark:text-zinc-200">{{ m.label }}</span>
+            <span class="block text-xs font-medium text-zinc-700 dark:text-zinc-200 inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="m.icon"></svg>{{ m.label }}</span>
             <span class="block text-[10px] text-zinc-400 mt-0.5">{{ m.desc }}</span>
           </button>
         </div>
         <p class="text-[10px] text-zinc-400 mt-1.5">加入方式保存在本机（后端暂无字段，跨设备不同步）</p>
       </div>
 
-      <!-- 审核队列（审核制频道；创建者/管理者处理） -->
+      <!-- 审核队列（审核制社区；创建者/管理者处理） -->
       <div v-if="joinMode === 'review'">
         <p class="text-xs font-medium text-zinc-400 mb-2">加入申请（{{ joinRequests.length }}）</p>
         <div v-if="joinRequests.length === 0" class="text-xs text-zinc-400 py-6 text-center bg-white/40 dark:bg-zinc-800/40 rounded-[5%]">暂无待审核申请</div>
@@ -81,7 +81,7 @@
             {{ generating ? '生成中...' : '＋ 生成邀请码' }}
           </button>
         </div>
-        <p v-if="joinMode === 'private' && !isOwner" class="text-xs text-zinc-400 py-3 text-center bg-white/40 dark:bg-zinc-800/40 rounded-[5%]">私密频道仅创建者可邀请</p>
+        <p v-if="joinMode === 'private' && !isOwner" class="text-xs text-zinc-400 py-3 text-center bg-white/40 dark:bg-zinc-800/40 rounded-[5%]">私密社区仅创建者可邀请</p>
         <div v-else-if="inviteCodes.length === 0" class="text-xs text-zinc-400 py-3 text-center bg-white/40 dark:bg-zinc-800/40 rounded-[5%]">暂无邀请码，点击上方生成</div>
         <div v-for="it in inviteCodes" :key="it.inviteGuid" class="flex items-center gap-2 px-3 py-2 rounded-[5%] bg-white/40 dark:bg-zinc-800/40 mb-1">
           <code class="flex-1 text-sm font-mono tracking-wider text-zinc-700 dark:text-zinc-200">{{ it.code }}</code>
@@ -103,8 +103,9 @@
 </template>
 
 <script setup>
-// 频道管理面板：基本信息（Owner）/加入方式三选（Owner）/审核队列/邀请码（localStorage 本地持久化）
+// 社区管理面板：基本信息（Owner）/加入方式三选（Owner）/审核队列/邀请码（localStorage 本地持久化）
 import { computed, ref, watch } from 'vue'
+import { themeAvatar } from '@/utils/avatar'
 import { generateCircleInvitation, getCircleInvitations, revokeCircleInvitation, updateCircle } from '@/api/circle'
 import { useToastStore } from '@/stores/toast'
 
@@ -117,9 +118,9 @@ const emit = defineEmits(['close', 'saved'])
 const toast = useToastStore()
 
 const JOIN_MODES = [
-  { key: 'invite', label: '🔓 邀请', desc: '全员可用邀请码' },
-  { key: 'private', label: '🔒 私密', desc: '仅创建者可邀请' },
-  { key: 'review', label: '📋 审核', desc: '公开申请+审核' }
+  { key: 'invite', label: '邀请', desc: '全员可用邀请码', icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>' },
+  { key: 'private', label: '私密', desc: '仅创建者可邀请', icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>' },
+  { key: 'review', label: '审核', desc: '公开申请+审核', icon: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>' }
 ]
 
 const isOwner = computed(() => props.myRole === 'Owner')
@@ -138,7 +139,7 @@ const generating = ref(false)
 
 const avatarUrl = computed(() => props.current?.avatarUrl || '')
 const fallback = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="8" fill="#f59e0b"/><text x="40" y="52" font-size="36" text-anchor="middle" fill="#fff" font-family="sans-serif">🏕</text></svg>'
+  '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="8" fill="#f59e0b"/><path d="M14 50 L40 24 L66 50 Z" fill="#fff"/><path d="M40 50v-16" stroke="#f59e0b" stroke-width="4"/></svg>'
 )
 
 watch(() => props.current, (c) => {
@@ -304,7 +305,7 @@ async function onCoverFile(e) {
   }
 }
 
-// ===== 保存（真实频道走 PUT /api/circles/{guid}；示例频道本地更新） =====
+// ===== 保存（真实社区走 PUT /api/circles/{guid}；示例社区本地更新） =====
 async function save() {
   if (!props.current || !name.value.trim()) return
   saving.value = true
@@ -320,7 +321,7 @@ async function save() {
         await updateCircle(props.current.circleGuid, payload)
       } catch (e) { /* 后端未就绪时本地生效 */ }
     }
-    toast.push('频道信息已保存', 'success')
+    toast.push('社区信息已保存', 'success')
     emit('saved', {
       name: name.value.trim(),
       description: desc.value.trim(),
@@ -333,9 +334,5 @@ async function save() {
 }
 
 // 主题渐变头像
-function themeAvatar(char) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#f97316"/></linearGradient></defs><rect width="72" height="72" rx="5" fill="url(#g)"/><text x="36" y="48" font-size="30" text-anchor="middle" fill="#fff" font-family="sans-serif">${char}</text></svg>`
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg)
-}
 
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <!-- 频道页容器：左侧频道列表 + 右侧主视窗（数据加载与状态协调） -->
+  <!-- 社区页容器：左侧社区列表 + 右侧主视窗（数据加载与状态协调） -->
   <div class="max-w-[1400px] mx-auto flex gap-5 h-[calc(100vh-7.5rem)]">
     <CircleSidebar
       :circles="circles"
@@ -18,10 +18,9 @@
       @created="onCreated"
       @leave="doLeave"
     />
-  </div>
 
-  <!-- 加入频道弹窗（邀请码/申请/收到的直邀） -->
-  <CircleJoinDialog
+    <!-- 加入社区弹窗（邀请码/申请/收到的直邀） -->
+    <CircleJoinDialog
     v-if="joinOpen"
     :my-invites="myInvites"
     :busy="inviteBusy"
@@ -30,8 +29,9 @@
     @join-submit="doJoin"
     @apply-join="doApplyJoin"
     @accept="onAcceptInvite"
-    @reject="onRejectInvite"
-  />
+      @reject="onRejectInvite"
+    />
+  </div>
 </template>
 
 <script>
@@ -39,8 +39,9 @@ export default { name: 'CirclePage' }
 </script>
 
 <script setup>
-// 频道页容器：负责频道数据加载、选择、加入/退出、直邀接收与示例数据兜底
+// 社区页容器：负责社区数据加载、选择、加入/退出、直邀接收与示例数据兜底
 import { computed, onMounted, ref } from 'vue'
+import { charAvatar as demoAvatar } from '@/utils/avatar'
 import CircleSidebar from '@/components/circle/CircleSidebar.vue'
 import CircleWorkspace from '@/components/circle/CircleWorkspace.vue'
 import CircleJoinDialog from '@/components/circle/CircleJoinDialog.vue'
@@ -61,7 +62,7 @@ const inviteBusy = ref('')
 
 const myRole = computed(() => (current.value ? (current.value.myRole || 'Member') : 'Member'))
 
-// ===== 示例频道数据（后端离线/未加入频道时展示；isSample 标记「示例」徽标） =====
+// ===== 示例社区数据（后端离线/未加入社区时展示；isSample 标记「示例」徽标） =====
 const DEMO_CIRCLES = [
   { circleGuid: 'demo-circle-photo', name: '轻芒摄影部落', description: '用镜头记录生活，分享光影之美', avatarUrl: demoAvatar('摄', '#6366f1'), coverUrl: '', memberCount: 128, myRole: 'Owner', unread: 3, isSample: true },
   { circleGuid: 'demo-circle-outdoor', name: '周末户外俱乐部', description: '徒步 · 露营 · 骑行，周末一起出发', avatarUrl: demoAvatar('户', '#10b981'), coverUrl: '', memberCount: 86, myRole: 'Admin', unread: 0, isSample: true },
@@ -69,11 +70,7 @@ const DEMO_CIRCLES = [
   { circleGuid: 'demo-circle-frontend', name: '前端开发圈', description: 'Vue / React / 工程化，一起卷技术', avatarUrl: demoAvatar('前', '#ec4899'), coverUrl: '', memberCount: 342, myRole: 'Member', unread: 0, isSample: true }
 ]
 
-// ===== 示例数据兜底（后端离线/未加入频道时展示；isSample 标记「示例」徽标） =====
-function demoAvatar(char, bg) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="8" fill="${bg}"/><text x="40" y="52" font-size="34" text-anchor="middle" fill="#fff" font-family="sans-serif">${char}</text></svg>`
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg)
-}
+// ===== 示例数据兜底（后端离线/未加入社区时展示；isSample 标记「示例」徽标） =====
 
 async function loadCircles() {
   loading.value = true
@@ -114,12 +111,12 @@ async function doLeave() {
   if (current.value.isSample) {
     circles.value = circles.value.filter(c => String(c.circleGuid) !== String(current.value.circleGuid))
     current.value = circles.value[0] || null
-    toast.push('已退出示例频道（本地）', 'info')
+    toast.push('已退出示例社区（本地）', 'info')
     return
   }
   try {
     await leaveCircle(current.value.circleGuid)
-    toast.push('已退出频道', 'success')
+    toast.push('已退出社区', 'success')
     await loadCircles()
   } catch (e) {
     toast.push('退出失败：' + (e.message || '请重试'), 'error')
@@ -134,7 +131,7 @@ async function doJoin(input) {
     const tokenMatch = text.match(/[?&]token=([0-9a-f-]+)/i) || text.match(/\/([0-9a-f-]{36})/i)
     const payload = tokenMatch ? { token: tokenMatch[1] } : { code: text }
     await joinCircle(payload)
-    toast.push('已加入频道', 'success')
+    toast.push('已加入社区', 'success')
     joinOpen.value = false
     await loadCircles()
   } catch (e) {
@@ -146,13 +143,13 @@ async function doJoin(input) {
   }
 }
 
-// 审核制频道申请加入（示例频道本地入队；真实频道后端暂无审核端点）
+// 审核制社区申请加入（示例社区本地入队；真实社区后端暂无审核端点）
 function doApplyJoin(input) {
   const name = (input || '').trim()
   if (!name) return
   const target = DEMO_CIRCLES.find(c => c.name === name && c.joinMode === 'review')
   if (!target) {
-    toast.push('未找到可申请的审核制频道', 'error')
+    toast.push('未找到可申请的审核制社区', 'error')
     return
   }
   try {
@@ -164,7 +161,7 @@ function doApplyJoin(input) {
     }
     list.push({ userGuid: 'me', userName: '我', time: Date.now() })
     localStorage.setItem(key, JSON.stringify(list))
-    toast.push('已提交加入申请，等待频道审核', 'success')
+    toast.push('已提交加入申请，等待社区审核', 'success')
   } catch (e) {
     toast.push('申请提交失败', 'error')
   }

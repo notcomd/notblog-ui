@@ -1,9 +1,9 @@
 <template>
-  <!-- 频道成员 tab：搜索框 + 按角色分组列表（创建者/管理者/普通成员），角色管理/移除 -->
+  <!-- 社区成员 tab：搜索框 + 按角色分组列表（创建者/管理者/普通成员），角色管理/移除 -->
   <div class="mt-4">
     <div class="glass-card p-5">
       <div class="flex items-center gap-3 mb-4">
-        <span class="flex-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200">👥 频道成员（{{ members.length }}）</span>
+        <span class="flex-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200 inline-flex items-center gap-1.5"><svg class="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>社区成员（{{ members.length }}）</span>
         <!-- 成员搜索框（卡片右上方；搜索结果替换分组列表） -->
         <div class="relative w-52 shrink-0">
           <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
@@ -23,7 +23,7 @@
       <!-- 搜索结果（搜索时替换分组列表） -->
       <div v-else-if="memberSearch" class="space-y-1">
         <div v-if="filteredMembers.length === 0" class="py-8 flex flex-col items-center gap-2 text-zinc-400">
-          <div class="text-3xl">🔍</div>
+          <div class="text-3xl"><svg class="w-10 h-10 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
           <p class="text-xs">未找到相关成员</p>
         </div>
         <div v-for="m in filteredMembers" :key="m.userGuid" class="flex items-center gap-3 px-2 py-2 rounded-[5%] hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors">
@@ -74,8 +74,9 @@
 </template>
 
 <script setup>
-// 频道成员：加载/搜索/按角色分组展示 + 角色任命（Owner）/移除（Owner/Admin）
+// 社区成员：加载/搜索/按角色分组展示 + 角色任命（Owner）/移除（Owner/Admin）
 import { computed, ref, watch } from 'vue'
+import { themeAvatar } from '@/utils/avatar'
 import { getCircleMembers } from '@/api/circle'
 import { useAuthStore } from '@/stores/auth'
 
@@ -156,8 +157,4 @@ function buildDemoMembers() {
 }
 
 // 主题渐变头像（amber→orange，全局 rounded-[5%] 风格）
-function themeAvatar(char) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#f97316"/></linearGradient></defs><rect width="72" height="72" rx="5" fill="url(#g)"/><text x="36" y="48" font-size="30" text-anchor="middle" fill="#fff" font-family="sans-serif">${char}</text></svg>`
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg)
-}
 </script>

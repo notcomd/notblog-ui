@@ -73,7 +73,7 @@
       </div>
 
       <!-- 评论（支持图片评论） -->
-      <MarkdownCommentSection v-if="doc" :mark-down-guid="route.params.guid" />
+      <CommentSection v-if="doc" :cfg="commentCfg" />
     </article>
   </div>
 </template>
@@ -89,10 +89,17 @@ import {
   unlikeMarkdown,
   favoriteMarkdown,
   unfavoriteMarkdown,
-  getMyFavorites
+  getMyFavorites,
+  getMarkdownReviews,
+  addMarkdownReview,
+  deleteMarkdownReview,
+  replyMarkdownReview,
+  likeMarkdownReview,
+  unlikeMarkdownReview,
+  getMarkdownReviewChildren
 } from '@/api/markdown'
 import { renderMarkdown } from '@/utils/markdown'
-import MarkdownCommentSection from '@/components/markdown/MarkdownCommentSection.vue'
+import CommentSection from '@/components/comment/CommentSection.vue'
 import { formatTime } from '@/utils/format'
 import { unwrap } from '@/utils/response'
 import { useToastStore } from '@/stores/toast'
@@ -102,6 +109,28 @@ const router = useRouter()
 const toast = useToastStore()
 
 const doc = ref(null)
+
+// 评论配置（通用评论组件，Markdown 后端：全量 + 图片评论 + 子评论接口）
+const commentCfg = {
+  idField: 'markReviewGuid',
+  contentField: 'content',
+  timeField: 'reviewTime',
+  likeCountField: '',
+  replyCountField: '',
+  imagesField: 'reviewImages',
+  images: true,
+  sortable: false,
+  replyMode: 'direct',
+  loader: () => getMarkdownReviews(route.params.guid),
+  creator: (payload) => addMarkdownReview(route.params.guid, payload),
+  remove: (id) => deleteMarkdownReview(route.params.guid, id),
+  replyLoader: (parentId) => getMarkdownReviewChildren(route.params.guid, parentId),
+  replier: (parentId, payload) => replyMarkdownReview(route.params.guid, parentId, payload),
+  like: (id) => likeMarkdownReview(route.params.guid, id),
+  unlike: (id) => unlikeMarkdownReview(route.params.guid, id),
+  authorName: (r) => (r.userId ? '用户 ' + String(r.userId).slice(0, 8) : '用户'),
+  authorId: (r) => r.userId
+}
 const content = ref('')
 const loading = ref(true)
 const liked = ref(false)
