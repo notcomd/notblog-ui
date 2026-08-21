@@ -71,6 +71,9 @@
           {{ quote.ViewCount }} 浏览
         </span>
       </div>
+
+      <!-- 评论（支持图片评论） -->
+      <MarkdownCommentSection v-if="doc" :mark-down-guid="route.params.guid" />
     </article>
   </div>
 </template>
@@ -89,6 +92,7 @@ import {
   getMyFavorites
 } from '@/api/markdown'
 import { renderMarkdown } from '@/utils/markdown'
+import MarkdownCommentSection from '@/components/markdown/MarkdownCommentSection.vue'
 import { formatTime } from '@/utils/format'
 import { unwrap } from '@/utils/response'
 import { useToastStore } from '@/stores/toast'
