@@ -10,7 +10,7 @@
         >
           <!-- 通知图标 -->
           <div class="w-10 h-10 shrink-0 rounded-[10px] bg-amber-400/15 dark:bg-amber-500/15 flex items-center justify-center text-xl">
-            {{ item.icon }}
+            <span v-html="item.icon"></span>
           </div>
 
           <!-- 通知内容：名称 + 消息 + 时间 -->
@@ -22,7 +22,7 @@
                 title="关闭"
                 @click="toast.dismiss(item.id)"
               >
-                ✕
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
             <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300 break-words">{{ item.text }}</p>

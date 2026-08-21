@@ -42,7 +42,7 @@
             <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
           </button>
           <span class="tabular-nums">{{ fmtTime(currentTime) }} / {{ fmtTime(duration) }}</span>
-          <span class="ml-2 hidden sm:inline text-zinc-300">💬 {{ barrageCount }} 条弹幕</span>
+          <span class="ml-2 hidden sm:inline text-zinc-300 inline-flex items-center gap-1"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>{{ barrageCount }} 条弹幕</span>
           <div class="flex-1"></div>
           <!-- 弹幕开关（记忆 per video） -->
           <button class="w-8 h-8 rounded-[5%] hover:bg-white/15 flex items-center justify-center transition-colors" :class="danmakuOn ? 'text-amber-400' : 'text-zinc-400'" title="弹幕开关" @click="toggleDanmaku">

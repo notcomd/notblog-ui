@@ -3,7 +3,7 @@
     <!-- 左：新建公报表单 -->
     <div class="glass-card p-5 space-y-4 h-fit">
       <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
-        <span class="text-lg">📢</span> 新建公报 <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-600 font-normal">后端缺口 · 演示</span>
+        <span class="text-lg"><svg class="w-5 h-5 inline-block align-[-3px] text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></span> 新建公报 <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-600 font-normal">后端缺口 · 演示</span>
       </h3>
       <!-- 发送范围 -->
       <div>
@@ -52,7 +52,7 @@
             <span>{{ a.scopeLabel }}</span>
             <span>{{ a.sender }}</span>
             <span>{{ relativeTime(a.sentTime) }}</span>
-            <span class="text-emerald-500">✅ 已送达 {{ a.delivered }} 人</span>
+            <span class="text-emerald-500 inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>已送达 {{ a.delivered }} 人</span>
             <button v-if="!a.recalled && Date.now() - a.sentTime < 5 * 60000" class="ml-auto text-xs text-red-500 hover:underline" @click="recall(a)">撤回</button>
           </div>
         </div>
@@ -80,9 +80,9 @@ const scopes = [
   { value: 'circle', label: '指定社区' }
 ]
 const msgTypes = [
-  { value: '公告', label: '📌 公告', active: 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' },
-  { value: '警告', label: '⚠️ 警告', active: 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' },
-  { value: '活动推广', label: '🎉 活动推广', active: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow' }
+  { value: '公告', label: '公告', active: 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' },
+  { value: '警告', label: '警告', active: 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' },
+  { value: '活动推广', label: '活动推广', active: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow' }
 ]
 
 const scope = ref('all')

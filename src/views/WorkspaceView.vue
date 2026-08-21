@@ -6,17 +6,17 @@
         <p class="text-sm text-zinc-400 mt-1">选择内容类型开始创作，未发布的作品会保存在这里</p>
       </div>
       <button class="px-4 h-10 rounded-2xl text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="toast.push('草稿保存在本机浏览器中', 'info')">
-        💾 草稿自动保存到本机
+        <svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>草稿自动保存到本机
       </button>
     </div>
 
     <!-- 四个方形类型选项 -->
-    <div class="grid grid-cols-2 xl:grid-cols-4 gap-5">
+    <div class="grid grid-cols-2 xl:grid-cols-3 gap-5">
       <div v-for="t in types" :key="t.type" class="glass-card overflow-hidden group cursor-pointer transition-all hover:-translate-y-1 hover:" @click="createNew(t.type)">
         <!-- 方形选项头 -->
         <div class="aspect-square relative flex flex-col items-center justify-center gap-3 transition-all group-hover:scale-[1.02]"
           :class="t.gradient">
-          <div class="text-6xl transition-transform duration-300 group-hover:scale-110">{{ t.icon }}</div>
+          <div class="text-6xl transition-transform duration-300 group-hover:scale-110" v-html="t.icon"></div>
           <div class="text-xl font-bold text-white drop-shadow">{{ t.label }}</div>
           <div class="text-xs text-white/80">{{ t.desc }}</div>
           <div class="absolute top-3 right-3 w-8 h-8 rounded-xl bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
@@ -34,7 +34,7 @@
               <!-- 缩略图 -->
               <div class="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
                 <img v-if="d.cover || (d.images && d.images[0])" :src="d.cover || d.images[0].preview || d.images[0].url" alt="" class="w-full h-full object-cover" @error="hideImg" />
-                <span v-else class="text-base">{{ t.icon }}</span>
+                <span v-else class="text-base" v-html="t.icon"></span>
               </div>
               <div class="flex-1 min-w-0">
                 <div class="text-xs font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ d.title || d.content || '未命名草稿' }}</div>
@@ -83,10 +83,9 @@ const toast = useToastStore()
 const deleteTarget = ref(null)
 
 const types = [
-  { type: 'post', label: '图文博客', icon: '🖼️', desc: '图片 + 文字记录', gradient: 'bg-gradient-to-br from-amber-400 to-orange-500', target: '/publish?type=post' },
-  { type: 'video', label: '视频', icon: '🎬', desc: '视频 + 封面 + 弹幕', gradient: 'bg-gradient-to-br from-blue-500 to-indigo-600', target: '/publish?type=video' },
-  { type: 'markdown', label: 'Markdown', icon: '📝', desc: '长文写作 · 需要封面', gradient: 'bg-gradient-to-br from-emerald-400 to-teal-600', target: '/publish?type=workspace' },
-  { type: 'circle', label: '创建社区', icon: '🏕️', desc: '建立兴趣频道', gradient: 'bg-gradient-to-br from-purple-400 to-fuchsia-600', target: '/publish?type=circle' }
+  { type: 'post', label: '图文博客', icon: '<svg class="w-9 h-9 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>', desc: '图片 + 文字记录', gradient: 'bg-gradient-to-br from-amber-400 to-orange-500', target: '/publish?type=post' },
+  { type: 'video', label: '视频', icon: '<svg class="w-9 h-9 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>', desc: '视频 + 封面 + 弹幕', gradient: 'bg-gradient-to-br from-blue-500 to-indigo-600', target: '/publish?type=video' },
+  { type: 'markdown', label: 'Markdown', icon: '<svg class="w-9 h-9 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', desc: '长文写作 · 需要封面', gradient: 'bg-gradient-to-br from-emerald-400 to-teal-600', target: '/publish?type=workspace' },
 ]
 
 function draftsByType(t) {

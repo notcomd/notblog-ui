@@ -85,9 +85,9 @@
             <div class="flex gap-2">
               <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="onPickFile" />
               <button class="flex-1 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed" :disabled="uploading" @click="pickFile">
-                {{ uploading ? '⏳ 上传中…' : '📤 上传自定义图片' }}
+                <span v-if="!uploading" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>上传自定义图片</span><span v-else>上传中…</span>
               </button>
-              <button v-if="skin.customUrl" class="h-9 px-3 rounded-[5%] text-sm font-medium text-red-500 border border-red-300 dark:border-red-500/40 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" @click="skin.removeWallpaper()">❌ 移除背景</button>
+              <button v-if="skin.customUrl" class="h-9 px-3 rounded-[5%] text-sm font-medium text-red-500 border border-red-300 dark:border-red-500/40 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" @click="skin.removeWallpaper()"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> 移除背景</button>
             </div>
             <!-- 我的壁纸：点击切换回自定义背景 -->
             <div v-if="skin.customUrl" class="flex items-center gap-2.5">

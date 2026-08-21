@@ -1,22 +1,22 @@
 import service from '@/axios'
 
-// 频道发现列表：GET /api/circles?keyword=&page=&pageSize= -> ApiResponse<PagedResult<CircleDto>>
+// 社区发现列表：GET /api/circles?keyword=&page=&pageSize= -> ApiResponse<PagedResult<CircleDto>>
 // ⚠️ 2026-08-13 新增对接（后端「圈子发现列表」，原推荐广场缺口已补）
 export function getDiscoverCircles(params = {}) {
   return service.get('/api/circles', { params })
 }
 
-// 我的频道列表：GET /api/circles/my -> ApiResponse<List<CircleDto>>
+// 我的社区列表：GET /api/circles/my -> ApiResponse<List<CircleDto>>
 export function getMyCircles() {
   return service.get('/api/circles/my')
 }
 
-// 频道详情：GET /api/circles/{circleGuid} -> ApiResponse<CircleDto>
+// 社区详情：GET /api/circles/{circleGuid} -> ApiResponse<CircleDto>
 export function getCircle(circleGuid) {
   return service.get(`/api/circles/${circleGuid}`)
 }
 
-// 频道动态流：GET /api/circles/{circleGuid}/posts -> ApiResponse<PagedResult<CommunityPostDto>>
+// 社区动态流：GET /api/circles/{circleGuid}/posts -> ApiResponse<PagedResult<CommunityPostDto>>
 // CommunityPostDto 缺作者信息，转换为 PostCard 兼容结构
 export function getCirclePosts(circleGuid, params = {}) {
   const req = service.get(`/api/circles/${circleGuid}/posts`, { params })
@@ -41,17 +41,17 @@ function mapCommunityPost(p) {
   }
 }
 
-// 加入频道（邀请码/链接）：POST /api/circles/join { code? | token? }
+// 加入社区（邀请码/链接）：POST /api/circles/join { code? | token? }
 export function joinCircle(payload) {
   return service.post('/api/circles/join', payload)
 }
 
-// 退出频道：DELETE /api/circles/{circleGuid}/members/{userGuid}
+// 退出社区：DELETE /api/circles/{circleGuid}/members/{userGuid}
 export function leaveCircle(circleGuid, userGuid) {
   return service.delete(`/api/circles/${circleGuid}/members/${userGuid}`)
 }
 
-// 频道成员列表：GET /api/circles/{circleGuid}/members -> ApiResponse<PagedResult<CircleMemberDto{userGuid,role,nickname,joinTime}>>
+// 社区成员列表：GET /api/circles/{circleGuid}/members -> ApiResponse<PagedResult<CircleMemberDto{userGuid,role,nickname,joinTime}>>
 export function getCircleMembers(circleGuid, params = {}) {
   return service.get(`/api/circles/${circleGuid}/members`, { params })
 }
@@ -93,27 +93,27 @@ export function rejectCircleInvitation(inviteGuid) {
   return service.post(`/api/circles/invitations/${inviteGuid}/reject`)
 }
 
-// 解散频道：DELETE /api/circles/{circleGuid}（仅圈主）
+// 解散社区：DELETE /api/circles/{circleGuid}（仅圈主）
 export function dissolveCircle(circleGuid) {
   return service.delete(`/api/circles/${circleGuid}`)
 }
 
-// 转让频道：POST /api/circles/{circleGuid}/transfer { newOwnerGuid }（仅圈主）
+// 转让社区：POST /api/circles/{circleGuid}/transfer { newOwnerGuid }（仅圈主）
 export function transferCircle(circleGuid, newOwnerGuid) {
   return service.post(`/api/circles/${circleGuid}/transfer`, { newOwnerGuid })
 }
 
-// 创建频道：POST /api/circles { name, description?, avatarUrl?, coverUrl?, maxMembers? }
+// 创建社区：POST /api/circles { name, description?, avatarUrl?, coverUrl?, maxMembers? }
 export function createCircle(payload) {
   return service.post('/api/circles', payload)
 }
 
-// 更新频道信息：PUT /api/circles/{circleGuid} { name, description?, avatarUrl?, coverUrl? }
+// 更新社区信息：PUT /api/circles/{circleGuid} { name, description?, avatarUrl?, coverUrl? }
 export function updateCircle(circleGuid, payload) {
   return service.put(`/api/circles/${circleGuid}`, payload)
 }
 
-// ===== 频道媒体上传（头像/封面：图片/动图/视频 ≤20MB） =====
+// ===== 社区媒体上传（头像/封面：图片/动图/视频 ≤20MB） =====
 // 通道选择：≤10MB 直传 /api/files/upload-image（图片）或 /api/files/upload（视频，需 isPublic）；
 //          >10MB 自动走分片通道 /api/files/chunk/*（init → 逐片 upload → merge，FileMd5 后端可空不计算）
 const SMALL_FILE_LIMIT = 10 * 1024 * 1024 // 与后端 SmallFileSizeLimit 一致

@@ -77,7 +77,7 @@
             class="flex items-center gap-3 rounded-[5%] transition-all duration-200 relative group w-full"
             :class="[collapsed ? 'w-11 h-11 justify-center mx-auto' : 'px-3 h-11', isActive(item.path) ? 'bg-gradient-to-r from-amber-400/15 to-orange-500/10 text-amber-600 dark:text-amber-400 font-medium ' : 'text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 hover:translate-x-0.5']"
           >
-            <span class="text-lg shrink-0">{{ item.icon }}</span>
+            <span class="shrink-0" v-html="item.icon"></span>
             <span v-if="!collapsed" class="text-sm">{{ item.label }}</span>
             <span v-else class="absolute left-full ml-3 px-2 py-1 rounded-[5%] bg-zinc-800 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">{{ item.label }}</span>
             <!-- 公报高亮 -->
@@ -120,13 +120,13 @@ const pendingCount = ref(0)
 let savedTheme = null
 
 const navItems = [
-  { path: '/admin', label: '工作台', icon: '📊', match: '/admin' },
-  { path: '/admin/users', label: '用户管理', icon: '👤' },
-  { path: '/admin/content', label: '内容管理', icon: '📄' },
-  { path: '/admin/reports', label: '举报管理', icon: '🚩' },
-  { path: '/admin/circles', label: '社区管理', icon: '🏠' },
-  { path: '/admin/files', label: '文件管理', icon: '📁' },
-  { path: '/admin/announcements', label: '公报', icon: '📢', badge: 'NEW' }
+  { path: '/admin', label: '工作台', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>', match: '/admin' },
+  { path: '/admin/users', label: '用户管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
+  { path: '/admin/content', label: '内容管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' },
+  { path: '/admin/reports', label: '举报管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>' },
+  { path: '/admin/circles', label: '社区管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
+  { path: '/admin/files', label: '文件管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
+  { path: '/admin/announcements', label: '公报', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>', badge: 'NEW' }
 ]
 
 const adminAvatar = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#3b82f6"/><text x="50" y="62" font-size="40" text-anchor="middle" fill="white">管</text></svg>')

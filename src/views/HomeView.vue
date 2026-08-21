@@ -2,7 +2,7 @@
   <div class="max-w-[1400px] mx-auto">
     <!-- 未登录引导条 -->
     <div v-if="!auth.isLoggedIn()" class="mb-5 glass-card px-4 py-3 flex items-center gap-3 bg-gradient-to-r from-amber-400/10 to-orange-400/5">
-      <span class="text-2xl">🔒</span>
+      <span class="text-2xl"><svg class="w-7 h-7 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
       <p class="text-sm text-zinc-600 dark:text-zinc-300 flex-1">登录后解锁最新动态、点赞收藏评论等全部互动功能</p>
       <button class="px-4 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all" @click="router.push('/login')">立即登录</button>
     </div>

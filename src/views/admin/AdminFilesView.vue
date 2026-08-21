@@ -14,7 +14,7 @@
       <div class="h-2.5 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70 overflow-hidden">
         <div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500" :style="{ width: '42.6%' }"></div>
       </div>
-      <div class="text-[11px] text-amber-500 mt-1.5">⚠️ 剩余空间低于 60%，建议清理过期文件</div>
+      <div class="text-[11px] text-amber-500 mt-1.5 inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>剩余空间低于 60%，建议清理过期文件</div>
     </div>
 
     <!-- 筛选 -->
@@ -32,7 +32,7 @@
         <div class="aspect-video bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center overflow-hidden relative">
           <img v-if="f.type === 'image'" :src="f.url" alt="" class="w-full h-full object-cover" @error="hideImg" />
           <video v-else-if="f.type === 'video'" :src="f.url" class="w-full h-full object-cover" muted></video>
-          <div v-else class="text-5xl">📄</div>
+          <div v-else class="text-5xl"><svg class="w-12 h-12 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
           <!-- 悬停操作 -->
           <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
             <button class="px-3 py-1.5 rounded-[5%] bg-white/90 text-xs font-medium text-zinc-700 shadow dark:text-zinc-200" @click="preview(f)">预览</button>
@@ -46,8 +46,8 @@
         </div>
       </div>
       <div v-if="files.length === 0" class="col-span-full py-16 flex flex-col items-center gap-3 text-zinc-400">
-        <div class="text-5xl">{{ type === 'wallpaper' ? '🖼️' : '📁' }}</div>
-        <p class="text-sm">{{ type === 'wallpaper' ? '暂无用户壁纸（⚠️ 后端缺口：用户壁纸列表/删除端点待实现，删除后该用户端背景图自动回退纯色）' : '该分类下暂无文件' }}</p>
+        <div class="text-5xl" v-if="type === 'wallpaper'"><svg class="w-12 h-12 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div class="text-5xl" v-else><svg class="w-12 h-12 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+        <p class="text-sm">{{ type === 'wallpaper' ? '暂无用户壁纸（后端缺口：用户壁纸列表/删除端点待实现，删除后该用户端背景图自动回退纯色）' : '该分类下暂无文件' }}</p>
       </div>
     </div>
 
@@ -57,7 +57,7 @@
         <img v-if="previewing.type === 'image'" :src="previewing.url" alt="" class="max-h-[400px] object-contain" />
         <video v-else-if="previewing.type === 'video'" :src="previewing.url" controls class="w-full max-h-[400px]"></video>
         <div v-else class="text-center py-10 text-zinc-400">
-          <div class="text-6xl mb-3">📄</div>文档在线预览开发中
+          <div class="text-6xl mb-3"><svg class="w-14 h-14 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>文档在线预览开发中
         </div>
       </div>
     </AdminModal>

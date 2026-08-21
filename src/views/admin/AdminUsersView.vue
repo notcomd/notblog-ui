@@ -112,7 +112,7 @@
           </div>
         </div>
         <div v-if="viewing.banReason" class="px-4 py-3 rounded-[5%] bg-red-500/10 text-sm text-red-500">
-          ⛔ 封禁原因：{{ viewing.banReason }}
+          <svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>封禁原因：{{ viewing.banReason }}
         </div>
       </div>
     </AdminModal>
@@ -198,7 +198,7 @@ function statusClass(s) {
 }
 
 function statusText(s) {
-  return { Normal: '✅ 正常', Banned: '⛔ 已封禁', Online: '🟢 在线中' }[s] || s
+  return { Normal: '正常', Banned: '已封禁', Online: '在线中' }[s] || s
 }
 
 async function load(p) {

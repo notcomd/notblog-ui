@@ -27,7 +27,7 @@
 
     <!-- 空状态 -->
     <div v-if="!loading && posts.length === 0" class="py-24 flex flex-col items-center gap-4">
-      <div class="text-6xl">🌱</div>
+      <div class="text-6xl"><svg class="w-14 h-14 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M12 20v-8"/><path d="M12 12c0-4-2-7-6-7 0 4 2 7 6 7z"/><path d="M12 12c0-3 2-5 5-5 0 3-2 5-5 5z"/></svg></div>
       <p class="text-zinc-500 dark:text-zinc-400">{{ emptyText }}</p>
     </div>
 
@@ -91,6 +91,6 @@ onUnmounted(() => {
   if (observer) observer.disconnect()
 })
 
-// loader 变化（如频道切换）时重置
+// loader 变化（如社区切换）时重置
 watch(() => props.loader, () => loadMore(true))
 </script>

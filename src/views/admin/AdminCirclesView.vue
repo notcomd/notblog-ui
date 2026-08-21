@@ -35,14 +35,14 @@
                 <div class="text-xs text-white/85 mt-0.5">{{ current.description }}</div>
                 <div class="text-[11px] text-white/70 mt-1">创建者：{{ current.ownerName }} · {{ current.memberCount }} 成员 · {{ current.postCount }} 帖子</div>
               </div>
-              <span v-if="current.status === 'Banned'" class="ml-3 text-xs px-2.5 py-1 rounded-full bg-red-500/90 text-white">⛔ 已封禁</span>
+              <span v-if="current.status === 'Banned'" class="ml-3 text-xs px-2.5 py-1 rounded-full bg-red-500/90 text-white inline-flex items-center gap-1"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>已封禁</span>
             </div>
           </div>
           <!-- 操作按钮 -->
           <div class="px-5 py-3 flex gap-2 border-t border-zinc-200/60 dark:border-zinc-700/60">
-            <button v-if="current.status !== 'Banned'" class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-400/15 text-amber-600 dark:text-amber-400 hover:bg-amber-400/25 active:scale-95 transition-all" @click="banCircleOpen = true">⛔ 封禁社区</button>
-            <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 active:scale-95 transition-all" @click="dissolveOpen = true">🗑 解散社区</button>
-            <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-500/10 text-amber-600 hover:bg-amber-1000/20 active:scale-95 transition-all" @click="transferOpen = true">🔄 转让社区</button>
+            <button v-if="current.status !== 'Banned'" class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-400/15 text-amber-600 dark:text-amber-400 hover:bg-amber-400/25 active:scale-95 transition-all inline-flex items-center gap-1" @click="banCircleOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> 封禁社区</button>
+            <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 active:scale-95 transition-all inline-flex items-center gap-1" @click="dissolveOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 解散社区</button>
+            <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-500/10 text-amber-600 hover:bg-amber-1000/20 active:scale-95 transition-all inline-flex items-center gap-1" @click="transferOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 转让社区</button>
           </div>
           <!-- Tab：成员 / 会话 -->
           <div class="px-5 pb-4">
@@ -65,7 +65,7 @@
           </div>
         </div>
         <div v-else class="py-24 flex flex-col items-center gap-4 text-zinc-400">
-          <div class="text-6xl">🏠</div>
+          <div class="text-6xl"><svg class="w-14 h-14 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
           <p>从左侧选择一个社区</p>
         </div>
       </div>

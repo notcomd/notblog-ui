@@ -1,7 +1,7 @@
 <template>
   <header class="sticky top-0 z-50 transition-all duration-300" :class="blurred ? 'opacity-60 saturate-50 pointer-events-none' : ''">
     <div class="h-16 px-5 flex items-center">
-      <!-- 左上：当前功能标题（随功能栏激活项变化，如：广场/频道/会话/探索、个人空间 Tab） -->
+      <!-- 左上：当前功能标题（随功能栏激活项变化，如：首页/社区/会话/广场、个人空间 Tab） -->
       <div v-if="titleItem" class="shrink-0">
         <span class="text-lg font-bold tracking-wide text-zinc-800 dark:text-zinc-100">{{ titleItem.label }}</span>
       </div>
@@ -20,7 +20,7 @@
           :class="feedTab.tab === 'latest' ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
           @click="onTabSwitch('latest')"
         >
-          <span v-if="!auth.isLoggedIn()" class="mr-1">🔒</span>最新
+          <span v-if="!auth.isLoggedIn()" class="mr-1"><svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>最新
           <span v-if="feedTab.tab === 'latest'" class="absolute left-3 right-3 bottom-0 h-0.5 rounded-full bg-amber-500"></span>
         </button>
       </div>
@@ -130,7 +130,7 @@
                     :disabled="signingIn"
                     @click="onSignIn"
                   >{{ signingIn ? '签到中...' : '每日签到 +250经验' }}</button>
-                  <span v-else-if="userInfo && userInfo.signedInToday" class="text-[11px] text-zinc-400">今日已签到 ✓</span>
+                  <span v-else-if="userInfo && userInfo.signedInToday" class="text-[11px] text-zinc-400">今日已签到 <svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 </div>
               </div>
 

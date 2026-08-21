@@ -1,13 +1,13 @@
 <template>
-  <!-- 频道主视窗：创建面板 / 管理面板 / 频道详情（Banner + 四分类 tab） -->
+  <!-- 社区主视窗：创建面板 / 管理面板 / 社区详情（Banner + 四分类 tab） -->
   <div class="flex-1 min-w-0 flex flex-col min-h-0">
-    <!-- 创建频道面板（复用主视窗） -->
+    <!-- 创建社区面板（复用主视窗） -->
     <CircleCreatePanel v-if="createMode" class="glass-card flex-1" @close="$emit('close-create')" @created="guid => $emit('created', guid)" />
 
     <!-- 管理面板 -->
     <CircleManagePanel v-else-if="manageMode" :current="current" :my-role="myRole" @close="manageMode = false" @saved="onManaged" />
 
-    <!-- 频道详情 -->
+    <!-- 社区详情 -->
     <template v-else-if="current">
       <div ref="scrollBox" data-scroll-container class="flex-1 min-h-0 overflow-y-auto">
         <CircleBanner
@@ -20,12 +20,12 @@
           @switch-tab="switchCircleTab"
         />
 
-        <!-- 主页：频道动态流 -->
+        <!-- 主页：社区动态流 -->
         <div v-if="circleTab === 'home'" class="mt-4">
           <div class="flex items-center gap-2 mb-4">
-            <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-400/15 text-amber-600 dark:text-amber-400">当前所在频道：{{ current.name }}</span>
+            <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-400/15 text-amber-600 dark:text-amber-400">当前所在社区：{{ current.name }}</span>
           </div>
-          <PostGrid :loader="circleLoader" :key="current.circleGuid + '-' + gridKey" empty-text="频道里还没有内容，快来发布第一条动态吧" />
+          <PostGrid :loader="circleLoader" :key="current.circleGuid + '-' + gridKey" empty-text="社区里还没有内容，快来发布第一条动态吧" />
         </div>
 
         <!-- 公告 -->
@@ -39,18 +39,18 @@
       </div>
     </template>
 
-    <!-- 未选择频道 -->
+    <!-- 未选择社区 -->
     <div v-else class="flex-1 min-h-0 flex items-center justify-center text-zinc-400">
       <div class="text-center">
-        <div class="text-6xl mb-3">🏕️</div>
-        <p>选择一个频道，或创建一个新频道</p>
+        <div class="mb-3 flex justify-center"><svg class="w-16 h-16 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 21l8.5-17 8.5 17"/><path d="M7 21l5-10 5 10"/><line x1="2" y1="21" x2="22" y2="21"/></svg></div>
+        <p>选择一个社区，或创建一个新社区</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-// 频道主视窗：创建面板 / 管理面板 / 频道详情编排（Banner + 公告·主页·资源·成员 tab）
+// 社区主视窗：创建面板 / 管理面板 / 社区详情编排（Banner + 公告·主页·资源·成员 tab）
 import { computed, ref } from 'vue'
 import PostGrid from '@/components/post/PostGrid.vue'
 import CircleCreatePanel from '@/components/circle/CircleCreatePanel.vue'
@@ -76,7 +76,7 @@ const circleTab = ref('home')
 
 const canManageUsers = computed(() => props.myRole === 'Owner' || props.myRole === 'Admin')
 
-// 频道加入方式（localStorage 本地持久化，后端暂无字段）
+// 社区加入方式（localStorage 本地持久化，后端暂无字段）
 const circleJoinMode = computed(() => {
   if (!props.current) return 'invite'
   try {
@@ -90,13 +90,13 @@ function switchCircleTab(t) {
   circleTab.value = t
 }
 
-// 频道动态流加载器（PostGrid 消费）
+// 社区动态流加载器（PostGrid 消费）
 function circleLoader(params) {
   if (!props.current) return Promise.resolve({ data: { items: [], total: 0 } })
   return getCirclePosts(props.current.circleGuid, params).catch(() => ({ data: { items: [], total: 0 } }))
 }
 
-// 管理面板保存后回写频道信息
+// 管理面板保存后回写社区信息
 function onManaged(patch) {
   manageMode.value = false
   const c = props.current
@@ -106,10 +106,10 @@ function onManaged(patch) {
     if (patch.avatarUrl) c.avatarUrl = patch.avatarUrl
     if (patch.coverUrl) c.coverUrl = patch.coverUrl
   }
-  toast.push('频道信息已更新', 'success')
+  toast.push('社区信息已更新', 'success')
 }
 
-// 成员角色/移除（真实端点；示例频道本地处理）
+// 成员角色/移除（真实端点；示例社区本地处理）
 async function onSetRole(m, role) {
   if (!props.current) return
   try {

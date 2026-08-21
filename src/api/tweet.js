@@ -7,7 +7,7 @@ export function getTimeline(params = {}) {
   return service.get('/api/tweets/timeline', { params })
 }
 
-// 热门（探索页）
+// 热门（广场页）
 export function getTrending(params = {}) {
   return service.get('/api/tweets/trending', { params })
 }

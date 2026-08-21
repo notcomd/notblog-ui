@@ -8,7 +8,7 @@
       <div class="flex items-center gap-3 text-sm">
         <span class="px-3 py-1.5 rounded-full bg-red-500/10 text-red-500 font-medium">待处理 {{ pendingCount }} 条</span>
         <span class="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 font-medium">已处理 {{ resolvedCount }} 条</span>
-        <button v-if="selected.length" class="px-3 h-9 rounded-[5%] text-xs bg-amber-500/10 text-amber-600 hover:bg-amber-1000/20 transition-colors" @click="batchResolve">✓ 批量标记已处理（{{ selected.length }}）</button>
+        <button v-if="selected.length" class="px-3 h-9 rounded-[5%] text-xs bg-amber-500/10 text-amber-600 hover:bg-amber-1000/20 transition-colors" @click="batchResolve"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 批量标记已处理（{{ selected.length }}）</button>
       </div>
     </div>
 
@@ -34,7 +34,7 @@
       </template>
       <template #cell-status="{ row }">
         <span class="text-xs px-2 py-1 rounded-full font-medium" :class="row.status === 'Pending' ? 'bg-amber-400/15 text-amber-600 dark:text-amber-400' : 'bg-emerald-400/15 text-emerald-500'">
-          {{ row.status === 'Pending' ? '⏳ 待处理' : '✅ 已处理' }}
+          {{ row.status === 'Pending' ? '待处理' : '已处理' }}
         </span>
       </template>
       <template #actions="{ row }">
@@ -48,7 +48,7 @@
       <div class="absolute right-0 top-0 bottom-0 w-[480px] glass-card rounded-l-[5%] rounded-r-none flex flex-col">
         <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-200/60 dark:border-zinc-700/60">
           <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100">举报详情 #{{ viewing.reportGuid }}</h3>
-          <button class="w-8 h-8 rounded-[5%] flex items-center justify-center text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" @click="viewing = null">✕</button>
+          <button class="w-8 h-8 rounded-[5%] flex items-center justify-center text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" @click="viewing = null"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
         <div class="flex-1 overflow-y-auto p-5 space-y-4">
           <div class="grid grid-cols-2 gap-3 text-sm">

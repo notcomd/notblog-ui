@@ -3,9 +3,8 @@
 
 export const MAIN_NAV_ITEMS = [
   { to: { path: '/home' }, label: '广场', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6' },
-  { to: { path: '/circles' }, label: '频道', icon: 'M3 21v-4m0 0V5a2 2 0 0 1 2-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 0 0-2 2zm9-13.5V9m0 4.5V19' },
+  { to: { path: '/circles' }, label: '社区', icon: 'M3.5 21 14 3l10.5 18M3.5 21h17M3.5 21 14 13' },
   { to: { path: '/chat' }, label: '会话', icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
-  { to: { path: '/explore' }, label: '探索', icon: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm0-7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm7-2h2m-2-6l-1.4 1.4M5 5l1.4 1.4M3 12h2' }
 ]
 
 // 个人空间导航：收藏/安全仅自己可见（他人只保留：主页/作品/公开仓库）

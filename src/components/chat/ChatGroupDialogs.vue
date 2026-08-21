@@ -4,7 +4,7 @@
     <!-- 创建群聊 -->
     <template v-if="mode === 'create'">
       <div class="flex items-center gap-3 px-5 py-3 border-b border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
-        <button class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60" @click="$emit('close')">←</button>
+        <button class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60" @click="$emit('close')"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
         <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">创建群聊</span>
       </div>
       <div class="flex-1 overflow-y-auto px-6 py-5 min-h-0 space-y-5">
@@ -43,7 +43,7 @@
     <!-- 搜索群聊 -->
     <template v-else-if="mode === 'search'">
       <div class="flex items-center gap-3 px-5 py-3 border-b border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
-        <button class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60" @click="$emit('close')">←</button>
+        <button class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60" @click="$emit('close')"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
         <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">搜索群聊</span>
       </div>
       <div class="flex-1 overflow-y-auto px-6 py-5 min-h-0 space-y-3">

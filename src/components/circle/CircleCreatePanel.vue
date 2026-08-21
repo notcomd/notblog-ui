@@ -5,7 +5,7 @@
       <button class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="返回" @click="emit('close')">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
       </button>
-      <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">创建频道</span>
+      <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">创建社区</span>
     </div>
 
     <!-- 表单区 -->
@@ -13,7 +13,7 @@
       <!-- 封面（静态图可裁剪；动图/视频直传） -->
       <div>
         <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-2 flex items-center gap-2">
-          频道封面
+          社区封面
           <span class="text-xs font-normal text-zinc-400">支持图片 / 动图 / 视频（≤20MB）</span>
         </div>
         <div class="relative h-32 rounded-[5%] overflow-hidden group">
@@ -44,23 +44,23 @@
           <button v-if="avatarPreview" class="absolute inset-0 rounded-[5%] bg-black/45 text-white text-[10px] font-medium flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="更换头像" :disabled="avatarUploading" @click="avatarInput && avatarInput.click()">更换头像</button>
         </div>
         <div class="flex-1 min-w-0">
-          <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">频道头像</div>
+          <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200">社区头像</div>
           <p class="text-xs text-zinc-400 mt-1">{{ avatarPreview ? '点击头像可更换' : '选图后 1:1 裁剪（JPG / PNG / WebP / 动图）' }}</p>
           <button v-if="!avatarPreview" class="mt-2 px-3 h-8 rounded-[5%] text-xs font-medium border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-60" :disabled="avatarUploading" @click="avatarInput && avatarInput.click()">{{ avatarUploading ? '上传中...' : '选择图片' }}</button>
         </div>
         <input ref="avatarInput" type="file" accept="image/*" class="hidden" @change="onAvatarPick" />
       </div>
 
-      <!-- 频道名称 -->
+      <!-- 社区名称 -->
       <div>
-        <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-2">频道名称 <span class="text-red-500">*</span></div>
-        <input v-model="form.name" maxlength="50" placeholder="给频道起个名字（必填）" class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+        <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-2">社区名称 <span class="text-red-500">*</span></div>
+        <input v-model="form.name" maxlength="50" placeholder="给社区起个名字（必填）" class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
       </div>
 
-      <!-- 频道简介 -->
+      <!-- 社区简介 -->
       <div>
-        <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-2">频道简介</div>
-        <textarea v-model="form.description" rows="3" maxlength="500" placeholder="介绍一下这个频道是做什么的（可选）" class="w-full resize-none rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"></textarea>
+        <div class="text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-2">社区简介</div>
+        <textarea v-model="form.description" rows="3" maxlength="500" placeholder="介绍一下这个社区是做什么的（可选）" class="w-full resize-none rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"></textarea>
       </div>
 
       <!-- 成员上限 -->
@@ -74,7 +74,7 @@
     <div class="px-5 py-3.5 border-t border-zinc-200/60 dark:border-zinc-700/60 flex justify-end gap-2 shrink-0">
       <button class="h-10 px-4 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" @click="emit('close')">取消</button>
       <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium active:scale-95 transition-all disabled:opacity-50" :disabled="creating || !form.name.trim()" @click="doCreate">
-        {{ creating ? '创建中...' : '创建频道' }}
+        {{ creating ? '创建中...' : '创建社区' }}
       </button>
     </div>
 
@@ -298,7 +298,7 @@ async function doCreate() {
     })
     const data = unwrap(res)
     const guid = typeof data === 'object' && data !== null ? (data.circleGuid || data.data || data.guid || '') : (data || '')
-    toast.push('频道创建成功', 'success')
+    toast.push('社区创建成功', 'success')
     emit('created', guid)
   } catch (err) {
     toast.push('创建失败，请稍后重试', 'error')

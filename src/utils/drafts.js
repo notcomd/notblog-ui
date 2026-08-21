@@ -1,5 +1,5 @@
 // 本地草稿箱：工作台未发布内容管理
-// 存储结构：{ id, type: 'post'|'video'|'markdown'|'circle', title, content, images[], cover, circleGuid, circleName, createdAt, updatedAt }
+// 存储结构：{ id, type: 'post'|'video'|'markdown', title, content, images[], cover, circleGuid, circleName, createdAt, updatedAt }
 const KEY = 'qingmang_drafts'
 
 export function getDrafts() {

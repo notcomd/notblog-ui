@@ -10,7 +10,7 @@ export function createTweet(payload) {
   })
 }
 
-// 发布到频道：POST /api/tweets/circle { circleGuid, content, fileIds?, linkUrl?, topicGuids? }
+// 发布到社区：POST /api/tweets/circle { circleGuid, content, fileIds?, linkUrl?, topicGuids? }
 export function createCirclePost(payload) {
   return service.post('/api/tweets/circle', {
     circleGuid: payload.circleGuid,
@@ -90,7 +90,7 @@ async function uploadVideoByChunks(file, onProgress) {
 }
 
 
-// 创建频道：POST /api/circles { name, description?, avatarUrl?, maxMembers? }
+// 创建社区：POST /api/circles { name, description?, avatarUrl?, maxMembers? }
 export function createCircle(payload) {
   return service.post('/api/circles', payload)
 }

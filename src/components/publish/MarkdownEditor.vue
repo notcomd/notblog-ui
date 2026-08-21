@@ -3,11 +3,11 @@
     <!-- 工具栏 -->
     <div class="flex flex-wrap items-center gap-1 px-3 py-2 border-b border-zinc-200/60 dark:border-zinc-700/60">
       <button v-for="btn in toolButtons" :key="btn.label" class="w-8 h-8 rounded-lg flex items-center justify-center text-sm text-zinc-600 dark:text-zinc-300 hover:bg-amber-400/15 hover:text-amber-500 transition-colors" :title="btn.tip" @click="insert(btn.syntax)">
-        {{ btn.icon }}
+        <span v-if="btn.svg" v-html="btn.svg"></span><span v-else>{{ btn.icon }}</span>
       </button>
       <div class="w-px h-5 bg-zinc-200 dark:bg-zinc-700 mx-1"></div>
       <button class="h-8 px-2.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-300 hover:bg-amber-400/15 hover:text-amber-500 transition-colors" title="上传图片（≤10MB，自动插入 Markdown）" :disabled="uploading" @click="pickImage">
-        {{ uploading ? '上传中...' : '🖼️ 上传图片' }}
+        <span v-if="!uploading" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>上传图片</span><span v-else>上传中...</span>
       </button>
       <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onPickImage" />
       <div class="flex-1"></div>
@@ -34,7 +34,7 @@
       <div v-if="view !== 'edit'" class="overflow-y-auto p-5 prose-sm w-1/2 flex-1 bg-white/20 dark:bg-zinc-900/20" :class="view === 'split' ? '' : 'w-full'">
         <div v-if="modelValue.trim()" class="markdown-body" v-html="rendered"></div>
         <div v-else class="h-full min-h-[380px] flex flex-col items-center justify-center gap-2 text-zinc-400">
-          <div class="text-5xl">✍️</div>
+          <div class="text-5xl"><svg class="w-12 h-12 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
           <p class="text-sm">在左侧开始书写，右侧实时预览</p>
         </div>
       </div>
@@ -96,7 +96,7 @@ const toolButtons = [
   { icon: '•', tip: '无序列表 - 项目', syntax: '- 列表项目' },
   { icon: '1.', tip: '有序列表 1. 项目', syntax: '1. 列表项目' },
   { icon: '</>', tip: '代码块 ```js', syntax: '```js\nconsole.log("hello")\n```' },
-  { icon: '🔗', tip: '链接 [文字](url)', syntax: '[链接文字](https://)' },
+  { icon: '🔗', svg: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>', tip: '链接 [文字](url)', syntax: '[链接文字](https://)' },
   { icon: '☰', tip: '表格', syntax: '| 列1 | 列2 |\n| --- | --- |\n| 内容 | 内容 |' },
   { icon: '—', tip: '分隔线 ---', syntax: '\n---\n' }
 ]
