@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 
 const THEME_KEY = 'qingmang_theme';
 
-// 全局主题：浅色/深色，带平滑颜色过渡（daisyUI light/dark）
+// 全局主题：浅色/深色，带平滑颜色过渡（data-theme 由 input.css 自定义选择器接管）
 export const useThemeStore = defineStore('theme', () => {
   const isDark = ref(localStorage.getItem(THEME_KEY) === 'dark');
 

@@ -1,8 +1,6 @@
 /* Tailwind CSS */
 @import "tailwindcss";
 
-@plugin "daisyui";
-
 /* ⚠️ dark: 变体必须跟随 data-theme 而非系统偏好（Tailwind 4 默认 media 策略，
    系统深色偏好会让浅色主题下的 dark:text-* 文字变白，与页面主题脱节——2026-08 用户实测发现） */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
@@ -10,14 +8,6 @@
 /* ===== 圆角统一策略：全局固定 10px（2026-08 调整：5% 自适应 → 20px 过大 → 10px） ===== */
 .rounded-\[5\%\] {
   border-radius: 10px !important;
-}
-
-/* daisyUI 组件（btn/input/card/modal/alert 等）圆角变量统一 10px */
-:root,
-[data-theme] {
-  --radius-selector: 10px;
-  --radius-field: 10px;
-  --radius-box: 10px;
 }
 
 /* 主题切换平滑过渡 */
@@ -33,7 +23,7 @@ html.theme-transition *::after {
    类名 glass / glass-card 不变（约 120 处引用不动），改这里即可全局生效 */
 @utility glass {
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: none; /* 覆盖 daisyUI 内置 .glass 的 blur(var(--glass-blur,40px))——类名重名冲突 */
+  backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
