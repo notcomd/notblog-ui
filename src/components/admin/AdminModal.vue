@@ -30,8 +30,8 @@ defineProps<Props>()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
 const widthClass: Record<string, string> = {
-  'w-[560px]': 'w-[560px]',
-  'w-[720px]': 'w-[720px]',
-  'w-[900px]': 'w-[900px]'
+  'w-[560px]': 'w-[min(560px,92vw)]',
+  'w-[720px]': 'w-[min(720px,92vw)]',
+  'w-[900px]': 'w-[min(900px,92vw)]'
 }
 </script>

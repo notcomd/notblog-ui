@@ -1,5 +1,5 @@
 <template>
-  <div class="absolute right-0 top-full mt-2 w-80 z-50 rounded-[5%] bg-white dark:bg-zinc-800/95 border border-zinc-200/70 dark:border-zinc-700/60 flex flex-col overflow-hidden" @click.stop>
+  <div class="absolute right-0 top-full mt-2 w-[min(20rem,90vw)] z-50 rounded-[5%] bg-white dark:bg-zinc-800/95 border border-zinc-200/70 dark:border-zinc-700/60 flex flex-col overflow-hidden" @click.stop>
     <!-- 头部 -->
     <div class="flex items-center justify-between px-4 h-11 border-b border-zinc-200/70 dark:border-zinc-700/60">
       <span class="text-sm font-medium text-zinc-800 dark:text-zinc-100">通知</span>

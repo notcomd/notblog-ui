@@ -2,14 +2,14 @@
   <div class="relative">
     <!-- 3列等宽网格（<1200px 自适应 2 列） -->
     <!-- 瀑布流：columns 多列交错（视频 1:1 与图文 9:16 混排无空隙，视觉更自然） -->
-    <div class="columns-2 xl:columns-3 gap-5">
+    <div class="columns-1 sm:columns-2 xl:columns-3 gap-5">
       <div v-for="post in posts" :key="post.tweetGuid" class="break-inside-avoid mb-5">
         <PostCard :post="post" />
       </div>
     </div>
 
     <!-- 加载中：骨架屏（瀑布流，模拟图文/视频交错比例） -->
-    <div v-if="loading" class="columns-2 xl:columns-3 gap-5 mt-5">
+    <div v-if="loading" class="columns-1 sm:columns-2 xl:columns-3 gap-5 mt-5">
       <div v-for="i in 6" :key="i" class="break-inside-avoid mb-5">
         <div class="glass-card overflow-hidden animate-pulse">
           <div class="bg-zinc-200/70 dark:bg-zinc-800/70" :class="i % 4 === 3 ? 'aspect-square' : 'aspect-[9/16]'"></div>

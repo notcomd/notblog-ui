@@ -1,6 +1,6 @@
 <template>
   <!-- 会话侧边栏：消息 / 好友 / 群聊 列表 + 通知 + 会话操作 -->
-  <div class="w-80 shrink-0 flex flex-col glass-card p-3 min-h-0">
+  <div class="w-full lg:w-80 lg:shrink-0 flex flex-col glass-card p-3 min-h-0">
     <!-- 列表头部 -->
     <div class="flex items-center justify-between shrink-0 px-1 pb-2">
       <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{{ tabTitle }}</span>
@@ -99,7 +99,7 @@
 
     <!-- 添加好友弹窗 -->
     <div v-if="addFriendOpen" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/30" @click.self="addFriendOpen = false">
-      <div class="glass-card p-6 w-[26rem]">
+      <div class="glass-card p-6 w-[min(26rem,92vw)]">
         <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-1">添加好友</h3>
         <p class="text-xs text-zinc-400 mb-4">输入对方邮箱查找用户并发起好友请求</p>
         <div class="flex gap-2">
@@ -122,7 +122,7 @@
 
     <!-- 搜索好友弹窗 -->
     <div v-if="friendSearchOpen" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/30" @click.self="friendSearchOpen = false">
-      <div class="glass-card p-6 w-[26rem] max-h-[85vh] flex flex-col">
+      <div class="glass-card p-6 w-[min(26rem,92vw)] max-h-[85vh] flex flex-col">
         <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-3">搜索好友</h3>
         <div class="flex gap-2">
           <input v-model="friendKeyword" class="flex-1 min-w-0 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="按备注搜索好友" @keydown.enter.exact.prevent="onFriendSearchEnter" />

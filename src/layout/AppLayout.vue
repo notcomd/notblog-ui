@@ -4,12 +4,15 @@
     <BackgroundLayer />
     <!-- 内容层：relative z-10 抬升到背景图层（z-0）之上（负 z-index 会被 body 背景 canvas 盖住，不可用） -->
     <div class="relative z-10 flex">
-      <!-- 左侧功能栏（100vh 全高，顶部含 Logo；个人主页与主页面公用同一布局，导航项随路由切换） -->
-      <SideNav :blurred="isDetail" />
+      <!-- 左侧功能栏：桌面≥lg 显示；移动端隐藏（由底部 MobileNav 承担主导航） -->
+      <SideNav :blurred="isDetail" class="hidden lg:flex" />
       <!-- 右侧：顶栏 + 内容区（顶栏不再横跨全屏，Logo 已移至左侧功能栏） -->
       <div class="flex-1 min-w-0 flex flex-col">
         <TopBar :blurred="isDetail" />
-        <main ref="mainBox" class="flex-1 min-h-0 px-6 py-6 overflow-y-auto">
+        <main
+          ref="mainBox"
+          class="flex-1 min-h-0 px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto scroll-native pb-24 lg:pb-6"
+        >
           <router-view v-slot="{ Component }">
             <transition name="page-fade">
               <keep-alive :include="cachedViews">
@@ -21,10 +24,13 @@
       </div>
     </div>
 
+    <!-- 移动端底部 Tab 导航（<lg 显示） -->
+    <MobileNav />
+
     <!-- 回到顶部（全局，右下角；监听 main 捕获阶段可覆盖页面内部滚动容器） -->
     <button
       v-if="showTopBtn"
-      class="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200/70 dark:border-zinc-700/60 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 active:scale-95 transition-all"
+      class="fixed bottom-24 right-4 sm:right-6 z-50 w-11 h-11 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200/70 dark:border-zinc-700/60 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 active:scale-95 transition-all lg:bottom-6"
       title="回到顶部"
       @click="scrollToTop"
     >
@@ -41,6 +47,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import TopBar from '@/layout/TopBar.vue'
 import SideNav from '@/layout/SideNav.vue'
+import MobileNav from '@/layout/MobileNav.vue'
 import BackgroundLayer from '@/components/common/BackgroundLayer.vue'
 import CallPanel from '@/components/chat/CallPanel.vue'
 

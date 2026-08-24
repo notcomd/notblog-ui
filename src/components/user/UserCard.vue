@@ -41,9 +41,9 @@
       <div class="flex items-center gap-3 sm:gap-4">
         <!-- 头像（失败回退首字母头像） -->
         <div class="relative group shrink-0">
-          <div class="w-20 h-20 rounded-2xl overflow-hidden border-4 border-white dark:border-zinc-800 bg-gradient-to-br from-amber-300 to-orange-400 flex items-center justify-center select-none">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 sm:border-4 border-white dark:border-zinc-800 bg-gradient-to-br from-amber-300 to-orange-400 flex items-center justify-center select-none">
             <img v-if="!avatarFailed && user.avatar" :src="user.avatar" alt="" class="w-full h-full object-cover" @error="avatarFailed = true" />
-            <span v-else class="text-3xl font-bold text-white">{{ avatarChar }}</span>
+            <span v-else class="text-2xl sm:text-3xl font-bold text-white">{{ avatarChar }}</span>
           </div>
           <button v-if="isSelf" class="absolute inset-0 rounded-2xl bg-black/45 text-white text-[10px] font-medium flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="更换头像" @click="avatarInput && avatarInput.click()">更换头像</button>
           <input ref="avatarInput" type="file" accept="image/*" class="hidden" @change="onAvatarChange" />

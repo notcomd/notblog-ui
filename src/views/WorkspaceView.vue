@@ -1,11 +1,11 @@
 <template>
   <div class="max-w-[1400px] mx-auto">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">发布工作台</h1>
+    <div class="flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-6">
+      <div class="min-w-0">
+        <h1 class="text-xl sm:text-2xl font-bold text-zinc-800 dark:text-zinc-100">发布工作台</h1>
         <p class="text-sm text-zinc-400 mt-1">选择内容类型开始创作，未发布的作品会保存在这里</p>
       </div>
-      <button class="px-4 h-10 rounded-2xl text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="toast.push('草稿保存在本机浏览器中', 'info')">
+      <button class="px-4 h-10 shrink-0 rounded-2xl text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="toast.push('草稿保存在本机浏览器中', 'info')">
         <svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>草稿自动保存到本机
       </button>
     </div>

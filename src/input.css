@@ -166,3 +166,78 @@ html[data-theme="dark"] body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ============================================================
+   移动端全局适配基础（2026-08 全项目响应式）
+   - 统一使用 lg(1024px) 作为桌面/移动分界：≥lg 显示侧边栏，<lg 走底部 Tab
+   - dynamic viewport：规避 iOS 地址栏导致的 100vh 溢出，改用 100dvh
+   ============================================================ */
+:root {
+  --app-top: 0px;      /* 顶部安全区（刘海屏 + 状态栏） */
+  --app-bottom: 0px;   /* 底部安全区（Home 指示条） */
+  --tab-h: 0px;        /* 移动端底部 Tab 高度（布局预留用） */
+}
+
+/* 动态视口高度：正文滚动容器用 min-h-svh 保证真机行为一致 */
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* iOS Safari 刘海屏安全区变量 */
+@supports (padding-top: env(safe-area-inset-top)) {
+  :root {
+    --app-top: env(safe-area-inset-top);
+    --app-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 移动端禁止横向滚动（保护类：阻止意外横向溢出） */
+html,
+body {
+  overflow-x: hidden;
+}
+
+/* 移动端点击高亮去除 + 文字缩放钳制（禁用 iOS 双击/聚焦缩放） */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+@media (max-width: 1023px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  /* 移动端隐藏桌面滚动条，保持内容区域可惯性滚动 */
+  body {
+    scrollbar-width: none;
+  }
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+/* 移动端卡片 hover 上浮在触屏上无意义，弱化为轻触反馈 */
+@media (hover: none) {
+  .card-lift:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .card-lift:active {
+    transform: scale(0.98);
+  }
+}
+
+/* 底部安全区垫层：给固定底栏（Tab/返回）预留 Home 指示条高度 */
+.mb-safe {
+  padding-bottom: var(--app-bottom);
+}
+.pt-safe {
+  padding-top: var(--app-top);
+}
+
+/* 平滑惯性滚动（移动端内容容器） */
+.scroll-native {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}

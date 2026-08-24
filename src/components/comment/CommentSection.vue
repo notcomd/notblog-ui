@@ -52,7 +52,7 @@
             @keydown.enter.exact.prevent="submit"
           ></textarea>
           <!-- Emoji 面板 -->
-          <div v-if="emojiOpen" class="absolute bottom-full left-0 mb-2 glass-card p-2 w-64 z-20">
+          <div v-if="emojiOpen" class="absolute bottom-full left-0 mb-2 glass-card p-2 w-[min(16rem,80vw)] z-20">
             <div class="grid grid-cols-8 gap-1">
               <button v-for="e in EMOJIS" :key="e" class="w-7 h-7 rounded-[5%] hover:bg-amber-50 dark:hover:bg-zinc-800 text-base transition-colors" @click="insertEmoji(e)">{{ e }}</button>
             </div>

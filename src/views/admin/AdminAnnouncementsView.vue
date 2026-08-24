@@ -27,7 +27,7 @@
       <!-- 消息类型 -->
       <div>
         <label class="text-xs text-zinc-400 block mb-1.5">消息类型</label>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <button v-for="t in msgTypes" :key="t.value" class="px-3.5 py-2 rounded-[5%] text-sm transition-all"
             :class="form.type === t.value ? t.active : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'"
             @click="form.type = t.value">{{ t.label }}</button>

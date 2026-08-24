@@ -43,12 +43,12 @@
     </button>
 
     <!-- ===== 中央登录 / 注册卡片（玻璃拟态，自动适配明暗） ===== -->
-    <div class="relative z-10 min-h-screen flex items-center justify-center p-6">
-      <div v-if="showLoginForm" class="w-full max-w-md glass-card p-8 transition-formentOut">
+    <div class="relative z-10 min-h-screen flex items-center justify-center p-4 sm:p-6">
+      <div v-if="showLoginForm" class="w-full max-w-md glass-card p-6 sm:p-8 transition-formentOut">
         <LoginFrom :showLoginForm="showLoginForm" :showRegisterForm="!showRegisterForm" @showLoginForm="handleShowLoginForm"
          @showRegisterForm="handleShowRegisterForm" @submitEmailLogin="handleSubmitEmailLogin" class="transition-forment" />
       </div>
-      <div v-else class="w-full max-w-md glass-card p-8 transition-formentOut">
+      <div v-else class="w-full max-w-md glass-card p-6 sm:p-8 transition-formentOut">
         <RegisterForm :showLoginForm="showLoginForm" :showRegisterForm="!showRegisterForm" @showLoginForm="handleShowLoginForm"
          @showRegisterForm="handleShowRegisterForm" class="transition-forment" />
       </div>

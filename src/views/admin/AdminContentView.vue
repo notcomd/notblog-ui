@@ -29,7 +29,7 @@
 
     <!-- 内容列表 -->
     <div class="space-y-3">
-      <div v-for="t in items" :key="t.tweetGuid" class="glass-card p-4 flex items-center gap-4 transition-all hover:"
+      <div v-for="t in items" :key="t.tweetGuid" class="glass-card p-4 flex flex-wrap items-center gap-3 sm:gap-4 transition-all hover:"
         :class="(t.reportCount || 0) > 0 ? 'ring-2 ring-red-400/40' : ''">
         <!-- 封面缩略图 -->
         <div class="w-20 h-24 rounded-[5%] overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
@@ -71,7 +71,7 @@
     <!-- 审核弹窗 -->
     <AdminModal v-if="auditTarget" :title="'内容审核：' + auditTarget.content.slice(0, 30)" width="w-[720px]" @close="auditTarget = null">
       <div class="space-y-4">
-        <div class="flex gap-4">
+        <div class="flex flex-col sm:flex-row gap-4">
           <img v-if="auditTarget.mediaUrls && auditTarget.mediaUrls[0]" :src="auditTarget.mediaUrls[0]" alt="" class="w-44 h-56 rounded-[5%] object-cover" @error="hideImg" />
           <div class="flex-1 space-y-2">
             <div class="text-base font-semibold text-zinc-800 dark:text-zinc-100">{{ auditTarget.content }}</div>

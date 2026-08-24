@@ -1,6 +1,6 @@
 <template>
   <div class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40" @click.self="emit('close')">
-    <div class="glass-card p-6 w-[420px]">
+    <div class="glass-card p-6 w-[min(420px,92vw)] max-h-[85vh] overflow-y-auto">
       <div class="flex items-start gap-3">
         <div class="w-10 h-10 rounded-[5%] flex items-center justify-center shrink-0" :class="danger ? 'bg-red-500/15 text-red-500' : 'bg-amber-400/15 text-amber-500'">
           <svg v-if="danger" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" /><path d="M12 9v4M12 17h.01" /></svg>

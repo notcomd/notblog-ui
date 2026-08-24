@@ -135,8 +135,8 @@
 
       <!-- 文件库 -->
       <div v-else-if="activeTab === 'files'">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex gap-2">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div class="flex flex-wrap gap-2">
             <button v-for="t in fileTypes" :key="t.key" class="px-3 py-1.5 rounded-[5%] text-xs font-medium transition-all" :class="fileType === t.key ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="fileType = t.key">{{ t.label }}</button>
           </div>
           <span class="text-xs text-zinc-400">{{ isSelf ? '我的仓库端点后端缺口，当前为演示数据' : '公开文件端点后端缺口，当前为空' }}</span>

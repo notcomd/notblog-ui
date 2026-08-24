@@ -1,12 +1,12 @@
 <template>
   <!-- 全局通知弹窗：顶部右侧堆叠，长方体卡片（图标 + 通知名称 + 消息 + 时间），可手动关闭 -->
   <Teleport to="body">
-    <div class="fixed top-4 right-4 z-[999] flex flex-col items-end gap-2 pointer-events-none">
+    <div class="fixed top-3 right-3 lg:top-4 lg:right-4 z-[999] flex flex-col items-end gap-2 pointer-events-none">
       <TransitionGroup name="notify-slide">
         <div
           v-for="item in toast.messages"
           :key="item.id"
-          class="pointer-events-auto relative w-[360px] rounded-[10px] border border-zinc-200/70 dark:border-zinc-700/60 bg-white/95 dark:bg-zinc-900/95 px-4 py-3 flex items-start gap-3"
+          class="pointer-events-auto relative w-[min(360px,92vw)] rounded-[10px] border border-zinc-200/70 dark:border-zinc-700/60 bg-white/95 dark:bg-zinc-900/95 px-4 py-3 flex items-start gap-3"
         >
           <!-- 通知图标 -->
           <div class="w-10 h-10 shrink-0 rounded-[10px] bg-amber-400/15 dark:bg-amber-500/15 flex items-center justify-center text-xl">

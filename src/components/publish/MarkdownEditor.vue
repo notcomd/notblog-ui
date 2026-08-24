@@ -1,37 +1,37 @@
 <template>
   <div class="glass-card overflow-hidden">
     <!-- 工具栏 -->
-    <div class="flex flex-wrap items-center gap-1 px-3 py-2 border-b border-zinc-200/60 dark:border-zinc-700/60">
-      <button v-for="btn in toolButtons" :key="btn.label" class="w-8 h-8 rounded-lg flex items-center justify-center text-sm text-zinc-600 dark:text-zinc-300 hover:bg-amber-400/15 hover:text-amber-500 transition-colors" :title="btn.tip" @click="insert(btn.syntax)">
+    <div class="flex items-center gap-1 px-3 py-2 border-b border-zinc-200/60 dark:border-zinc-700/60 overflow-x-auto">
+      <button v-for="btn in toolButtons" :key="btn.label" class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm text-zinc-600 dark:text-zinc-300 hover:bg-amber-400/15 hover:text-amber-500 transition-colors" :title="btn.tip" @click="insert(btn.syntax)">
         <span v-if="btn.svg" v-html="btn.svg"></span><span v-else>{{ btn.icon }}</span>
       </button>
-      <div class="w-px h-5 bg-zinc-200 dark:bg-zinc-700 mx-1"></div>
-      <button class="h-8 px-2.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-300 hover:bg-amber-400/15 hover:text-amber-500 transition-colors" title="上传图片（≤10MB，自动插入 Markdown）" :disabled="uploading" @click="pickImage">
+      <div class="shrink-0 w-px h-5 bg-zinc-200 dark:bg-zinc-700 mx-1"></div>
+      <button class="shrink-0 whitespace-nowrap h-8 px-2.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-300 hover:bg-amber-400/15 hover:text-amber-500 transition-colors" title="上传图片（≤10MB，自动插入 Markdown）" :disabled="uploading" @click="pickImage">
         <span v-if="!uploading" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>上传图片</span><span v-else>上传中...</span>
       </button>
       <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onPickImage" />
-      <div class="flex-1"></div>
-      <div class="flex gap-0.5 glass p-0.5 rounded-xl">
+      <div class="flex-1 shrink-0 min-w-3"></div>
+      <div class="shrink-0 flex gap-0.5 glass p-0.5 rounded-xl">
         <button class="px-3 h-7 rounded-lg text-xs font-medium transition-all" :class="view === 'edit' ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow' : 'text-zinc-500'" @click="view = 'edit'">编辑</button>
         <button class="px-3 h-7 rounded-lg text-xs font-medium transition-all" :class="view === 'preview' ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow' : 'text-zinc-500'" @click="view = 'preview'">预览</button>
         <button class="px-3 h-7 rounded-lg text-xs font-medium transition-all" :class="view === 'split' ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow' : 'text-zinc-500'" @click="view = 'split'">分栏</button>
       </div>
     </div>
 
-    <div class="flex min-h-[420px]">
+    <div class="flex flex-col lg:flex-row min-h-[420px]">
       <textarea
         v-if="view !== 'preview'"
         ref="taRef"
         :value="modelValue"
         rows="16"
-        class="resize-none outline-none p-4 text-sm leading-relaxed bg-white/40 dark:bg-zinc-900/40 font-mono text-zinc-700 dark:text-zinc-200 transition-all"
-        :class="view === 'split' ? 'w-1/2 border-r border-zinc-200/60 dark:border-zinc-700/60' : 'flex-1 w-full'"
+        class="resize-none outline-none p-4 text-sm leading-relaxed bg-white/40 dark:bg-zinc-900/40 font-mono text-zinc-700 dark:text-zinc-200 transition-all w-full"
+        :class="view === 'split' ? 'lg:w-1/2 lg:border-r lg:border-zinc-200/60 dark:lg:border-zinc-700/60' : ''"
         :placeholder="placeholderText"
         spellcheck="false"
         @input="onInput"
         @keydown.tab.prevent="insertTab"
       ></textarea>
-      <div v-if="view !== 'edit'" class="overflow-y-auto p-5 prose-sm w-1/2 flex-1 bg-white/20 dark:bg-zinc-900/20" :class="view === 'split' ? '' : 'w-full'">
+      <div v-if="view !== 'edit'" class="overflow-y-auto p-5 prose-sm bg-white/20 dark:bg-zinc-900/20 w-full" :class="view === 'split' ? 'lg:w-1/2' : ''">
         <div v-if="modelValue.trim()" class="markdown-body" v-html="rendered"></div>
         <div v-else class="h-full min-h-[380px] flex flex-col items-center justify-center gap-2 text-zinc-400">
           <div class="text-5xl"><svg class="w-12 h-12 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>

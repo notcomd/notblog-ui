@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-[1400px] mx-auto px-6 py-6">
+  <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
     <!-- 加载态 -->
     <div v-if="loading" class="glass-card p-12 text-center text-sm text-zinc-400">加载中...</div>
 
@@ -10,7 +10,7 @@
     </div>
 
     <!-- 文章主体 -->
-    <article v-else class="glass-card p-8">
+    <article v-else class="glass-card p-4 sm:p-8">
       <button
         class="mb-6 text-sm text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1"
         @click="router.back()"
@@ -20,7 +20,7 @@
       </button>
 
       <!-- 标题 -->
-      <h1 class="text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-snug">{{ doc.name }}</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-snug">{{ doc.name }}</h1>
 
       <!-- 元数据 -->
       <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-zinc-400">

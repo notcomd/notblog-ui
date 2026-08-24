@@ -1,12 +1,12 @@
 <template>
   <header class="sticky top-0 z-50 transition-all duration-300" :class="blurred ? 'opacity-60 saturate-50 pointer-events-none' : ''">
-    <div class="h-16 px-5 flex items-center">
+    <div class="h-14 lg:h-16 px-3 sm:px-5 flex items-center">
       <!-- 左上：当前功能标题（随功能栏激活项变化，如：首页/社区/会话/广场、个人空间 Tab） -->
-      <div v-if="titleItem" class="shrink-0">
-        <span class="text-lg font-bold tracking-wide font-display text-zinc-800 dark:text-zinc-100">{{ titleItem.label }}</span>
+      <div v-if="titleItem" class="shrink-0 min-w-0">
+        <span class="text-base lg:text-lg font-bold tracking-wide font-display text-zinc-800 dark:text-zinc-100 truncate">{{ titleItem.label }}</span>
       </div>
       <!-- 广场页信息流切换（并入顶部栏，仅 /home 显示）：热门 | 最新 -->
-      <div v-if="isHome" class="flex items-center ml-6 shrink-0">
+      <div v-if="isHome" class="flex items-center ml-4 lg:ml-6 shrink-0">
         <button
           class="relative px-3 pb-1 text-sm font-medium transition-colors flex items-center"
           :class="feedTab.tab === 'hot' ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
@@ -25,10 +25,10 @@
         </button>
       </div>
       <!-- 右侧操作区（Logo 与搜索功能均已在左侧功能栏；按钮组靠右） -->
-      <div class="flex items-center gap-3 shrink-0 ml-auto">
+      <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
         <!-- 消息铃铛（点击下拉通知面板） -->
         <div class="relative">
-          <button class="w-10 h-10 rounded-[5%] flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="消息" @click.stop="onBellClick">
+          <button class="w-9 h-9 lg:w-10 lg:h-10 rounded-[5%] flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="消息" @click.stop="onBellClick">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.7 21a2 2 0 0 1-3.4 0" />
@@ -53,7 +53,7 @@
         </div>
 
         <!-- 皮肤设置：调色板图标 → 皮肤面板（颜色皮肤 + 背景设置） -->
-        <button class="w-10 h-10 rounded-[5%] flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="皮肤设置" @click="skinOpen = true">
+        <button class="w-9 h-9 lg:w-10 lg:h-10 rounded-[5%] flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="皮肤设置" @click="skinOpen = true">
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.12 0-.92.75-1.66 1.67-1.66h2c3.05 0 5.56-2.5 5.56-5.55C21.96 6.01 17.46 2 12 2z" />
             <circle cx="6.5" cy="12" r="0.7" fill="currentColor" stroke="none" />
@@ -64,7 +64,7 @@
 
         <!-- 未登录：登录按钮 -->
         <template v-if="!auth.isLoggedIn()">
-          <button class="px-4 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all" @click="router.push('/login')">登录</button>
+          <button class="px-3 h-8 lg:px-4 lg:h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all" @click="router.push('/login')">登录</button>
         </template>
 
         <!-- 已登录：用户头像（点击展开下拉：用户数据 + 菜单） -->
@@ -88,7 +88,7 @@
             enter-from-class="opacity-0 -translate-y-1"
             leave-to-class="opacity-0 -translate-y-1"
           >
-            <div v-if="userMenuOpen" class="absolute right-0 top-full mt-2 w-60 p-2 z-50 rounded-[5%] bg-white dark:bg-zinc-800/95 border border-zinc-200/70 dark:border-zinc-700/60">
+            <div v-if="userMenuOpen" class="absolute right-0 top-full mt-2 w-[min(15rem,90vw)] p-2 z-50 rounded-[5%] bg-white dark:bg-zinc-800/95 border border-zinc-200/70 dark:border-zinc-700/60">
               <!-- 用户数据区：用户名 + 等级 + 经验 + 硬币 -->
               <div class="px-3 pt-2 pb-3">
                 <div class="flex items-center gap-3">

@@ -64,10 +64,24 @@
       </div>
     </header>
 
+    <!-- 移动端横向导航条（lg:hidden）：管理端点分发入口 -->
+    <nav class="lg:hidden fixed top-14 left-0 right-0 z-40 flex items-center gap-1 px-3 py-2 glass border-b border-zinc-200/50 dark:border-zinc-800/50 overflow-x-auto scrollbar-none">
+      <router-link
+        v-for="item in navItems"
+        :key="item.path"
+        :to="item.path"
+        class="shrink-0 flex items-center gap-1.5 px-3 h-9 rounded-[5%] text-sm transition-colors"
+        :class="isActive(item.path) ? 'bg-gradient-to-r from-amber-400/15 to-orange-500/10 text-amber-600 dark:text-amber-400 font-medium' : 'text-zinc-500 dark:text-zinc-300'"
+      >
+        <span class="shrink-0" v-html="item.icon"></span>
+        <span>{{ item.label }}</span>
+      </router-link>
+    </nav>
+
     <!-- 左栏 + 主内容 -->
-    <div class="flex pt-16">
-      <!-- 侧边栏 -->
-      <aside class="sticky top-16 h-[calc(100vh-4rem)] flex flex-col items-center py-5 gap-2 shrink-0 transition-all duration-300 border-r border-zinc-200/50 dark:border-zinc-800/50 bg-white/95 dark:bg-zinc-900/95"
+    <div class="flex pt-14 lg:pt-16">
+      <!-- 侧边栏：桌面≥lg 固定显示；移动端隐藏（底部提供横向导航条） -->
+      <aside class="hidden lg:flex sticky top-16 h-[calc(100vh-4rem)] flex-col items-center py-5 gap-2 shrink-0 transition-all duration-300 border-r border-zinc-200/50 dark:border-zinc-800/50 bg-white/95 dark:bg-zinc-900/95"
         :class="collapsed ? 'w-[72px]' : 'w-[210px]'">
         <nav class="flex flex-col items-center gap-1.5 w-full px-3">
           <router-link
@@ -93,7 +107,8 @@
       </aside>
 
       <!-- 主内容 -->
-      <main class="flex-1 min-w-0 px-6 py-6 overflow-y-auto h-[calc(100vh-4rem)]">
+      <main class="flex-1 min-w-0 px-4 lg:px-6 py-4 lg:py-6 overflow-y-auto h-[calc(100vh-4rem)] lg:pt-20">
+        <div class="lg:hidden pt-2"></div>
         <router-view />
       </main>
     </div>

@@ -6,10 +6,10 @@
         {{ authorName.slice(0, 1) }}
       </div>
       <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ authorName }}</span>
-          <span class="text-xs text-zinc-400">{{ timeText }}</span>
-          <span v-if="isMine" class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400">我</span>
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate flex-1 min-w-0">{{ authorName }}</span>
+          <span class="text-xs text-zinc-400 shrink-0">{{ timeText }}</span>
+          <span v-if="isMine" class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">我</span>
         </div>
         <p class="text-sm text-zinc-700 dark:text-zinc-200 mt-1 leading-relaxed break-words">
           <span v-if="replyToName" class="text-amber-600 dark:text-amber-400">回复 @{{ replyToName }}：</span>{{ commentContent }}
@@ -28,7 +28,7 @@
         </div>
 
         <!-- 操作行 -->
-        <div class="flex items-center gap-4 mt-1.5">
+        <div class="flex items-center gap-2 sm:gap-4 mt-1.5">
           <button v-if="cfg.like" class="flex items-center gap-1 text-xs text-zinc-400 hover:text-red-500 transition-colors" @click="onLike">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z" />

@@ -1,11 +1,11 @@
 <template>
   <div class="max-w-[1400px] mx-auto space-y-5">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
       <div>
         <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">举报管理</h1>
         <p class="text-sm text-zinc-400 mt-1">举报工单处理（后端 AuditApi：待处理队列 + resolve）</p>
       </div>
-      <div class="flex items-center gap-3 text-sm">
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-sm">
         <span class="px-3 py-1.5 rounded-full bg-red-500/10 text-red-500 font-medium">待处理 {{ pendingCount }} 条</span>
         <span class="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 font-medium">已处理 {{ resolvedCount }} 条</span>
         <button v-if="selected.length" class="px-3 h-9 rounded-[5%] text-xs bg-amber-500/10 text-amber-600 hover:bg-amber-1000/20 transition-colors" @click="batchResolve"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 批量标记已处理（{{ selected.length }}）</button>

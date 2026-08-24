@@ -19,7 +19,7 @@
 
     <!-- 筛选 -->
     <div class="flex flex-wrap items-center gap-3">
-      <div class="flex gap-1 glass p-1 rounded-[5%]">
+      <div class="flex flex-wrap gap-1 glass p-1 rounded-[5%]">
         <button v-for="t in fileTypes" :key="t.key" class="px-4 py-1.5 rounded-[5%] text-sm font-medium transition-all" :class="type === t.key ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="switchType(t.key)">{{ t.label }}</button>
       </div>
       <input v-model="keyword" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="按文件名 / 上传者检索" @keyup.enter="load" />
@@ -65,11 +65,11 @@
     <!-- 文件详情弹窗 -->
     <AdminModal v-if="inspecting" :title="'文件详情：' + inspecting.name" @close="inspecting = null">
       <div class="space-y-2.5 text-sm">
-        <div class="flex justify-between px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400">MD5</span><span class="text-zinc-700 dark:text-zinc-200 font-mono text-xs">{{ inspecting.md5 }}</span></div>
-        <div class="flex justify-between px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400">存储路径</span><span class="text-zinc-700 dark:text-zinc-200 font-mono text-xs">{{ inspecting.path }}</span></div>
-        <div class="flex justify-between px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400">上传 IP</span><span class="text-zinc-700 dark:text-zinc-200">{{ inspecting.uploadIp }}</span></div>
-        <div class="flex justify-between px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400">关联内容</span><span class="text-zinc-700 dark:text-zinc-200">{{ inspecting.refTweetId || '无' }}</span></div>
-        <div class="flex justify-between px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400">上传者</span><span class="text-zinc-700 dark:text-zinc-200">{{ inspecting.uploader }}</span></div>
+        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400 shrink-0">MD5</span><span class="text-zinc-700 dark:text-zinc-200 font-mono text-xs min-w-0 break-all text-right">{{ inspecting.md5 }}</span></div>
+        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400 shrink-0">存储路径</span><span class="text-zinc-700 dark:text-zinc-200 font-mono text-xs min-w-0 break-all text-right">{{ inspecting.path }}</span></div>
+        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400 shrink-0">上传 IP</span><span class="text-zinc-700 dark:text-zinc-200 min-w-0 break-all text-right">{{ inspecting.uploadIp }}</span></div>
+        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400 shrink-0">关联内容</span><span class="text-zinc-700 dark:text-zinc-200 min-w-0 break-all text-right">{{ inspecting.refTweetId || '无' }}</span></div>
+        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400 shrink-0">上传者</span><span class="text-zinc-700 dark:text-zinc-200 min-w-0 break-all text-right">{{ inspecting.uploader }}</span></div>
       </div>
     </AdminModal>
 

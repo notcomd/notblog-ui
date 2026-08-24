@@ -28,7 +28,7 @@
         私密
       </span>
       <!-- 更多操作 -->
-      <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
+      <div class="absolute top-2 right-2 opacity-100 lg:opacity-0 lg:hover:opacity-100 transition-opacity">
         <button class="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center" @click.stop="openMore">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
         </button>

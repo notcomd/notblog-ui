@@ -42,7 +42,7 @@
     </div>
 
     <!-- 快捷操作区 -->
-    <div class="glass-card p-4 flex items-center gap-3">
+    <div class="glass-card p-4 flex flex-wrap items-center gap-3">
       <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 shrink-0">快捷操作：</span>
       <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all inline-flex items-center gap-1" @click="router.push('/admin/announcements')"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg> 发布系统公告</button>
       <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: active:scale-95 transition-all inline-flex items-center gap-1" @click="exportReport"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> 导出运营日报</button>

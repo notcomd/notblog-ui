@@ -97,7 +97,7 @@
           </div>
           <span class="ml-auto text-xs px-2 py-1 rounded-full font-medium" :class="statusClass(viewing.status)">{{ statusText(viewing.status) }}</span>
         </div>
-        <div class="grid grid-cols-3 gap-3 text-center">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
           <div class="rounded-[5%] bg-white/60 dark:bg-zinc-800/60 py-3">
             <div class="text-lg font-bold text-zinc-800 dark:text-zinc-100">{{ viewing.postCount || 0 }}</div>
             <div class="text-[11px] text-zinc-400">发布内容</div>

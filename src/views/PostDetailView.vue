@@ -18,10 +18,10 @@
 
     <!-- 举报弹窗 -->
     <div v-if="reportOpen" class="fixed inset-0 z-[85] flex items-center justify-center bg-black/40" @click.self="reportOpen = false">
-      <div class="glass-card p-6 w-[440px]">
+      <div class="glass-card p-4 sm:p-6 w-[min(440px,92vw)] max-h-[90vh] overflow-y-auto">
         <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 mb-1">举报内容</h3>
         <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">请选择举报类型，我们会尽快核实处理</p>
-        <div class="grid grid-cols-3 gap-2 mb-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
           <button v-for="(c, i) in REPORT_CATEGORIES" :key="i" class="py-2.5 rounded-xl text-sm font-medium transition-all"
             :class="reportCategory === i ? 'bg-gradient-to-r from-red-400 to-rose-500 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
             @click="reportCategory = i">{{ c }}</button>
@@ -35,8 +35,8 @@
     </div>
 
     <!-- 加载骨架 -->
-    <div v-if="loading" class="grid grid-cols-5 gap-6">
-      <div class="col-span-3 space-y-4 animate-pulse">
+    <div v-if="loading" class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div class="lg:col-span-3 space-y-4 animate-pulse">
         <div class="aspect-[4/3] rounded-[5%] bg-zinc-200/70 dark:bg-zinc-800/70"></div>
         <div class="h-6 w-3/4 rounded bg-zinc-200/70 dark:bg-zinc-800/70"></div>
         <div class="space-y-2">
@@ -45,7 +45,7 @@
           <div class="h-3 w-2/3 rounded bg-zinc-200/70 dark:bg-zinc-800/70"></div>
         </div>
       </div>
-      <div class="col-span-2">
+      <div class="lg:col-span-2">
         <div class="glass-card p-4 space-y-3 animate-pulse">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70"></div>
@@ -82,9 +82,9 @@
             </div>
           </div>
 
-          <div class="p-6">
+          <div class="p-4 sm:p-6">
             <!-- 标题 -->
-            <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-50 leading-snug">{{ tweet.content }}</h1>
+            <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 leading-snug">{{ tweet.content }}</h1>
 
             <!-- 元数据 -->
             <div class="flex flex-wrap items-center gap-3 mt-4 text-sm text-zinc-400">

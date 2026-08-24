@@ -5,7 +5,7 @@
       <div class="absolute inset-0 bg-black/40" @click="emit('close')"></div>
 
       <!-- 面板 -->
-      <div class="relative w-[430px] max-w-[94vw] max-h-[86vh] overflow-y-auto glass-card p-5 space-y-4 skin-panel-in">
+      <div class="relative w-[min(430px,92vw)] max-h-[86vh] overflow-y-auto glass-card p-5 space-y-4 skin-panel-in">
         <!-- 标题 -->
         <div class="flex items-center justify-between">
           <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100">皮肤设置</h3>

@@ -1,6 +1,6 @@
 <template>
   <!-- 社区侧边栏：我的社区列表 + 创建/加入入口（固定展开态，收缩功能已取消） -->
-  <div class="shrink-0 flex flex-col glass-card p-3 h-full min-h-0 w-64">
+  <div class="w-full lg:w-64 lg:h-full lg:shrink-0 flex flex-col glass-card p-3 min-h-0">
     <!-- 头部：标题 -->
     <div class="pb-3 flex items-center px-2 gap-2">
       <span class="flex-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200">我的社区</span>

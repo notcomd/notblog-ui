@@ -2,7 +2,7 @@
   <div class="min-h-screen flex items-center justify-center bg-amber-50/30 px-4">
     <div class="w-full max-w-md">
       <!-- 卡片 -->
-      <div class="bg-white rounded-[5%] p-8 transition-all duration-300">
+      <div class="bg-white rounded-[5%] p-6 sm:p-8 transition-all duration-300">
         <!-- 返回按钮 -->
         <button
           class="mb-6 flex items-center text-sm text-zinc-500 hover:text-zinc-700 transition-colors duration-200"

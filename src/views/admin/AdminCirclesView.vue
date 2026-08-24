@@ -39,7 +39,7 @@
             </div>
           </div>
           <!-- 操作按钮 -->
-          <div class="px-5 py-3 flex gap-2 border-t border-zinc-200/60 dark:border-zinc-700/60">
+          <div class="px-5 py-3 flex flex-wrap gap-2 border-t border-zinc-200/60 dark:border-zinc-700/60">
             <button v-if="current.status !== 'Banned'" class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-400/15 text-amber-600 dark:text-amber-400 hover:bg-amber-400/25 active:scale-95 transition-all inline-flex items-center gap-1" @click="banCircleOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> 封禁社区</button>
             <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 active:scale-95 transition-all inline-flex items-center gap-1" @click="dissolveOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 解散社区</button>
             <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-500/10 text-amber-600 hover:bg-amber-1000/20 active:scale-95 transition-all inline-flex items-center gap-1" @click="transferOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 转让社区</button>
@@ -52,12 +52,12 @@
             </div>
             <!-- 成员 -->
             <div v-if="tab === 'members'" class="space-y-2">
-              <div v-for="m in members" :key="m.userGuid" class="flex items-center gap-3 px-3 py-2 rounded-[5%] bg-white/50 dark:bg-zinc-800/50">
-                <span class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs">{{ (m.userName || '?').slice(0, 1) }}</span>
-                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 flex-1">{{ m.userName }}</span>
-                <span class="text-xs px-2 py-0.5 rounded-full" :class="roleClass(m.role)">{{ roleText(m.role) }}</span>
-                <span class="text-xs text-zinc-400">{{ relativeTime(m.joinTime) }}加入</span>
-                <button v-if="m.role !== 'Owner'" class="px-2.5 h-7 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10 transition-colors" @click="removeMember(m)">移除</button>
+              <div v-for="m in members" :key="m.userGuid" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 rounded-[5%] bg-white/50 dark:bg-zinc-800/50">
+                <span class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs shrink-0">{{ (m.userName || '?').slice(0, 1) }}</span>
+                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 flex-1 min-w-0 truncate">{{ m.userName }}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full shrink-0" :class="roleClass(m.role)">{{ roleText(m.role) }}</span>
+                <span class="text-xs text-zinc-400 shrink-0">{{ relativeTime(m.joinTime) }}加入</span>
+                <button v-if="m.role !== 'Owner'" class="px-2.5 h-7 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10 transition-colors shrink-0" @click="removeMember(m)">移除</button>
               </div>
             </div>
             <!-- 会话 -->

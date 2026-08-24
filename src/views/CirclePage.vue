@@ -1,6 +1,6 @@
 <template>
   <!-- 社区页容器：左侧社区列表 + 右侧主视窗（数据加载与状态协调） -->
-  <div class="max-w-[1400px] mx-auto flex gap-5 h-[calc(100vh-7.5rem)]">
+  <div class="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-5 h-auto lg:h-[calc(100vh-7.5rem)]">
     <CircleSidebar
       :circles="circles"
       :current="current"

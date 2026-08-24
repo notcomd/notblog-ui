@@ -6,7 +6,7 @@
     </div>
     <!-- 表格 -->
     <div class="overflow-x-auto">
-      <table class="w-full text-sm">
+      <table class="w-full text-sm min-w-[640px]">
         <thead>
           <tr class="text-left text-xs text-zinc-500 dark:text-zinc-400 border-b border-zinc-200/60 dark:border-zinc-700/60">
             <th v-if="selectable" class="px-4 py-3 w-10">
