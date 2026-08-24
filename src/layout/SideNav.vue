@@ -86,16 +86,14 @@
   </aside>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { MAIN_NAV_ITEMS, buildSpaceNavItems } from '@/layout/navItems'
 
-defineProps({
-  blurred: { type: Boolean, default: false }
-})
+withDefaults(defineProps<{ blurred?: boolean }>(), { blurred: false })
 
 const route = useRoute()
 const router = useRouter()
@@ -104,13 +102,13 @@ const auth = useAuthStore()
 // 个人主页：SideNav 导航项切换为空间工具栏（作品/收藏/我的仓库/安全），与主页面公用同一布局
 const isUserSpace = computed(() => route.path.startsWith('/users/'))
 
-const isSelf = computed(() => !!auth.user && String(auth.user.id) === String(route.params.id || ''))
+const isSelf = computed(() => !!auth.user && String(auth.user.id) === String((route.params.id as string) || ''))
 
-const spaceNavItems = computed(() => buildSpaceNavItems(route.params.id || '', isSelf.value))
+const spaceNavItems = computed(() => buildSpaceNavItems((route.params.id as string) || '', isSelf.value))
 
 const navItems = computed(() => (isUserSpace.value ? spaceNavItems.value : MAIN_NAV_ITEMS))
 
-function isActive(item) {
+function isActive(item: any) {
   if (isUserSpace.value) {
     const tab = item.to.query.tab
     return (route.query.tab || 'home') === tab
@@ -122,22 +120,22 @@ const collapsed = ref(false)
 
 // ==================== 搜索功能（展开态输入框 / 收缩态图标入口） ====================
 const keyword = ref('')
-const searchInput = ref(null)
+const searchInput = ref<HTMLElement | null>(null)
 const toast = useToastStore()
 
-function onSearch() {
+function onSearch(): void {
   if (!keyword.value.trim()) return
   toast.push(`搜索「${keyword.value.trim()}」功能开发中`, 'info')
 }
 
 // 收缩态点击搜索图标：先展开功能栏，再聚焦输入框
-async function expandAndFocus() {
+async function expandAndFocus(): Promise<void> {
   collapsed.value = false
   await nextTick()
   searchInput.value && searchInput.value.focus()
 }
 
-function onPublish() {
+function onPublish(): void {
   // 发布入口 → 工作台（四个类型选择 + 未发布作品管理）
   router.push('/workspace')
 }

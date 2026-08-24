@@ -35,20 +35,30 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 
-const props = defineProps({
-  modelValue: { type: String, default: '' },
-  length: { type: Number, default: 9 },
-  disabled: { type: Boolean, default: false },
-  autoFocus: { type: Boolean, default: true },
-  error: { type: Boolean, default: false }
+interface Props {
+  modelValue?: string
+  length?: number
+  disabled?: boolean
+  autoFocus?: boolean
+  error?: boolean
+}
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: '',
+  length: 9,
+  disabled: false,
+  autoFocus: true,
+  error: false
 })
 
-const emit = defineEmits(['update:modelValue', 'complete'])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string): void
+  (e: 'complete', value: string): void
+}>()
 
-const inputEl = ref(null)
+const inputEl = ref<HTMLInputElement | null>(null)
 const focused = ref(false)
 
 // 只允许数字 + 英文字母（大小写保留，后端 Ordinal 区分大小写）
@@ -56,7 +66,7 @@ const VALID = /^[A-Za-z0-9]$/
 
 const displayChars = computed(() => (props.modelValue || '').split('').slice(0, props.length))
 
-function cellClass(index) {
+function cellClass(index: number): string {
   const base = 'bg-amber-50/60 dark:bg-zinc-800/60 border-amber-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-100'
   if (props.error) return 'border-red-400 bg-red-50/50 dark:bg-red-500/10 text-red-500'
   if (displayChars.value[index]) return 'border-amber-400 dark:border-amber-500/60 ' + base
@@ -64,16 +74,16 @@ function cellClass(index) {
   return 'border-amber-200 dark:border-zinc-700 ' + base
 }
 
-function onInput(e) {
+function onInput(e: Event) {
   // 过滤：只保留字母数字，截断到 length
-  const raw = e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, props.length)
+  const raw = (e.target as HTMLInputElement).value.replace(/[^A-Za-z0-9]/g, '').slice(0, props.length)
   emit('update:modelValue', raw)
   if (raw.length === props.length) {
     emit('complete', raw)
   }
 }
 
-function onKeydown(e) {
+function onKeydown(e: KeyboardEvent) {
   // 退格：删除最后一位（input 原生也会删，这里确保格子联动）
   if (e.key === 'Backspace') {
     // 让原生处理（value 联动），无需额外逻辑
@@ -85,9 +95,9 @@ function onKeydown(e) {
   }
 }
 
-function onPaste(e) {
+function onPaste(e: ClipboardEvent) {
   e.preventDefault()
-  const text = (e.clipboardData || window.clipboardData).getData('text')
+  const text = (e.clipboardData || (window as unknown as { clipboardData?: DataTransfer }).clipboardData).getData('text')
   const cleaned = text.replace(/[^A-Za-z0-9]/g, '').slice(0, props.length)
   emit('update:modelValue', cleaned)
   if (cleaned.length === props.length) {

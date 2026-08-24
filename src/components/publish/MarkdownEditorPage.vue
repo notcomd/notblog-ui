@@ -60,7 +60,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MarkdownEditor from '@/components/publish/MarkdownEditor.vue'
@@ -70,9 +70,13 @@ import { saveDraft, removeDraft } from '@/utils/drafts'
 import { unwrap } from '@/utils/response'
 import { useToastStore } from '@/stores/toast'
 
-const props = defineProps({
-  myCircles: { type: Array, default: () => [] },
-  draft: { type: Object, default: null }
+interface Props {
+  myCircles?: unknown[]
+  draft?: unknown
+}
+const props = withDefaults(defineProps<Props>(), {
+  myCircles: () => [],
+  draft: null
 })
 
 const router = useRouter()
@@ -81,9 +85,9 @@ const toast = useToastStore()
 const title = ref('')          // 文章标题（必填）
 const coverUrl = ref('')       // 可显示 URL（预览用；上传失败时 objectURL 兜底）
 const content = ref('')
-const mdImages = ref([])
+const mdImages = ref<unknown[]>([])
 const visibility = ref('Public')
-const coverInput = ref(null)
+const coverInput = ref<HTMLInputElement | null>(null)
 const coverUploading = ref(false)
 const publishing = ref(false)
 const savingDraft = ref(false)
@@ -100,9 +104,9 @@ watch(() => props.draft, (d) => {
   visibility.value = d.visibility || 'Public'
 }, { immediate: true })
 
-async function onCoverPick(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onCoverPick(e: Event) {
+  const file = (e.target as HTMLInputElement).files && (e.target as HTMLInputElement).files[0]
+  ;(e.target as HTMLInputElement).value = ''
   if (!file) return
   if (file.size > 10 * 1024 * 1024) { toast.push('图片不能超过 10MB', 'error'); return }
   coverUploading.value = true
@@ -129,7 +133,7 @@ function clearCover() {
   coverUrl.value = ''
 }
 
-function hideImg(e) { e.target.style.visibility = 'hidden' }
+function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 
 function saveAsDraft() {
   savingDraft.value = true

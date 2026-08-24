@@ -22,7 +22,7 @@
           <path d="M12 3l7 4v5c0 4.4-3 7.9-7 9-4-1.1-7-4.6-7-9V7l7-4z" />
         </svg>
       </div>
-      <span class="text-xl font-bold tracking-wide text-white">轻芒 · 兴趣部落</span>
+      <span class="text-xl font-bold tracking-wide font-display text-white">轻芒 · 兴趣部落</span>
     </router-link>
 
     <!-- ===== 右上角主题切换 ===== -->
@@ -56,7 +56,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
@@ -72,17 +72,17 @@ const theme = useThemeStore()
 const showLoginForm = ref(true)
 const showRegisterForm = ref(false)
 
-const handleShowLoginForm = (value) => {
+const handleShowLoginForm = (value: boolean): void => {
   showLoginForm.value = value
 }
 
-const handleShowRegisterForm = (value) => {
+const handleShowRegisterForm = (value: boolean): void => {
   showRegisterForm.value = value
 }
 
 // 处理邮箱登录提交 → 跳转验证码页面（密码经路由 state 传递，仅存内存、刷新即失效，
 // 由验证码页用「密码 + 验证码」两步调用登录接口）
-const handleSubmitEmailLogin = (loginData) => {
+const handleSubmitEmailLogin = (loginData: any): void => {
   router.push({
     path: '/verify-code',
     query: { email: loginData.email },
@@ -97,7 +97,7 @@ onMounted(async () => {
   if (provider && code && state) {
     sessionStorage.removeItem('oauth_provider')
     try {
-      const res = await oauthCallback(provider, code, state, window.location.origin + '/login')
+      const res = await oauthCallback(provider, code as string, state as string, window.location.origin + '/login')
       if (saveLoginResult(res)) {
         router.replace('/home')
       } else {

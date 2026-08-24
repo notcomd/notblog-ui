@@ -73,22 +73,37 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 社区成员：加载/搜索/按角色分组展示 + 角色任命（Owner）/移除（Owner/Admin）
 import { computed, ref, watch } from 'vue'
 import { themeAvatar } from '@/utils/avatar'
 import { getCircleMembers } from '@/api/circle'
 import { useAuthStore } from '@/stores/auth'
 
-const props = defineProps({
-  current: { type: Object, default: null },
-  myRole: { type: String, default: 'Member' }
-})
-defineEmits(['set-role', 'remove-member'])
+interface CircleData {
+  circleGuid?: string
+}
+
+interface CircleMember {
+  userGuid?: string
+  nickname?: string
+  role?: string
+  isMe?: boolean
+  joinTime?: any
+}
+
+const props = defineProps<{
+  current: CircleData | null
+  myRole?: string
+}>()
+defineEmits<{
+  'set-role': [m: CircleMember, role: string]
+  'remove-member': [m: CircleMember]
+}>()
 
 const auth = useAuthStore()
 
-const members = ref([])
+const members = ref<CircleMember[]>([])
 const loading = ref(false)
 const memberSearch = ref('')
 const confirmRemove = ref('')
@@ -103,8 +118,8 @@ const filteredMembers = computed(() => {
   return members.value.filter(m => (m.nickname || '').toLowerCase().includes(q))
 })
 
-const memberGroups = computed(() => {
-  const g = { 创建者: [], 管理者: [], 成员: [] }
+const memberGroups = computed<Record<string, CircleMember[]>>(() => {
+  const g: Record<string, CircleMember[]> = { 创建者: [], 管理者: [], 成员: [] }
   for (const m of members.value) {
     if (m.role === 'Owner') g.创建者.push(m)
     else if (m.role === 'Admin') g.管理者.push(m)
@@ -145,7 +160,7 @@ async function load() {
 }
 
 // 示例成员兜底（后端离线/无数据时展示，含「我」+ 三角色）
-function buildDemoMembers() {
+function buildDemoMembers(): CircleMember[] {
   const me = String(auth.user?.id || '')
   return [
     { userGuid: me, nickname: auth.user?.name || '我', role: props.myRole, isMe: true, joinTime: Date.now() },

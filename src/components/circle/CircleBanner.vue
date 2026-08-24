@@ -75,26 +75,46 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 社区 Banner：封面（图片/视频/头像兜底）+ 信息行 + 权限操作（管理/邀请/退出）+ 分类 tab
 import { computed, ref } from 'vue'
 import { generateCircleInvitation } from '@/api/circle'
 import { useToastStore } from '@/stores/toast'
 
-const props = defineProps({
-  current: { type: Object, default: null },
-  circleTab: { type: String, default: 'home' },
-  myRole: { type: String, default: 'Member' },
-  joinMode: { type: String, default: 'invite' }
-})
-defineEmits(['manage', 'leave', 'switch-tab'])
+interface CircleData {
+  circleGuid?: string
+  coverUrl?: string
+  avatarUrl?: string
+  name?: string
+  description?: string
+  memberCount?: number
+  isSample?: boolean
+}
+
+interface CircleTab {
+  key: string
+  label: string
+  icon: string
+}
+
+const props = defineProps<{
+  current: CircleData | null
+  circleTab?: string
+  myRole?: string
+  joinMode?: string
+}>()
+defineEmits<{
+  manage: []
+  leave: []
+  'switch-tab': [key: string]
+}>()
 
 const toast = useToastStore()
 const confirmingLeave = ref(false)
 const inviteCodeOpen = ref(false)
 const latestInviteCode = ref('')
 
-const CIRCLE_TABS = [
+const CIRCLE_TABS: CircleTab[] = [
   { key: 'announce', label: '公告', icon: '<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>' },
   { key: 'home', label: '主页', icon: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
   { key: 'resources', label: '资源', icon: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>' },
@@ -137,5 +157,5 @@ function copyInviteCode() {
 const fallback = 'data:image/svg+xml;utf8,' + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="8" fill="#f59e0b"/><path d="M14 50 L40 24 L66 50 Z" fill="#fff"/><path d="M40 50v-16" stroke="#f59e0b" stroke-width="4"/></svg>'
 )
-function hideImg(e) { e.target.style.visibility = 'hidden' }
+function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 </script>

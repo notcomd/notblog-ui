@@ -63,7 +63,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { compactNumber, relativeTime } from '@/utils/format'
@@ -71,9 +71,33 @@ import { toggleLike, toggleFavorite } from '@/api/tweet'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 
-const props = defineProps({
-  post: { type: Object, required: true }
-})
+interface PostAuthor {
+  userName?: string
+  name?: string
+  nickname?: string
+  avatar?: string
+}
+
+interface PostItem {
+  tweetGuid: string
+  content?: string
+  isVideo?: boolean
+  isLiked?: boolean
+  isFavorited?: boolean
+  likeCount?: number
+  favoriteCount?: number
+  mediaUrls?: string[]
+  publishTime?: string | number
+  createTime?: string | number
+  visibility?: string
+  author?: PostAuthor
+  [key: string]: unknown
+}
+
+interface Props {
+  post: PostItem
+}
+const props = defineProps<Props>()
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -81,7 +105,7 @@ const toast = useToastStore()
 const coverFailed = ref(false)
 
 // 互动操作需要登录：未登录时提示并跳转登录页
-function requireLogin() {
+function requireLogin(): boolean {
   if (auth.isLoggedIn()) return true
   toast.push('请先登录后再进行互动', 'info')
   router.push('/login')
@@ -108,8 +132,8 @@ function onCoverError() {
   coverFailed.value = true
 }
 
-function hideAvatar(e) {
-  e.target.style.visibility = 'hidden'
+function hideAvatar(e: Event) {
+  ;(e.target as HTMLElement).style.visibility = 'hidden'
 }
 
 async function onLike() {
@@ -117,7 +141,7 @@ async function onLike() {
   const liked = !props.post.isLiked
   const prev = props.post.likeCount
   props.post.isLiked = liked
-  props.post.likeCount = Math.max(0, prev + (liked ? 1 : -1))
+  props.post.likeCount = Math.max(0, (prev || 0) + (liked ? 1 : -1))
   try {
     await toggleLike(props.post.tweetGuid, liked)
   } catch (e) {
@@ -131,7 +155,7 @@ async function onFavorite() {
   const favorited = !props.post.isFavorited
   const prev = props.post.favoriteCount
   props.post.isFavorited = favorited
-  props.post.favoriteCount = Math.max(0, prev + (favorited ? 1 : -1))
+  props.post.favoriteCount = Math.max(0, (prev || 0) + (favorited ? 1 : -1))
   try {
     await toggleFavorite(props.post.tweetGuid, favorited)
   } catch (e) {

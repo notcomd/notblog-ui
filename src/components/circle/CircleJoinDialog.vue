@@ -53,22 +53,34 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 加入社区弹窗：邀请码/链接加入 + 审核制申请加入 + 收到的直邀（接受/拒绝真实端点）
 import { ref } from 'vue'
 
-defineProps({
-  myInvites: { type: Array, default: () => [] },
-  busy: { type: String, default: '' },
-  joining: { type: Boolean, default: false }
-})
-defineEmits(['close', 'join-submit', 'apply-join', 'accept', 'reject'])
+interface CircleInvite {
+  inviteGuid?: string
+  circleName?: string
+  status?: string
+}
+
+defineProps<{
+  myInvites?: CircleInvite[]
+  busy?: string
+  joining?: boolean
+}>()
+defineEmits<{
+  close: []
+  'join-submit': [code: string]
+  'apply-join': [name: string]
+  accept: [inv: CircleInvite]
+  reject: [inv: CircleInvite]
+}>()
 
 const joinInput = ref('')
 const applyInput = ref('')
 
-const INVITE_STATUS_TEXT = { Pending: '待处理', Accepted: '已接受', Revoked: '已撤销', Expired: '已过期' }
-function statusText(inv) {
-  return INVITE_STATUS_TEXT[inv.status] || inv.status || '未知'
+const INVITE_STATUS_TEXT: Record<string, string> = { Pending: '待处理', Accepted: '已接受', Revoked: '已撤销', Expired: '已过期' }
+function statusText(inv: CircleInvite): string {
+  return INVITE_STATUS_TEXT[inv.status || ''] || inv.status || '未知'
 }
 </script>

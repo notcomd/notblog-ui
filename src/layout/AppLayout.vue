@@ -36,7 +36,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import TopBar from '@/layout/TopBar.vue'
@@ -50,14 +50,14 @@ const route = useRoute()
 const isDetail = computed(() => route.path.startsWith('/posts/'))
 
 // keep-alive 缓存的信息流视图（返回时保留浏览位置）
-const cachedViews = ['HomeView', 'CirclePage', 'ChatPage', 'UserSpaceView']
+const cachedViews: string[] = ['HomeView', 'CirclePage', 'ChatPage', 'UserSpaceView']
 
 // ===== 回到顶部（全局；页面内部滚动容器用 data-scroll-container 标记，如 CirclesView） =====
-const mainBox = ref(null)
+const mainBox = ref<HTMLElement | null>(null)
 const showTopBtn = ref(false)
 const TOP_BTN_THRESHOLD = 400
 
-function currentScrollTop() {
+function currentScrollTop(): number {
   // 内容撑高页面时滚动发生在 window；社区页等内部容器独立滚动
   const inner = document.querySelector('[data-scroll-container]')
   return Math.max(
@@ -67,11 +67,11 @@ function currentScrollTop() {
   )
 }
 
-function onMainScroll() {
+function onMainScroll(): void {
   showTopBtn.value = currentScrollTop() > TOP_BTN_THRESHOLD
 }
 
-function scrollToTop() {
+function scrollToTop(): void {
   if ((window.scrollY || 0) > 0) {
     window.scrollTo({ top: 0, behavior: 'smooth' })
     return

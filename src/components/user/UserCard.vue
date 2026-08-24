@@ -129,7 +129,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
@@ -138,31 +138,47 @@ import { uploadUserCover, updateBackgroundCover } from '@/api/userinfo'
 import { useToastStore } from '@/stores/toast'
 import { unwrap } from '@/utils/response'
 
-const props = defineProps({
-  user: { type: Object, required: true },
-  isSelf: { type: Boolean, default: false },
+interface UserInfoData {
+  level?: number
+}
+
+interface Props {
+  user: Record<string, unknown>
+  isSelf?: boolean
   // Message /api/user-info/me：他人无该数据时为空（不显示等级徽章）
-  userInfo: { type: Object, default: null },
-  following: { type: Boolean, default: false }
+  userInfo?: UserInfoData | null
+  following?: boolean
+}
+const props = withDefaults(defineProps<Props>(), {
+  isSelf: false,
+  userInfo: null,
+  following: false
 })
-const emit = defineEmits(['avatar-changed', 'cover-changed', 'bio-changed', 'chat', 'toggle-follow'])
+const emit = defineEmits<{
+  (e: 'avatar-changed', url: string): void
+  (e: 'cover-changed', url: string): void
+  (e: 'bio-changed', bio: string): void
+  (e: 'chat'): void
+  (e: 'toggle-follow'): void
+}>()
 
 const toast = useToastStore()
 
 // ===== 头像（选择后先裁剪 1:1，再上传裁剪结果） =====
-const avatarInput = ref(null)
+const avatarInput = ref<HTMLInputElement | null>(null)
 const avatarFailed = ref(false)
 const avatarCropOpen = ref(false)
 const avatarCropSrc = ref('')
-const avatarCropImg = ref(null)
-const avatarCropper = ref(null)
+const avatarCropImg = ref<HTMLImageElement | null>(null)
+const avatarCropper = ref<Cropper | null>(null)
 const avatarUploading = ref(false)
-const displayName = computed(() => props.user.nickname || props.user.name || '未命名用户')
+const displayName = computed(() => (props.user.nickname as string) || (props.user.name as string) || '未命名用户')
 const avatarChar = computed(() => (displayName.value || '芒').slice(0, 1))
 
-function onAvatarChange(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+function onAvatarChange(e: Event) {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = ''
   if (!file) return
   if (!file.type.startsWith('image/')) {
     toast.push('请选择图片文件', 'error')
@@ -176,14 +192,14 @@ function onAvatarChange(e) {
   avatarCropSrc.value = URL.createObjectURL(file)
   avatarCropOpen.value = true
   nextTick(() => {
-    const el = avatarCropImg.value
-    if (!el) return
+    const el2 = avatarCropImg.value
+    if (!el2) return
     const init = () => {
       if (avatarCropper.value) avatarCropper.value.destroy()
-      avatarCropper.value = new Cropper(el, { aspectRatio: 1, viewMode: 1, autoCropArea: 0.85, background: false, dragMode: 'move' })
+      avatarCropper.value = new Cropper(el2, { aspectRatio: 1, viewMode: 1, autoCropArea: 0.85, background: false, dragMode: 'move' })
     }
-    if (el.complete && el.naturalWidth) init()
-    else el.onload = init
+    if (el2.complete && el2.naturalWidth) init()
+    else el2.onload = init
   })
 }
 
@@ -234,11 +250,11 @@ function confirmAvatarCrop() {
 // ===== 签名（编辑态：仅自己；持久化由父组件处理，后端暂无 bio 字段/端点） =====
 const bioEditing = ref(false)
 const bioDraft = ref('')
-const bioInput = ref(null)
-const bioDisplay = computed(() => props.user.bio || '这个人很懒，什么都没有写')
+const bioInput = ref<HTMLInputElement | null>(null)
+const bioDisplay = computed(() => (props.user.bio as string) || '这个人很懒，什么都没有写')
 
 function startEditBio() {
-  bioDraft.value = props.user.bio || ''
+  bioDraft.value = (props.user.bio as string) || ''
   bioEditing.value = true
   nextTick(() => bioInput.value && bioInput.value.focus())
 }
@@ -255,13 +271,13 @@ function cancelBio() {
 }
 
 // ===== 封面 =====
-const coverInput = ref(null)
+const coverInput = ref<HTMLInputElement | null>(null)
 const coverFailed = ref(false)
 const coverUploading = ref(false)
 const coverProgress = ref(0)
-const coverTheme = ref(null) // canvas 采样主色 {r,g,b} | null → 回退默认琥珀
+const coverTheme = ref<{ r: number; g: number; b: number } | null>(null) // canvas 采样主色 {r,g,b} | null → 回退默认琥珀
 
-const coverIsVideo = computed(() => /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(props.user.coverUrl || ''))
+const coverIsVideo = computed(() => /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test((props.user.coverUrl as string) || ''))
 
 // 边缘→中心主题色渐变遮罩（中心透明，四边染主题色，与底层模糊融合）
 const coverOverlayStyle = computed(() => {
@@ -273,7 +289,7 @@ const coverOverlayStyle = computed(() => {
 })
 
 // 采样封面主色：canvas 8×8 降采样取平均色（跨域/视频失败回退默认琥珀）
-function sampleColor(source) {
+function sampleColor(source: HTMLImageElement | HTMLVideoElement): Promise<{ r: number; g: number; b: number } | null> {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas')
     canvas.width = 8
@@ -298,10 +314,10 @@ function sampleColor(source) {
   })
 }
 
-async function refreshTheme(url) {
+async function refreshTheme(url: string) {
   coverTheme.value = null
   if (!url) return
-  const timeout = new Promise(r => setTimeout(() => r(null), 4000))
+  const timeout: Promise<null> = new Promise(r => setTimeout(() => r(null), 4000))
   if (coverIsVideo.value) {
     const v = document.createElement('video')
     v.muted = true
@@ -316,9 +332,10 @@ async function refreshTheme(url) {
   }
 }
 
-async function onCoverPick(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onCoverPick(e: Event) {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = ''
   if (!file) return
   const isImage = file.type.startsWith('image/')
   const isVideo = file.type.startsWith('video/')
@@ -358,7 +375,7 @@ async function onCoverPick(e) {
 // 封面/头像变化（含用户切换）时重置失败态 + 重新采样主题色
 watch(() => props.user.coverUrl, (url) => {
   coverFailed.value = false
-  if (url) refreshTheme(url)
+  if (url) refreshTheme(url as string)
 })
 watch(() => props.user.avatar, () => { avatarFailed.value = false })
 </script>

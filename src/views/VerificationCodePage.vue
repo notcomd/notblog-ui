@@ -80,7 +80,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import VerificationCodeInput from '@/components/VerificationCodeInput.vue'
@@ -90,12 +90,13 @@ const route = useRoute()
 const router = useRouter()
 
 // 登录页经路由 state 传来的密码（仅内存态，刷新页面即失效，需重新登录）
-const password = window.history.state && window.history.state.password
-  ? window.history.state.password
+const historyState: any = window.history.state
+const password = historyState && historyState.password
+  ? historyState.password
   : ''
 
 // ==================== 从路由参数获取目标信息 ====================
-const target = computed(() => route.query.email || route.query.phone || '')
+const target = computed(() => (route.query.email || route.query.phone || '') as string)
 
 const maskedTarget = computed(() => {
   const t = target.value
@@ -117,7 +118,7 @@ const isCodeComplete = computed(() => code.value.length === 9)
 
 // ==================== 倒计时 ====================
 const countdown = ref(60)
-let countdownTimer = null
+let countdownTimer: ReturnType<typeof setInterval> | null = null
 
 const startCountdown = () => {
   countdown.value = 60

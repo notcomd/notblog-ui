@@ -20,15 +20,16 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
-  title: { type: String, required: true },
-  width: { type: String, default: 'w-[560px]' }
-})
+<script setup lang="ts">
+interface Props {
+  title: string
+  width?: string
+}
+defineProps<Props>()
 
-const emit = defineEmits(['close'])
+const emit = defineEmits<{ (e: 'close'): void }>()
 
-const widthClass = {
+const widthClass: Record<string, string> = {
   'w-[560px]': 'w-[560px]',
   'w-[720px]': 'w-[720px]',
   'w-[900px]': 'w-[900px]'

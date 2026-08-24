@@ -149,11 +149,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'AdminUsersView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import AdminTable from '@/components/admin/AdminTable.vue'
 import AdminModal from '@/components/admin/AdminModal.vue'
@@ -172,24 +172,24 @@ const columns = [
   { key: 'status', label: '状态' }
 ]
 
-const users = ref([])
+const users = ref<any[]>([])
 const loading = ref(false)
 const page = ref(1)
 const pageSize = 10
 const total = ref(0)
 const keyword = ref('')
 const status = ref('all')
-const selected = ref([])
+const selected = ref<any[]>([])
 
 const showAdd = ref(false)
 const addForm = ref({ userName: '', userEmail: '', password: '', role: 'Member' })
-const viewing = ref(null)
-const banTarget = ref(null)
+const viewing = ref<any>(null)
+const banTarget = ref<any>(null)
 const banDuration = ref('7d')
 const banReason = ref('')
-const deleteTarget = ref(null)
+const deleteTarget = ref<any>(null)
 
-function statusClass(s) {
+function statusClass(s: string): string {
   return {
     Normal: 'bg-emerald-400/15 text-emerald-500',
     Banned: 'bg-red-400/15 text-red-500',
@@ -197,16 +197,16 @@ function statusClass(s) {
   }[s] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
 }
 
-function statusText(s) {
+function statusText(s: string): string {
   return { Normal: '正常', Banned: '已封禁', Online: '在线中' }[s] || s
 }
 
-async function load(p) {
+async function load(p?: number): Promise<void> {
   loading.value = true
   page.value = p || 1
   try {
     const res = await getAdminUsers({ page: page.value, pageSize, keyword: keyword.value, status: status.value })
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     users.value = data.items || data.list || []
     total.value = data.totalCount !== undefined ? data.totalCount : (data.total || users.value.length)
   } catch (e) {
@@ -216,16 +216,16 @@ async function load(p) {
   }
 }
 
-function viewUser(row) {
+function viewUser(row: any): void {
   viewing.value = row
 }
 
-function banUser(row) {
+function banUser(row: any): void {
   banTarget.value = row
   banReason.value = ''
 }
 
-async function submitBan(reason) {
+async function submitBan(reason: string): Promise<void> {
   try {
     await banAdminUser(banTarget.value.userGuid, { reason, duration: banDuration.value })
     toast.push(`已封禁 ${banTarget.value.userName}`, 'success')
@@ -236,11 +236,11 @@ async function submitBan(reason) {
   }
 }
 
-function deleteUser(row) {
+function deleteUser(row: any): void {
   deleteTarget.value = row
 }
 
-async function submitDelete(reason) {
+async function submitDelete(reason: string): Promise<void> {
   try {
     await deleteAdminUser(deleteTarget.value.userGuid)
     toast.push(`已删除 ${deleteTarget.value.userName} 及其全部数据`, 'success')
@@ -251,7 +251,7 @@ async function submitDelete(reason) {
   }
 }
 
-async function submitAdd() {
+async function submitAdd(): Promise<void> {
   try {
     await addAdminUser(addForm.value)
     toast.push('用户创建成功', 'success')
@@ -263,20 +263,20 @@ async function submitAdd() {
   }
 }
 
-function batchBan() {
+function batchBan(): void {
   toast.push('批量封禁尚未接入后端，操作未执行', 'error')
   selected.value = []
   load(1)
 }
 
-function batchDelete() {
+function batchDelete(): void {
   toast.push('批量删除尚未接入后端，操作未执行', 'error')
   selected.value = []
   load(1)
 }
 
-function hideImg(e) {
-  e.target.style.visibility = 'hidden'
+function hideImg(e: Event) {
+  (e.target as HTMLElement).style.visibility = 'hidden'
 }
 
 onMounted(() => load(1))

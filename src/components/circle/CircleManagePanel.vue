@@ -102,22 +102,52 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 社区管理面板：基本信息（Owner）/加入方式三选（Owner）/审核队列/邀请码（localStorage 本地持久化）
 import { computed, ref, watch } from 'vue'
 import { themeAvatar } from '@/utils/avatar'
 import { generateCircleInvitation, getCircleInvitations, revokeCircleInvitation, updateCircle } from '@/api/circle'
 import { useToastStore } from '@/stores/toast'
 
-const props = defineProps({
-  current: { type: Object, default: null },
-  myRole: { type: String, default: 'Member' }
-})
-const emit = defineEmits(['close', 'saved'])
+interface CircleData {
+  circleGuid?: string
+  name?: string
+  description?: string
+  avatarUrl?: string
+  coverUrl?: string
+  isSample?: boolean
+}
+
+interface JoinMode {
+  key: string
+  label: string
+  desc: string
+  icon: string
+}
+
+interface InviteCode {
+  inviteGuid?: string
+  code: string
+}
+
+interface JoinRequest {
+  userGuid: string
+  userName: string
+  time: any
+}
+
+const props = defineProps<{
+  current: CircleData | null
+  myRole?: string
+}>()
+const emit = defineEmits<{
+  close: []
+  saved: [patch: { name: string; description: string; avatarUrl: string; coverUrl: string }]
+}>()
 
 const toast = useToastStore()
 
-const JOIN_MODES = [
+const JOIN_MODES: JoinMode[] = [
   { key: 'invite', label: '邀请', desc: '全员可用邀请码', icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>' },
   { key: 'private', label: '私密', desc: '仅创建者可邀请', icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>' },
   { key: 'review', label: '审核', desc: '公开申请+审核', icon: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>' }
@@ -130,11 +160,11 @@ const desc = ref('')
 const avatarPreview = ref('')
 const coverPreview = ref('')
 const saving = ref(false)
-const avatarInput = ref(null)
-const coverInput = ref(null)
+const avatarInput = ref<HTMLInputElement | null>(null)
+const coverInput = ref<HTMLInputElement | null>(null)
 const joinMode = ref('invite')
-const joinRequests = ref([])
-const inviteCodes = ref([])
+const joinRequests = ref<JoinRequest[]>([])
+const inviteCodes = ref<InviteCode[]>([])
 const generating = ref(false)
 
 const avatarUrl = computed(() => props.current?.avatarUrl || '')
@@ -154,24 +184,24 @@ watch(() => props.current, (c) => {
 }, { immediate: true })
 
 // ===== 加入方式（localStorage 本地持久化） =====
-function circleJoinMode(guid) {
+function circleJoinMode(guid: string): string {
   try {
     return localStorage.getItem('notblog-circle-joinmode-' + guid) || 'invite'
   } catch (e) {
     return 'invite'
   }
 }
-function setMode(m) {
+function setMode(m: string) {
   if (!isOwner.value || !props.current) return
   joinMode.value = m
   try {
     localStorage.setItem('notblog-circle-joinmode-' + props.current.circleGuid, m)
   } catch (e) { /* 忽略 */ }
 }
-function joinRequestsKey(guid) {
+function joinRequestsKey(guid: string): string {
   return 'notblog-circle-joinreq-' + guid
 }
-function loadJoinRequests(guid) {
+function loadJoinRequests(guid: string): JoinRequest[] {
   try {
     return JSON.parse(localStorage.getItem(joinRequestsKey(guid)) || '[]')
   } catch (e) {
@@ -184,22 +214,22 @@ function saveJoinRequests() {
     localStorage.setItem(joinRequestsKey(props.current.circleGuid), JSON.stringify(joinRequests.value))
   } catch (e) { /* 忽略 */ }
 }
-function approve(r) {
+function approve(r: JoinRequest) {
   joinRequests.value = joinRequests.value.filter(x => x.userGuid !== r.userGuid)
   saveJoinRequests()
   toast.push('已通过 ' + (r.userName || '') + ' 的加入申请', 'success')
 }
-function reject(r) {
+function reject(r: JoinRequest) {
   joinRequests.value = joinRequests.value.filter(x => x.userGuid !== r.userGuid)
   saveJoinRequests()
   toast.push('已拒绝 ' + (r.userName || '') + ' 的加入申请', 'info')
 }
 
 // ===== 邀请码 =====
-function invitesKey(guid) {
+function invitesKey(guid: string): string {
   return 'notblog-circle-invites-' + guid
 }
-async function loadInviteCodes(guid) {
+async function loadInviteCodes(guid: string) {
   const local = loadLocalInvites(guid)
   try {
     const res = await getCircleInvitations(guid)
@@ -212,7 +242,7 @@ async function loadInviteCodes(guid) {
   } catch (e) { /* 后端未就绪，用本地 */ }
   inviteCodes.value = local
 }
-function loadLocalInvites(guid) {
+function loadLocalInvites(guid: string): InviteCode[] {
   try {
     return JSON.parse(localStorage.getItem(invitesKey(guid)) || '[]')
   } catch (e) {
@@ -247,16 +277,16 @@ async function genInvite() {
     generating.value = false
   }
 }
-async function revoke(it) {
+async function revoke(it: InviteCode) {
   if (!props.current) return
   try {
-    await revokeCircleInvitation(props.current.circleGuid, it.inviteGuid)
+    await revokeCircleInvitation(props.current.circleGuid, it.inviteGuid!)
   } catch (e) { /* 本地删除 */ }
   inviteCodes.value = inviteCodes.value.filter(x => x.inviteGuid !== it.inviteGuid)
   saveLocalInvites()
   toast.push('邀请码已撤销', 'info')
 }
-function copy(it) {
+function copy(it: InviteCode) {
   try {
     navigator.clipboard.writeText(it.code)
     toast.push('邀请码已复制', 'success')
@@ -270,9 +300,10 @@ function pickAvatar() {
 function pickCover() {
   if (coverInput.value) coverInput.value.click()
 }
-async function onAvatarFile(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onAvatarFile(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files && input.files[0]
+  input.value = ''
   if (!file) return
   if (file.size > 10 * 1024 * 1024) { toast.push('图片不能超过 10MB', 'error'); return }
   try {
@@ -287,9 +318,10 @@ async function onAvatarFile(e) {
     toast.push('上传失败（本地预览）', 'info')
   }
 }
-async function onCoverFile(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onCoverFile(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files && input.files[0]
+  input.value = ''
   if (!file) return
   if (file.size > 20 * 1024 * 1024) { toast.push('封面不能超过 20MB', 'error'); return }
   try {

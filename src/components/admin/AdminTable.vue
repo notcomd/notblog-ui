@@ -60,28 +60,49 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps({
-  columns: { type: Array, required: true },
-  rows: { type: Array, default: () => [] },
-  rowKeyField: { type: String, default: 'id' },
-  loading: { type: Boolean, default: false },
-  emptyText: { type: String, default: '暂无数据' },
-  selectable: { type: Boolean, default: false },
-  selected: { type: Array, default: () => [] },
-  page: { type: Number, default: 1 },
-  pageSize: { type: Number, default: 10 },
-  total: { type: Number, default: 0 }
+interface Col {
+  key: string
+  label: string
+  className?: string
+  cellClass?: string
+}
+
+interface Props {
+  columns: Col[]
+  rows?: Array<Record<string, unknown>>
+  rowKeyField?: string
+  loading?: boolean
+  emptyText?: string
+  selectable?: boolean
+  selected?: unknown[]
+  page?: number
+  pageSize?: number
+  total?: number
+}
+const props = withDefaults(defineProps<Props>(), {
+  rows: () => [],
+  rowKeyField: 'id',
+  loading: false,
+  emptyText: '暂无数据',
+  selectable: false,
+  selected: () => [] as unknown[],
+  page: 1,
+  pageSize: 10,
+  total: 0
 })
 
-const emit = defineEmits(['update:selected', 'page-change'])
+const emit = defineEmits<{
+  (e: 'update:selected', keys: unknown[]): void
+  (e: 'page-change', page: number): void
+}>()
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const colspan = computed(() => props.columns.length + (props.selectable ? 1 : 0) + 1)
 
-function rowKey(row, index) {
+function rowKey(row: Record<string, unknown>, index: number): unknown {
   return row[props.rowKeyField] !== undefined ? row[props.rowKeyField] : index
 }
 
@@ -93,18 +114,18 @@ function toggleAll() {
   emit('update:selected', next)
 }
 
-function isSelected(key) {
+function isSelected(key: unknown): boolean {
   return props.selected.includes(key)
 }
 
-function toggleRow(key) {
+function toggleRow(key: unknown) {
   const next = props.selected.includes(key)
     ? props.selected.filter(k => k !== key)
     : [...props.selected, key]
   emit('update:selected', next)
 }
 
-function go(p) {
+function go(p: number) {
   emit('page-change', p)
 }
 </script>

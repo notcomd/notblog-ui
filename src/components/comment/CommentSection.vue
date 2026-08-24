@@ -89,7 +89,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import CommentItem from './CommentItem.vue'
 import { useToastStore } from '@/stores/toast'
@@ -102,20 +102,47 @@ import { unwrap } from '@/utils/response'
 //   - tweets（PostDetailView）：分页 + 排序 + 回复折叠（parentGuid/replyToGuid）
 //   - markdown（MarkdownDetailView）：全量 + 图片评论 + 子评论接口
 // ============================================================
-const props = defineProps({
-  // cfg：评论配置（见下方 buildCfg 注释，父组件构造传入）
-  cfg: { type: Object, required: true }
-})
+interface CommentConfig {
+  idField: string
+  likeCountField?: string
+  contentField?: string
+  timeField?: string
+  replyCountField?: string
+  imagesField?: string
+  sortable?: boolean
+  images?: boolean
+  pageSize?: number
+  replyMode?: string
+  parseList?: (data: any) => { items: any[]; total?: number; hasMore?: boolean }
+  loader?: (p: { page: number; pageSize: number }) => any
+  creator?: (payload: any) => any
+  replier?: (id: any, payload: any) => any
+  remove?: (id: any) => any
+  like?: (id: any) => any
+  unlike?: (id: any) => any
+  replyLoader?: (id: any) => any
+  authorName?: (c: any) => string
+  authorId?: (c: any) => any
+}
+
+interface ReplyTarget {
+  root: any
+  target: any
+}
+
+const props = defineProps<{
+  cfg: CommentConfig
+}>()
 
 const toast = useToastStore()
 
 const EMOJIS = ['😀', '😄', '😂', '🤣', '😊', '😍', '😘', '🥰', '😎', '🤔', '👍', '👏', '🙏', '💪', '🔥', '🎉', '❤️', '💔', '⭐', '🌹', '🌻', '🍻', '☕', '🎂', '🚀', '🌈', '🌊', '🏔️', '🐱', '🐶', '🍀', '✨']
 
 // ---------- 字段映射（读原始对象，兼容两套 DTO；条目级读取在 CommentItem 内） ----------
-const idOf = (c) => c[props.cfg.idField]
-const likeCountOf = (c) => (c[props.cfg.likeCountField] ?? (c.quote && c.quote.loveCount) ?? 0)
+const idOf = (c: any): any => c[props.cfg.idField]
+const likeCountOf = (c: any): any => (c[props.cfg.likeCountField] ?? (c.quote && c.quote.loveCount) ?? 0)
 
-const items = ref([])
+const items = ref<any[]>([])
 const total = ref(0)
 const loading = ref(false)
 const sending = ref(false)
@@ -124,18 +151,18 @@ const hasMore = ref(true)
 const sort = ref('new')
 const draft = ref('')
 const emojiOpen = ref(false)
-const images = ref([])
+const images = ref<string[]>([])
 const uploading = ref(false)
-const imageInput = ref(null)
-const likedMap = reactive({})   // commentId -> bool（点赞状态，组件内部维护）
+const imageInput = ref<HTMLInputElement | null>(null)
+const likedMap = reactive<Record<string, boolean>>({})   // commentId -> bool（点赞状态，组件内部维护）
 // replyingTo = { root, target }：回复目标（fold 模式 root=顶层评论）
-const replyingTo = ref(null)
-const sentinel = ref(null)
-let observer = null
+const replyingTo = ref<ReplyTarget | null>(null)
+const sentinel = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
 
-const sortedItems = computed(() => {
+const sortedItems = computed<any[]>(() => {
   if (sort.value === 'hot') {
-    return [...items.value].sort((a, b) => likeCountOf(b) - likeCountOf(a))
+    return [...items.value].sort((a: any, b: any) => likeCountOf(b) - likeCountOf(a))
   }
   return items.value
 })
@@ -146,7 +173,7 @@ const replyName = computed(() => {
   return props.cfg.authorName ? props.cfg.authorName(t) : '用户'
 })
 
-async function loadMore(reset = false) {
+async function loadMore(reset: boolean = false) {
   if (loading.value) return
   if (reset) {
     items.value = []
@@ -232,7 +259,7 @@ async function removeComment(payload) {
 }
 
 // 点赞/取消点赞（cfg.like/unlike 存在时走后端，否则 CommentItem 本地 +1）
-async function toggleLike(comment) {
+async function toggleLike(comment: any) {
   if (!props.cfg.like || !props.cfg.unlike) return
   try {
     const id = comment[props.cfg.idField]
@@ -253,9 +280,10 @@ function pickImages() {
   if (imageInput.value && !uploading.value) imageInput.value.click()
 }
 
-async function onImagesPick(e) {
-  const files = Array.from(e.target.files || []).slice(0, 9 - images.value.length)
-  e.target.value = ''
+async function onImagesPick(e: Event) {
+  const input = e.target as HTMLInputElement
+  const files = Array.from(input.files || []).slice(0, 9 - images.value.length)
+  input.value = ''
   if (!files.length) return
   uploading.value = true
   try {
@@ -277,11 +305,11 @@ async function onImagesPick(e) {
   }
 }
 
-function hideImg(e) { e.target.style.visibility = 'hidden' }
+function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 
 onMounted(() => {
   loadMore(true)
-  observer = new IntersectionObserver((entries) => {
+  observer = new IntersectionObserver((entries: IntersectionObserverEntry[]) => {
     if (entries[0].isIntersecting) loadMore()
   }, { rootMargin: '100px' })
   if (sentinel.value) observer.observe(sentinel.value)

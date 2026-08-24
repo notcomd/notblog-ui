@@ -87,7 +87,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createTweet, createCirclePost, uploadImage } from '@/api/publish'
@@ -96,9 +96,13 @@ import { saveDraft, removeDraft } from '@/utils/drafts'
 import { unwrap } from '@/utils/response'
 import { useToastStore } from '@/stores/toast'
 
-const props = defineProps({
-  myCircles: { type: Array, default: () => [] },
-  draft: { type: Object, default: null }
+interface Props {
+  myCircles?: unknown[]
+  draft?: unknown
+}
+const props = withDefaults(defineProps<Props>(), {
+  myCircles: () => [],
+  draft: null
 })
 
 const router = useRouter()
@@ -116,8 +120,8 @@ const publishing = ref(false)
 const savingDraft = ref(false)
 const draftId = ref('')
 const videoFileId = ref('')  // 发布用视频文件 fileId
-const videoInput = ref(null)
-const coverInput = ref(null)
+const videoInput = ref<HTMLInputElement | null>(null)
+const coverInput = ref<HTMLInputElement | null>(null)
 
 watch(() => props.draft, (d) => {
   if (!d) return
@@ -151,9 +155,10 @@ function clearVideo() {
 
 
 // 真实上传视频文件到后端（≤10MB 直传 /api/files/upload、>10MB 分片），保存 fileId 用于发布
-async function onVideoFile(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onVideoFile(e: Event) {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = ''
   if (!file) return
   if (file.size > 500 * 1024 * 1024) { toast.push('视频不能超过 500MB', 'error'); return }
   videoUploading.value = true
@@ -177,9 +182,10 @@ async function onVideoFile(e) {
   }
 }
 
-async function onCoverPick(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onCoverPick(e: Event) {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = ''
   if (!file) return
   if (file.size > 10 * 1024 * 1024) { toast.push('图片不能超过 10MB', 'error'); return }
   coverUploading.value = true
@@ -199,9 +205,9 @@ async function onCoverPick(e) {
   }
 }
 
-function hideImg(e) { e.target.style.visibility = 'hidden' }
+function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 
-function firstLine(s) {
+function firstLine(s?: string): string {
   const t = (s || '').trim()
   return t ? t.split('\n')[0].slice(0, 40) : ''
 }

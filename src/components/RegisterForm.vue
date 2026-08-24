@@ -232,21 +232,23 @@
       <p class="text-xs text-red-700 dark:text-red-300">{{ errorMessage }}</p>
     </div>
   </div>
-</template>s
+</template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 import { register, sendEmailCode } from '@/api/auth'
-import { defineEmits, defineProps } from 'vue'
 import router from '@/router'
 
 // ==================== Props & Emits ====================
-defineProps({
-  showLoginForm: { type: Boolean, default: false },
-  showRegisterForm: { type: Boolean, default: true }
-})
+interface Props {
+  showLoginForm?: boolean
+  showRegisterForm?: boolean
+}
+defineProps<Props>()
 
-const emit = defineEmits(['showLoginForm'])
+const emit = defineEmits<{
+  (e: 'showLoginForm', v: boolean): void
+}>()
 
 // ==================== 邮箱注册状态 ====================
 const email = ref('')
@@ -255,19 +257,19 @@ const generatecode = ref('')
 const showPassword = ref(false)
 const emailLoading = ref(false)
 const emailCodeCountdown = ref(0)
-let emailCodeTimer = null
+let emailCodeTimer: ReturnType<typeof setInterval> | null = null
 
 // ==================== 通用状态 ====================
 const errorMessage = ref('')
-const errors = ref({})
+const errors = ref<Record<string, string>>({})
 
 // ==================== 切换到登录 ====================
-const handleLoginClick = () => {
+const handleLoginClick = (): void => {
   emit('showLoginForm', true)
 }
 
 // ==================== 密码可见性切换 ====================
-const togglePasswordVisibility = () => {
+const togglePasswordVisibility = (): void => {
   showPassword.value = !showPassword.value
 }
 
@@ -291,17 +293,17 @@ const strengthLabelClass = computed(() => {
   return colors[passwordStrengthLevel.value] || ''
 })
 
-const strengthBarClass = (index) => {
+const strengthBarClass = (index: number): string => {
   const level = passwordStrengthLevel.value
   if (level === 0) return 'bg-gray-200 dark:bg-zinc-700'
   const colors = ['', 'bg-red-400', 'bg-yellow-400', 'bg-green-400']
   return index <= level ? colors[level] : 'bg-gray-200'
 }
 
-const getPasswordBorderClass = () => {
+const getPasswordBorderClass = (): string => {
   if (errors.value.password) return 'border-red-300 focus:border-red-400 focus:ring-red-300 dark:border-red-400/70 dark:focus:ring-red-400/50'
   if (!password.value) return 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50'
-  const map = {
+  const map: Record<number, string> = {
     0: 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50',
     1: 'border-red-300 focus:border-red-400 focus:ring-red-300 dark:border-red-400/70 dark:focus:ring-red-400/50',
     2: 'border-yellow-300 focus:border-yellow-400 focus:ring-yellow-300 dark:border-yellow-500/70 dark:focus:ring-yellow-400/50',
@@ -310,14 +312,14 @@ const getPasswordBorderClass = () => {
   return map[passwordStrengthLevel.value] || 'border-amber-200 focus:border-amber-400 focus:ring-amber-300 dark:border-zinc-600/60 dark:focus:ring-amber-400/50'
 }
 
-const handlePasswordInput = () => {
+const handlePasswordInput = (): void => {
   if (errors.value.password) {
     errors.value.password = ''
   }
 }
 
 // ==================== 邮箱验证码发送 ====================
-const handleSendEmailCode = async () => {
+const handleSendEmailCode = async (): Promise<void> => {
   errors.value.email = ''
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -331,8 +333,8 @@ const handleSendEmailCode = async () => {
     // 后端发送邮件验证码（Identity：POST /api/identity/ready/email-verifications）
     await sendEmailCode(email.value)
     startEmailCodeCountdown()
-  } catch (error) {
-    errorMessage.value = error.response && error.response.data && error.response.data.error
+  } catch (error: any) {
+    errorMessage.value = error && error.response && error.response.data && error.response.data.error
       ? error.response.data.error
       : '验证码发送失败，请稍后重试'
     console.error('发送邮箱验证码错误:', error)
@@ -341,20 +343,20 @@ const handleSendEmailCode = async () => {
   }
 }
 
-const startEmailCodeCountdown = () => {
+const startEmailCodeCountdown = (): void => {
   emailCodeCountdown.value = 60
   if (emailCodeTimer) clearInterval(emailCodeTimer)
   emailCodeTimer = setInterval(() => {
     emailCodeCountdown.value--
     if (emailCodeCountdown.value <= 0) {
-      clearInterval(emailCodeTimer)
+      clearInterval(emailCodeTimer!)
       emailCodeTimer = null
     }
   }, 1000)
 }
 
 // ==================== 邮箱注册提交 ====================
-const handleEmailRegister = async () => {
+const handleEmailRegister = async (): Promise<void> => {
   errors.value = {}
   errorMessage.value = ''
 
@@ -401,7 +403,7 @@ const handleEmailRegister = async () => {
 }
 
 // ==================== 第三方注册回调 ====================
-const handleThirdPartyRegister = (provider) => {
+const handleThirdPartyRegister = (provider: string): void => {
   console.log(`第三方注册: ${provider}`)
   // TODO: 对接各平台 OAuth 注册
   // { provider, userInfo: { ... } }

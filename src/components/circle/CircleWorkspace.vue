@@ -49,7 +49,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 社区主视窗：创建面板 / 管理面板 / 社区详情编排（Banner + 公告·主页·资源·成员 tab）
 import { computed, ref } from 'vue'
 import PostGrid from '@/components/post/PostGrid.vue'
@@ -62,13 +62,21 @@ import CircleMemberTab from '@/components/circle/CircleMemberTab.vue'
 import { getCirclePosts, setCircleMemberRole, leaveCircle } from '@/api/circle'
 import { useToastStore } from '@/stores/toast'
 
-const props = defineProps({
-  current: { type: Object, default: null },
-  createMode: { type: Boolean, default: false },
-  gridKey: { type: Number, default: 0 },
-  myRole: { type: String, default: 'Member' }
-})
-defineEmits(['close-create', 'created', 'leave'])
+interface CircleData {
+  [key: string]: any
+}
+
+const props = defineProps<{
+  current: CircleData | null
+  createMode?: boolean
+  gridKey?: number
+  myRole?: string
+}>()
+defineEmits<{
+  'close-create': []
+  created: [guid: string]
+  leave: []
+}>()
 
 const toast = useToastStore()
 const manageMode = ref(false)
@@ -86,18 +94,18 @@ const circleJoinMode = computed(() => {
   }
 })
 
-function switchCircleTab(t) {
+function switchCircleTab(t: string) {
   circleTab.value = t
 }
 
 // 社区动态流加载器（PostGrid 消费）
-function circleLoader(params) {
+function circleLoader(params: any): Promise<any> {
   if (!props.current) return Promise.resolve({ data: { items: [], total: 0 } })
   return getCirclePosts(props.current.circleGuid, params).catch(() => ({ data: { items: [], total: 0 } }))
 }
 
 // 管理面板保存后回写社区信息
-function onManaged(patch) {
+function onManaged(patch: any) {
   manageMode.value = false
   const c = props.current
   if (c && patch) {
@@ -110,7 +118,7 @@ function onManaged(patch) {
 }
 
 // 成员角色/移除（真实端点；示例社区本地处理）
-async function onSetRole(m, role) {
+async function onSetRole(m: any, role: string) {
   if (!props.current) return
   try {
     if (!props.current.isSample) {
@@ -123,7 +131,7 @@ async function onSetRole(m, role) {
   }
 }
 
-async function onRemoveMember(m) {
+async function onRemoveMember(m: any) {
   if (!props.current) return
   try {
     if (!props.current.isSample) {

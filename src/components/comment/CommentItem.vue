@@ -63,34 +63,53 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from 'vue'
 import { relativeTime } from '@/utils/format'
 import { unwrap } from '@/utils/response'
 import { useAuthStore } from '@/stores/auth'
 
+const auth = useAuthStore()
+
 // ============================================================
 // 通用评论条目：与 CommentSection 配套，递归渲染子评论。
 // 字段读取经 cfg 映射，适配 tweets / markdown 两套 DTO。
 // ============================================================
-const props = defineProps({
-  comment: { type: Object, required: true },
-  // cfg：与 CommentSection 同一配置对象（字段映射 + API 函数）
-  cfg: { type: Object, required: true },
-  // 顶层评论对象：fold 回复模式（tweets）下子评论的「回复」需折叠到顶层
-  rootComment: { type: Object, default: null },
-  replyToName: { type: String, default: '' }
-})
+interface CommentConfig {
+  idField: string
+  likeCountField?: string
+  contentField?: string
+  timeField?: string
+  replyCountField?: string
+  imagesField?: string
+  replyMode?: string
+  replier?: (id: any, payload: any) => any
+  creator?: (payload: any) => any
+  replyLoader?: (id: any) => any
+  like?: (id: any) => any
+  authorName?: (c: any) => string
+  authorId?: (c: any) => any
+}
 
-const auth = useAuthStore()
+interface ReplyTarget {
+  root: any
+  target: any
+}
+
+const props = defineProps<{
+  comment: any
+  cfg: CommentConfig
+  rootComment?: any
+  replyToName?: string
+}>()
 
 const rootComment = computed(() => props.rootComment || props.comment)
-const children = ref([])
+const children = ref<any[]>([])
 const childrenLoaded = ref(false)
 const visibleChildren = computed(() => children.value.slice(0, 3))
 
 // ---------- 字段映射 ----------
-const idOf = (c) => c[props.cfg.idField]
+const idOf = (c: any): any => c[props.cfg.idField]
 const commentContent = computed(() => props.comment[props.cfg.contentField] || '')
 const timeText = computed(() => relativeTime(props.comment[props.cfg.timeField] || props.comment.createTime || props.comment.reviewTime))
 const likeCount = computed(() => (props.comment[props.cfg.likeCountField] ?? (props.comment.quote && props.comment.quote.loveCount) ?? 0))
@@ -104,7 +123,7 @@ const isMine = computed(() => {
 })
 
 // 子回复显示「回复 @被回复者」（无作者名映射时回退当前父评论作者名）
-function replyToNameOf(c) {
+function replyToNameOf(c: any): string {
   const n = props.cfg.authorName ? props.cfg.authorName(c) : ''
   return n || props.replyToName || '用户'
 }
@@ -142,8 +161,12 @@ function onLike() {
   emit('like', props.comment)
 }
 
-const emit = defineEmits(['reply', 'remove', 'like'])
+function openImage(url: string) { window.open(url, '_blank') }
+function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 
-function openImage(url) { window.open(url, '_blank') }
-function hideImg(e) { e.target.style.visibility = 'hidden' }
+const emit = defineEmits<{
+  reply: [payload: ReplyTarget]
+  remove: [payload: ReplyTarget]
+  like: [comment: any]
+}>()
 </script>

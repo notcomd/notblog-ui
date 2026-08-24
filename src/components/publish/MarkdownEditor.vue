@@ -51,23 +51,29 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import { renderMarkdown } from '@/utils/markdown'
 import { uploadImage } from '@/api/publish'
 import { unwrap } from '@/utils/response'
 
-const props = defineProps({
-  modelValue: { type: String, default: '' }
+interface Props {
+  modelValue?: string
+}
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: ''
 })
 
-const emit = defineEmits(['update:modelValue', 'images-changed'])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string): void
+  (e: 'images-changed', images: Array<{ fileId: string; url: string }>): void
+}>()
 
-const view = ref('split')
+const view = ref<'edit' | 'preview' | 'split'>('split')
 const uploading = ref(false)
-const fileInput = ref(null)
-const taRef = ref(null)
-const uploadedImages = ref([])
+const fileInput = ref<HTMLInputElement | null>(null)
+const taRef = ref<HTMLTextAreaElement | null>(null)
+const uploadedImages = ref<Array<{ fileId: string; url: string }>>([])
 
 const rendered = computed(() => renderMarkdown(props.modelValue))
 
@@ -102,11 +108,11 @@ const toolButtons = [
 ]
 
 // ---------- 文本操作（使用组件内 ref，不依赖全局 DOM 查询） ----------
-function onInput(e) {
-  emit('update:modelValue', e.target.value)
+function onInput(e: Event) {
+  emit('update:modelValue', (e.target as HTMLTextAreaElement).value)
 }
 
-function insert(syntax) {
+function insert(syntax: string) {
   const ta = taRef.value
   if (!ta) {
     emit('update:modelValue', props.modelValue + syntax)
@@ -145,9 +151,10 @@ function pickImage() {
   fileInput.value && fileInput.value.click()
 }
 
-async function onPickImage(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onPickImage(e: Event) {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = ''
   if (!file) return
   if (file.size > 10 * 1024 * 1024) {
     alert('图片不能超过 10MB')

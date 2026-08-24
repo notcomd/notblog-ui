@@ -109,11 +109,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'AdminCirclesView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import AdminModal from '@/components/admin/AdminModal.vue'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
@@ -123,10 +123,10 @@ import { relativeTime } from '@/utils/format'
 
 const toast = useToastStore()
 
-const circles = ref([])
-const filtered = ref([])
-const current = ref(null)
-const members = ref([])
+const circles = ref<any[]>([])
+const filtered = ref<any[]>([])
+const current = ref<any>(null)
+const members = ref<any[]>([])
 const keyword = ref('')
 const tab = ref('members')
 
@@ -136,23 +136,23 @@ const dissolveOpen = ref(false)
 const transferOpen = ref(false)
 const newOwner = ref('')
 
-function roleClass(r) {
+function roleClass(r: string): string {
   return { Owner: 'bg-amber-400/15 text-amber-600 dark:text-amber-400', Admin: 'bg-blue-400/15 text-amber-600', Member: 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400' }[r] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
 }
 
-function roleText(r) {
+function roleText(r: string): string {
   return { Owner: '创建者', Admin: '管理员', Member: '成员' }[r] || r
 }
 
-function filterCircles() {
+function filterCircles(): void {
   const kw = keyword.value.toLowerCase()
   filtered.value = kw ? circles.value.filter(c => c.name.toLowerCase().includes(kw)) : circles.value
 }
 
-async function load() {
+async function load(): Promise<void> {
   try {
     const res = await getAdminCircles()
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     circles.value = data.items || data.list || data || []
     filterCircles()
     if (filtered.value.length && !current.value) select(filtered.value[0])
@@ -161,18 +161,18 @@ async function load() {
   }
 }
 
-async function select(c) {
+async function select(c: any): Promise<void> {
   current.value = c
   try {
     const res = await getAdminCircleMembers(c.circleGuid)
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     members.value = data.items || data.list || data || []
   } catch (e) {
     members.value = []
   }
 }
 
-async function doBanCircle() {
+async function doBanCircle(): Promise<void> {
   try {
     await banCircle(current.value.circleGuid, banReason.value)
     toast.push(`已封禁社区「${current.value.name}」`, 'success')
@@ -183,7 +183,7 @@ async function doBanCircle() {
   }
 }
 
-async function doDissolve(reason) {
+async function doDissolve(reason: string): Promise<void> {
   try {
     await dissolveCircle(current.value.circleGuid)
     toast.push('社区已解散', 'success')
@@ -196,7 +196,7 @@ async function doDissolve(reason) {
   }
 }
 
-async function doTransfer() {
+async function doTransfer(): Promise<void> {
   try {
     await transferCircle(current.value.circleGuid, newOwner.value)
     toast.push('社区已转让', 'success')
@@ -207,7 +207,7 @@ async function doTransfer() {
   }
 }
 
-async function removeMember(m) {
+async function removeMember(m: any): Promise<void> {
   try {
     await removeCircleMember(current.value.circleGuid, m.userGuid)
     members.value = members.value.filter(x => x.userGuid !== m.userGuid)
@@ -217,8 +217,8 @@ async function removeMember(m) {
   }
 }
 
-function hideImg(e) {
-  e.target.style.visibility = 'hidden'
+function hideImg(e: Event) {
+  (e.target as HTMLElement).style.visibility = 'hidden'
 }
 
 onMounted(load)

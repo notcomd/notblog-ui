@@ -62,11 +62,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'AdminAnnouncementsView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { getAnnouncements, sendAnnouncement, recallAnnouncement } from '@/api/admin'
 import { useToastStore } from '@/stores/toast'
@@ -88,9 +88,9 @@ const msgTypes = [
 const scope = ref('all')
 const form = ref({ title: '', content: '', type: '公告' })
 const sending = ref(false)
-const announcements = ref([])
+const announcements = ref<any[]>([])
 
-function typeClass(t) {
+function typeClass(t: string): string {
   return {
     '公告': 'bg-blue-400/15 text-amber-600',
     '警告': 'bg-amber-400/15 text-amber-600 dark:text-amber-400',
@@ -98,11 +98,11 @@ function typeClass(t) {
   }[t] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
 }
 
-async function send() {
+async function send(): Promise<void> {
   sending.value = true
   try {
     await sendAnnouncement({
-      scope,
+      scope: scope.value,
       title: form.value.title.trim(),
       content: form.value.content.trim(),
       type: form.value.type
@@ -117,7 +117,7 @@ async function send() {
   }
 }
 
-async function recall(a) {
+async function recall(a: any): Promise<void> {
   try {
     await recallAnnouncement(a.id)
     a.recalled = true
@@ -127,10 +127,10 @@ async function recall(a) {
   }
 }
 
-async function load() {
+async function load(): Promise<void> {
   try {
     const res = await getAnnouncements()
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     announcements.value = data.items || data.list || data || []
   } catch (e) {
     announcements.value = []

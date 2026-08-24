@@ -99,7 +99,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { nextTick, ref, watch } from 'vue'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
@@ -109,40 +109,49 @@ import { saveDraft, removeDraft } from '@/utils/drafts'
 import { unwrap } from '@/utils/response'
 import { useToastStore } from '@/stores/toast'
 
-const props = defineProps({
-  myCircles: { type: Array, default: () => [] },
-  draft: { type: Object, default: null }
+interface Props {
+  myCircles?: unknown[]
+  draft?: unknown
+}
+const props = withDefaults(defineProps<Props>(), {
+  myCircles: () => [],
+  draft: null
 })
 
 const router = useRouter()
 const toast = useToastStore()
 
+interface ImageItem {
+  fileId: string
+  preview: string
+}
+
 const content = ref('')
-const images = ref([])
+const images = ref<ImageItem[]>([])
 const circleGuid = ref('')
 const visibility = ref('Public')
 const uploading = ref(false)
 const publishing = ref(false)
 const savingDraft = ref(false)
 const draftId = ref('')
-const imageInput = ref(null)
-const splitInput = ref(null)
+const imageInput = ref<HTMLInputElement | null>(null)
+const splitInput = ref<HTMLInputElement | null>(null)
 const splitting = ref(false)
 
 // ---------- 裁剪 ----------
-const RATIO_KEYS = ['free', '1:1', '3:4', '9:16']
-const RATIOS = { free: NaN, '1:1': 1, '3:4': 3 / 4, '9:16': 9 / 16 }
+const RATIO_KEYS: string[] = ['free', '1:1', '3:4', '9:16']
+const RATIOS: Record<string, number> = { free: NaN, '1:1': 1, '3:4': 3 / 4, '9:16': 9 / 16 }
 
 const cropOpen = ref(false)
 const cropIndex = ref(-1)
 const cropSrc = ref('')
-const cropImg = ref(null)
-const cropper = ref(null)
+const cropImg = ref<HTMLImageElement | null>(null)
+const cropper = ref<Cropper | null>(null)
 const ratioKey = ref('free')
 
-async function openCrop(i) {
+async function openCrop(i: number) {
   cropIndex.value = i
-  cropSrc.value = images.value[i].preview
+  cropSrc.value = images.value[i]?.preview
   cropOpen.value = true
   ratioKey.value = 'free'
   await nextTick()
@@ -161,7 +170,7 @@ function closeCrop() {
   cropOpen.value = false
 }
 
-function setRatio(k) {
+function setRatio(k: string) {
   ratioKey.value = k
   if (cropper.value) cropper.value.setAspectRatio(RATIOS[k])
 }
@@ -196,7 +205,7 @@ function pickSplitImage() {
   if (!splitting.value && splitInput.value) splitInput.value.click()
 }
 
-function loadImage(file) {
+function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
     const img = new Image()
@@ -206,9 +215,10 @@ function loadImage(file) {
   })
 }
 
-async function onSplitPick(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onSplitPick(e: Event) {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = ''
   if (!file) return
   if (file.size > 10 * 1024 * 1024) { toast.push('图片不能超过 10MB', 'error'); return }
   splitting.value = true
@@ -241,7 +251,7 @@ async function onSplitPick(e) {
 }
 
 // 后台逐块上传换取真实 fileId（失败保留本地预览）
-async function uploadGridPart(item, blob) {
+async function uploadGridPart(item: ImageItem, blob: Blob) {
   try {
     const res = await uploadImage(new File([blob], 'grid-' + Date.now() + '.jpg', { type: 'image/jpeg' }))
     const data = unwrap(res) || {}
@@ -256,9 +266,10 @@ function pickImage() {
   if (!uploading.value && imageInput.value) imageInput.value.click()
 }
 
-async function onPickImage(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onPickImage(e: Event) {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = ''
   if (!file) return
   if (images.value.length >= 9) { toast.push('最多上传 9 张图片', 'info'); return }
   if (file.size > 10 * 1024 * 1024) {
@@ -292,7 +303,7 @@ watch(() => props.draft, (d) => {
   visibility.value = d.visibility || 'Public'
 }, { immediate: true })
 
-function firstLine(s) {
+function firstLine(s?: string): string {
   const t = (s || '').trim()
   return t ? t.split('\n')[0].slice(0, 40) : ''
 }

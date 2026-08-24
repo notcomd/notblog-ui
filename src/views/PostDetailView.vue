@@ -202,7 +202,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import CommentSection from '@/components/comment/CommentSection.vue'
@@ -221,10 +221,10 @@ const router = useRouter()
 const auth = useAuthStore()
 const toast = useToastStore()
 
-const tweet = ref(null)
+const tweet = ref<any>(null)
 
 // 评论配置（通用评论组件，tweets 后端：分页 + 排序 + 回复折叠）
-const commentCfg = {
+const commentCfg: any = {
   idField: 'commentGuid',
   contentField: 'content',
   timeField: 'createTime',
@@ -250,11 +250,11 @@ const commentCfg = {
 
 const isMarkdown = computed(() => !!tweet.value && looksLikeMarkdown(tweet.value.content))
 const renderedMarkdown = computed(() => (tweet.value ? renderMarkdown(tweet.value.content) : ''))
-const detail = ref({ isLiked: false, isFavorited: false, isCoined: false })
+const detail = ref<{ isLiked: boolean; isFavorited: boolean; isCoined: boolean }>({ isLiked: false, isFavorited: false, isCoined: false })
 const loading = ref(true)
 const isFollowing = ref(false)
 const activeMedia = ref(0)
-const commentSection = ref(null)
+const commentSection = ref<any>(null)
 const mediaFailed = ref(false)
 
 const isVideo = computed(() => !!tweet.value && !!tweet.value.isVideo)
@@ -272,8 +272,9 @@ const authorId = computed(() => {
 const isAuthor = computed(() => !!authorId.value && !!auth.user && auth.user.id === authorId.value)
 
 // 富文本解析：段落 / 引用块（> 开头）
-const bodyBlocks = computed(() => {
-  const body = (tweet.value && tweet.value.body) || tweet.value.content || ''
+interface BodyBlock { type: 'quote' | 'p'; text: string }
+const bodyBlocks = computed<BodyBlock[]>(() => {
+  const body: string = (tweet.value && tweet.value.body) || tweet.value.content || ''
   return body.split('\n').map(line => {
     const t = line.trim()
     if (t.startsWith('> ')) return { type: 'quote', text: t.slice(2) }
@@ -282,8 +283,9 @@ const bodyBlocks = computed(() => {
 })
 
 // @提及高亮
-function highlightMentions(text) {
-  const parts = []
+interface MentionSeg { type: 'text' | 'mention'; text?: string; name?: string }
+function highlightMentions(text: string): MentionSeg[] {
+  const parts: MentionSeg[] = []
   const re = /@([一-龥\w-]+)/g
   let last = 0
   let m
@@ -296,11 +298,11 @@ function highlightMentions(text) {
   return parts.length ? parts : [{ type: 'text', text }]
 }
 
-async function load() {
+async function load(): Promise<void> {
   loading.value = true
   try {
     const res = await getTweetDetail(route.params.id)
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     tweet.value = data.tweet || data
     detail.value = {
       isLiked: !!(data.isLiked !== undefined ? data.isLiked : tweet.value.isLiked),
@@ -327,7 +329,7 @@ async function load() {
   }
 }
 
-async function onLike() {
+async function onLike(): Promise<void> {
   if (!tweet.value) return
   const liked = !detail.value.isLiked
   const prev = tweet.value.likeCount
@@ -341,7 +343,7 @@ async function onLike() {
   }
 }
 
-async function onFavorite() {
+async function onFavorite(): Promise<void> {
   if (!tweet.value) return
   const favorited = !detail.value.isFavorited
   const prev = tweet.value.favoriteCount
@@ -355,7 +357,7 @@ async function onFavorite() {
   }
 }
 
-async function toggleFollow() {
+async function toggleFollow(): Promise<void> {
   if (!authorId.value) return
   const target = !isFollowing.value
   isFollowing.value = target
@@ -369,7 +371,7 @@ async function toggleFollow() {
   }
 }
 
-async function onShare() {
+async function onShare(): Promise<void> {
   if (!tweet.value) return
   try {
     await shareTweet(tweet.value.tweetGuid)
@@ -389,7 +391,7 @@ async function onShare() {
   toast.push('链接已复制', 'success')
 }
 
-function onMore() {
+function onMore(): void {
   reportOpen.value = true
   reportReason.value = ''
 }
@@ -399,9 +401,9 @@ const reportOpen = ref(false)
 const reportCategory = ref(0)
 const reportReason = ref('')
 
-const REPORT_CATEGORIES = ['色情低俗', '暴力', '政治敏感', '广告营销', '其他']
+const REPORT_CATEGORIES: string[] = ['色情低俗', '暴力', '政治敏感', '广告营销', '其他']
 
-async function submitReportReport() {
+async function submitReportReport(): Promise<void> {
   if (!tweet.value) return
   try {
     // 真实端点：POST /api/reports（Message）
@@ -419,51 +421,51 @@ async function submitReportReport() {
   }
 }
 
-function onEdit() {
+function onEdit(): void {
   toast.push('编辑功能开发中（Phase 7）', 'info')
 }
 
-function scrollToComments() {
+function scrollToComments(): void {
   if (commentSection.value) {
     // 滚动到评论区容器
     commentSection.value.$el.closest('.glass-card')?.scrollIntoView({ behavior: 'smooth' })
   }
 }
 
-function goBack() {
+function goBack(): void {
   if (window.history.length > 1) router.back()
   else router.push('/home')
 }
 
-function goCircle() {
+function goCircle(): void {
   toast.push('社区页开发中（Phase 3）', 'info')
 }
 
-function goAuthor() {
+function goAuthor(): void {
   if (authorId.value) router.push(`/users/${authorId.value}`)
 }
 
-function goUser(name) {
+function goUser(name: string): void {
   toast.push(`@${name} 用户主页开发中（Phase 5）`, 'info')
 }
 
-function prevMedia() {
+function prevMedia(): void {
   activeMedia.value = (activeMedia.value - 1 + mediaUrls.value.length) % mediaUrls.value.length
 }
 
-function nextMedia() {
+function nextMedia(): void {
   activeMedia.value = (activeMedia.value + 1) % mediaUrls.value.length
 }
 
-function onMediaError() {
+function onMediaError(): void {
   mediaFailed.value = true
 }
 
-function hideAvatar(e) {
-  e.target.style.visibility = 'hidden'
+function hideAvatar(e: Event): void {
+  (e.target as HTMLElement).style.visibility = 'hidden'
 }
 
-function onKeydown(e) {
+function onKeydown(e: KeyboardEvent): void {
   if (e.key === 'Escape') goBack()
 }
 

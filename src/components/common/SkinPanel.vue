@@ -121,28 +121,29 @@
   </Teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSkinStore } from '@/stores/skin'
 import { useThemeStore } from '@/stores/theme'
 import { WALLPAPER_CATS, WALLPAPERS, wallpaperDataUri } from '@/assets/wallpapers'
 import { bgImageStyle, vignetteStyle, maskStyle } from '@/utils/skinStyle'
 
-const emit = defineEmits(['close'])
+const emit = defineEmits<{ (e: 'close'): void }>()
 const skin = useSkinStore()
 const theme = useThemeStore()
 
-const tab = ref('color')
-const fileInput = ref(null)
+const tab = ref<'color' | 'bg'>('color')
+const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
 
 function pickFile() {
   if (fileInput.value) fileInput.value.click()
 }
 
-async function onPickFile(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = '' // 允许重复选择同一文件
+async function onPickFile(e: Event) {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = '' // 允许重复选择同一文件
   if (!file || uploading.value) return
   uploading.value = true
   try {
@@ -153,24 +154,25 @@ async function onPickFile(e) {
 }
 
 const customThumbStyle = computed(() => (skin.customUrl ? { backgroundImage: `url("${skin.customUrl}")` } : {}))
+type WallpaperStyle = Record<string, string>
 
 const img = computed(() => bgImageStyle(skin.wallpaperUrl, skin.blur))
 const vignette = computed(() => vignetteStyle())
 const mask = computed(() => maskStyle(skin.effectiveMask, theme.isDark))
 
-function wallpapersOf(catKey) {
+function wallpapersOf(catKey: string): Array<{ id: string; name: string; cat: string; svg: string }> {
   return WALLPAPERS.filter(w => w.cat === catKey)
 }
 
-function thumbStyle(w) {
+function thumbStyle(w: { id: string; name: string; cat: string; svg: string }): WallpaperStyle {
   return { backgroundImage: `url("${wallpaperDataUri(w)}")` }
 }
 
-function setDark(v) {
+function setDark(v: boolean) {
   if (theme.isDark !== v) theme.toggle()
 }
 
-function onKeydown(e) {
+function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') emit('close')
 }
 

@@ -66,11 +66,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'WorkspaceView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
@@ -80,37 +80,37 @@ import { relativeTime } from '@/utils/format'
 
 const router = useRouter()
 const toast = useToastStore()
-const deleteTarget = ref(null)
+const deleteTarget = ref<any>(null)
 
-const types = [
+const types: any[] = [
   { type: 'post', label: '图文博客', icon: '<svg class="w-9 h-9 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>', desc: '图片 + 文字记录', gradient: 'bg-gradient-to-br from-amber-400 to-orange-500', target: '/publish?type=post' },
   { type: 'video', label: '视频', icon: '<svg class="w-9 h-9 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>', desc: '视频 + 封面 + 弹幕', gradient: 'bg-gradient-to-br from-blue-500 to-indigo-600', target: '/publish?type=video' },
   { type: 'markdown', label: 'Markdown', icon: '<svg class="w-9 h-9 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', desc: '长文写作 · 需要封面', gradient: 'bg-gradient-to-br from-emerald-400 to-teal-600', target: '/publish?type=workspace' },
 ]
 
-function draftsByType(t) {
+function draftsByType(t: string) {
   return getDraftsByType(t)
 }
 
-function createNew(type) {
+function createNew(type: string): void {
   router.push({ path: '/publish', query: { type } })
 }
 
-function editDraft(d) {
+function editDraft(d: any): void {
   router.push({ path: '/publish', query: { type: d.type, draft: d.id } })
 }
 
-function confirmDelete(d) {
+function confirmDelete(d: any): void {
   deleteTarget.value = d
 }
 
-function doDelete() {
+function doDelete(): void {
   removeDraft(deleteTarget.value.id)
   toast.push('草稿已删除', 'success')
   deleteTarget.value = null
 }
 
-function hideImg(e) {
-  e.target.style.visibility = 'hidden'
+function hideImg(e: Event) {
+  (e.target as HTMLElement).style.visibility = 'hidden'
 }
 </script>

@@ -31,19 +31,23 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 
-defineProps({
-  title: { type: String, required: true },
-  message: { type: String, default: '' },
-  danger: { type: Boolean, default: true },
-  confirmText: { type: String, default: '确认' },
-  requireReason: { type: Boolean, default: false },
-  reasonPlaceholder: { type: String, default: '请输入操作原因（必填）' }
-})
+interface Props {
+  title: string
+  message?: string
+  danger?: boolean
+  confirmText?: string
+  requireReason?: boolean
+  reasonPlaceholder?: string
+}
+defineProps<Props>()
 
-const emit = defineEmits(['close', 'confirm'])
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'confirm', reason: string): void
+}>()
 
 const reason = ref('')
 

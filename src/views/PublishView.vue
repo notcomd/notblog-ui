@@ -21,11 +21,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'PublishView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import PostEditor from '@/components/publish/PostEditor.vue'
@@ -38,17 +38,17 @@ import { useToastStore } from '@/stores/toast'
 const route = useRoute()
 const toast = useToastStore()
 
-const mode = ref('post')
-const myCircles = ref([])
+const mode = ref<'post' | 'video' | 'workspace'>('post')
+const myCircles = ref<any[]>([])
 const draftId = ref('')
 
-const title = computed(() => ({
+const title = computed<string>(() => ({
   post: '发图文博客',
   video: '发视频',
   workspace: 'Markdown 长文'
 }[mode.value] || '发布'))
 
-const subtitle = computed(() => ({
+const subtitle = computed<string>(() => ({
   post: '分享你的精彩瞬间',
   video: '上传视频内容，支持弹幕互动',
   workspace: '用 Markdown 书写长文与图文混排内容'
@@ -64,14 +64,14 @@ watch(() => route.query.type, (t) => {
 }, { immediate: true })
 
 watch(() => route.query.draft, (d) => {
-  draftId.value = d || ''
+  draftId.value = (d as string) || ''
   if (d) toast.push('已载入草稿', 'info')
 }, { immediate: true })
 
 onMounted(async () => {
   try {
     const res = await getMyCircles()
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     myCircles.value = data.items || data.list || data || []
   } catch (e) {
     myCircles.value = []

@@ -66,7 +66,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 会话主视窗：负责消息展示、发送、失败重试、输入状态、滚动加载和群聊面板切换
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { charAvatar as demoAvatar } from '@/utils/avatar'
@@ -84,10 +84,10 @@ const router = useRouter()
 
 const draft = ref('')
 const sending = ref(false)
-const msgBox = ref(null)
-const draftBox = ref(null)
+const msgBox = ref<HTMLElement | null>(null)
+const draftBox = ref<HTMLTextAreaElement | null>(null)
 const memberOpen = ref(false)
-let typingTimer = null
+let typingTimer: ReturnType<typeof setTimeout> | null = null
 let scrollLock = false
 
 const mode = computed(() => route.query.action === 'createGroup' ? 'create' : route.query.action === 'searchGroup' ? 'search' : '')
@@ -121,16 +121,16 @@ const members = computed(() => {
 // 可通话会话：排除通知会话（notifyGuid）；后端限制私聊/群聊/频道可发起通话
 const canCall = computed(() => !!active.value && !active.value.notifyGuid)
 
-function startCall(type) {
+function startCall(type: string) {
   if (!active.value) return
   call.startCall(active.value.sessionId, type)
 }
 
 
-function isMine(m) {
+function isMine(m: any): boolean {
   return String(m.senderId) === String(myId.value)
 }
-function timeText(t) {
+function timeText(t: any): string {
   const d = new Date(t)
   const now = new Date()
   const sameDay = d.toDateString() === now.toDateString()
@@ -159,7 +159,7 @@ async function send() {
   }
 }
 
-async function retryMessage(m) {
+async function retryMessage(m: any) {
   if (!chat.activeSessionId || m.status !== -1) return
   try {
     await chat.retryMessage(chat.activeSessionId, m.messageId)
@@ -169,14 +169,14 @@ async function retryMessage(m) {
   }
 }
 
-function onEnter(e) {
+function onEnter(e: KeyboardEvent) {
   if (e.isComposing || e.keyCode === 229) return
   send()
 }
 
-function onInput(e) {
+function onInput(e: Event) {
   notifyTyping()
-  autoGrow(e.target)
+  autoGrow(e.target as HTMLTextAreaElement)
 }
 
 function notifyTyping() {
@@ -185,7 +185,7 @@ function notifyTyping() {
   typingTimer = setTimeout(() => chat.sendTyping(chat.activeSessionId), 500)
 }
 
-function autoGrow(el) {
+function autoGrow(el: HTMLElement) {
   el.style.height = 'auto'
   el.style.height = Math.min(el.scrollHeight, 120) + 'px'
 }
@@ -199,7 +199,7 @@ function resetDraftHeight() {
   })
 }
 
-function scrollToBottom(force = false) {
+function scrollToBottom(force: boolean = false) {
   if (scrollLock && !force) return
   nextTick(() => {
     if (msgBox.value) msgBox.value.scrollTop = msgBox.value.scrollHeight

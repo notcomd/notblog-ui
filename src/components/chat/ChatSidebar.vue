@@ -141,7 +141,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 会话侧边栏：负责会话/好友/群聊列表、通知列表、会话操作、添加/搜索好友
 import { computed, onMounted, ref } from 'vue'
 import { charAvatar as demoAvatar } from '@/utils/avatar'
@@ -156,11 +156,41 @@ import {
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '@/api/notification'
 import { notificationMeta, SAMPLE_NOTIFICATIONS } from '@/utils/notifications'
 
+interface SessionItem {
+  sessionId?: string
+  notifyGuid?: string
+  groupId?: string
+  isPinned?: boolean
+  isMuted?: boolean
+  isRead?: boolean
+  isSample?: boolean
+  unreadCount?: number
+  lastMessageContent?: string
+  lastMessageTime?: any
+  createdTime?: any
+  createTime?: any
+  sessionName?: string
+  avatarUrl?: string
+  [key: string]: any
+}
+
+interface CtxMenuData {
+  s: SessionItem
+  x: number
+  y: number
+}
+
+interface ActionItem {
+  key: string
+  label: string
+  icon: string
+}
+
 const chat = useChatStore()
 const toast = useToastStore()
 const router = useRouter()
 
-const BOTTOM_TABS = [
+const BOTTOM_TABS: { key: string; label: string }[] = [
   { key: 'messages', label: '消息' },
   { key: 'friends', label: '好友' },
   { key: 'groups', label: '群聊' }
@@ -169,9 +199,9 @@ const BOTTOM_TABS = [
 const tab = ref('messages')
 const tabTitle = computed(() => (tab.value === 'friends' ? '好友' : tab.value === 'groups' ? '群聊' : '消息'))
 const sessionsLoading = ref(true)
-const notifItems = ref([])
-const sessionMenuTarget = ref(null)
-const ctxMenu = ref(null)
+const notifItems = ref<SessionItem[]>([])
+const sessionMenuTarget = ref<string | null>(null)
+const ctxMenu = ref<CtxMenuData | null>(null)
 const allReadBusy = ref(false)
 
 const myId = computed(() => chat.currentUserId ? chat.currentUserId() : '')
@@ -195,22 +225,22 @@ const emptyText = computed(() => {
 })
 const emptyIcon = computed(() => (tab.value === 'groups' ? '<svg class="w-14 h-14 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' : tab.value === 'messages' ? '<svg class="w-14 h-14 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' : '<svg class="w-14 h-14 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'))
 
-function switchTab(t) {
+function switchTab(t: string) {
   tab.value = t
   sessionMenuTarget.value = null
   ctxMenu.value = null
 }
 
-function isNotify(s) { return !!s.notifyGuid }
-function rowUnread(s) { return isNotify(s) ? (s.isRead ? 0 : 1) : (s.unreadCount || 0) }
-function rowTime(s) { return timeText(s.lastMessageTime || s.createdTime || s.createTime) }
-function notifyText(n) { return ((n.title ? n.title + '：' : '') + (n.content || '')).replace(/\s+/g, ' ').trim() }
-function isActiveRow(s) {
+function isNotify(s: SessionItem): boolean { return !!s.notifyGuid }
+function rowUnread(s: SessionItem): number { return isNotify(s) ? (s.isRead ? 0 : 1) : (s.unreadCount || 0) }
+function rowTime(s: SessionItem): string { return timeText(s.lastMessageTime || s.createdTime || s.createTime) }
+function notifyText(n: SessionItem): string { return ((n.title ? n.title + '：' : '') + (n.content || '')).replace(/\s+/g, ' ').trim() }
+function isActiveRow(s: SessionItem): boolean {
   if (isNotify(s)) return false
   return chat.activeSessionId === s.sessionId
 }
 
-function timeText(t) {
+function timeText(t: any): string {
   const d = new Date(t)
   const now = new Date()
   const sameDay = d.toDateString() === now.toDateString()
@@ -220,29 +250,29 @@ function timeText(t) {
 }
 
 
-function sessionTitle(s) {
+function sessionTitle(s: SessionItem): string {
   if (s.sessionName) return s.sessionName
-  const peerId = chat.peerIdOf(s.sessionId)
+  const peerId = chat.peerIdOf(s.sessionId || '')
   const f = chat.friends.find(x => String(x.friendId) === String(peerId))
   return f ? f.friendName : '会话'
 }
 
-function sessionAvatar(s) {
+function sessionAvatar(s: SessionItem): string {
   if (s.avatarUrl) return s.avatarUrl
   if (s.groupId) {
     const g = chat.groups.find(x => String(x.groupId) === String(s.groupId))
     if (g && g.avatarUrl) return g.avatarUrl
   }
-  const peerId = chat.peerIdOf(s.sessionId)
+  const peerId = chat.peerIdOf(s.sessionId || '')
   const f = chat.friends.find(x => String(x.friendId) === String(peerId))
   return f ? f.friendAvatar : 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#d6d3d1"/><path d="M30 32h40v26H47l-11 11v-11h-6z" fill="#fff"/></svg>')
 }
 
-function isOnline(s) {
-  const peerId = chat.peerIdOf(s.sessionId)
+function isOnline(s: SessionItem): boolean {
+  const peerId = chat.peerIdOf(s.sessionId || '')
   return chat.onlineUsers[String(peerId)] === true
 }
-function isRowOnline(s) { return isOnline(s) }
+function isRowOnline(s: SessionItem): boolean { return isOnline(s) }
 
 const listMoreActions = computed(() => {
   if (tab.value === 'groups') {
@@ -257,14 +287,14 @@ const listMoreActions = computed(() => {
   ]
 })
 
-function onListMoreAction(a) {
+function onListMoreAction(a: ActionItem) {
   if (a.key === 'addFriend') addFriendOpen.value = true
   else if (a.key === 'searchFriend') friendSearchOpen.value = true
   else if (a.key === 'createGroup') router.push({ path: '/chat', query: { action: 'createGroup' } })
   else if (a.key === 'searchGroup') router.push({ path: '/chat', query: { action: 'searchGroup' } })
 }
 
-function onItemClick(s) {
+function onItemClick(s: SessionItem) {
   if (isNotify(s)) {
     markNotifyRead(s)
     return
@@ -272,7 +302,7 @@ function onItemClick(s) {
   openChat(s)
 }
 
-async function openChat(s) {
+async function openChat(s: SessionItem) {
   sessionMenuTarget.value = null
   const real = chat.sessions.find(x => x.sessionId === s.sessionId)
   if (!real) return
@@ -282,15 +312,15 @@ async function openChat(s) {
   router.push('/chat/' + real.sessionId)
 }
 
-async function markNotifyRead(n) {
+async function markNotifyRead(n: SessionItem) {
   if (n.isRead) return
   n.isRead = true
   if (!n.isSample) {
-    try { await markNotificationRead(n.notifyGuid) } catch (e) { /* 忽略 */ }
+    try { await markNotificationRead(n.notifyGuid || '') } catch (e) { /* 忽略 */ }
   }
 }
 
-function openRowContextMenu(s, e) {
+function openRowContextMenu(s: SessionItem, e: MouseEvent) {
   sessionMenuTarget.value = null
   const itemCount = isNotify(s) ? (s.isRead ? 0 : 1) : 3
   if (!itemCount) return
@@ -303,13 +333,13 @@ function openRowContextMenu(s, e) {
   }
 }
 
-async function markOneRead(s) {
+async function markOneRead(s: SessionItem) {
   ctxMenu.value = null
   if (isNotify(s)) {
     if (!s.isRead) {
       s.isRead = true
       if (!s.isSample) {
-        try { await markNotificationRead(s.notifyGuid) } catch (e) { /* 忽略 */ }
+        try { await markNotificationRead(s.notifyGuid || '') } catch (e) { /* 忽略 */ }
       }
     }
     chat.loadUnread()
@@ -348,10 +378,10 @@ async function markAllRead() {
   }
 }
 
-async function togglePin(s) {
+async function togglePin(s: SessionItem) {
   try {
-    if (s.isPinned) await unpinSession(s.sessionId)
-    else await pinSession(s.sessionId)
+    if (s.isPinned) await unpinSession(s.sessionId || '')
+    else await pinSession(s.sessionId || '')
     s.isPinned = !s.isPinned
     toast.push(s.isPinned ? '已置顶会话' : '已取消置顶', 'success')
   } catch (e) {
@@ -359,10 +389,10 @@ async function togglePin(s) {
   }
 }
 
-async function toggleMute(s) {
+async function toggleMute(s: SessionItem) {
   try {
-    if (s.isMuted) await unmuteSession(s.sessionId)
-    else await muteSession(s.sessionId)
+    if (s.isMuted) await unmuteSession(s.sessionId || '')
+    else await muteSession(s.sessionId || '')
     s.isMuted = !s.isMuted
     toast.push(s.isMuted ? '已开启免打扰' : '已恢复提醒', 'success')
   } catch (e) {
@@ -370,10 +400,10 @@ async function toggleMute(s) {
   }
 }
 
-async function removeSession(s) {
+async function removeSession(s: SessionItem) {
   try {
-    await deleteSession(s.sessionId)
-    chat.removeSession(s.sessionId)
+    await deleteSession(s.sessionId || '')
+    chat.removeSession(s.sessionId || '')
     toast.push('会话已删除', 'success')
   } catch (e) {
     toast.push('删除失败（后端未就绪）', 'error')
@@ -394,14 +424,14 @@ function onCtxDelete() {
 // 添加好友
 const addFriendOpen = ref(false)
 const addEmail = ref('')
-const addUser = ref(null)
+const addUser = ref<any | null>(null)
 const addLoading = ref(false)
 const addNotFound = ref(false)
 const addSending = ref(false)
 const addUserIsSelf = computed(() => addUser.value && String(addUser.value.userGuid) === String(myId.value))
 const addUserIsFriend = computed(() => addUser.value && chat.friends.some(f => String(f.friendId) === String(addUser.value.userGuid)))
 
-function onLookupEnter(e) {
+function onLookupEnter(e: KeyboardEvent) {
   if (e.isComposing || e.keyCode === 229) return
   lookupUser()
 }
@@ -436,10 +466,10 @@ async function sendAddRequest() {
 // 搜索好友
 const friendSearchOpen = ref(false)
 const friendKeyword = ref('')
-const friendResults = ref([])
+const friendResults = ref<any[]>([])
 const friendSearching = ref(false)
 const friendSearched = ref(false)
-function onFriendSearchEnter(e) {
+function onFriendSearchEnter(e: KeyboardEvent) {
   if (e.isComposing || e.keyCode === 229) return
   doFriendSearch()
 }
@@ -459,10 +489,10 @@ async function doFriendSearch() {
     friendSearching.value = false
   }
 }
-function friendDisplayName(f) {
+function friendDisplayName(f: any): string {
   return f.friendName || f.remark || ('好友 ' + String(f.friendId).slice(0, 8))
 }
-async function openFriendChat(f) {
+async function openFriendChat(f: any) {
   try {
     const res = await createSession(f.friendId)
     const d = res && res.data ? res.data : res
@@ -486,7 +516,7 @@ async function loadNotifications() {
   }
 }
 
-function hideImg(e) { e.target.style.visibility = 'hidden' }
+function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 
 onMounted(async () => {
   await Promise.all([chat.loadSessions(), chat.loadFriends(), chat.loadGroups(), chat.loadUnread(), loadNotifications()])

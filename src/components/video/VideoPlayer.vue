@@ -88,22 +88,23 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import DanmakuLayer from './DanmakuLayer.vue'
 import { getBarrages, sendBarrage, containsSensitive } from '@/api/danmaku'
 import { useToastStore } from '@/stores/toast'
 
-const props = defineProps({
-  src: { type: String, required: true },
-  videoGuid: { type: String, required: true }
-})
+interface Props {
+  src: string
+  videoGuid: string
+}
+const props = defineProps<Props>()
 
 const toast = useToastStore()
 
-const container = ref(null)
-const videoEl = ref(null)
-const layer = ref(null)
+const container = ref<HTMLElement | null>(null)
+const videoEl = ref<HTMLVideoElement | null>(null)
+const layer = ref<{ addBarrage: (b: unknown) => void; $el: HTMLElement } | null>(null)
 
 const paused = ref(true)
 const currentTime = ref(0)
@@ -113,20 +114,31 @@ const controlsVisible = ref(false)
 const barrageCount = ref(0)
 
 // 弹幕偏好（记忆 per video）
-const DM_KEY = id => 'danmaku_pref_' + id
+const DM_KEY = (id: string) => 'danmaku_pref_' + id
 const danmakuOn = ref(true)
 const danmakuOpacity = ref(70)
-const danmakuSpeed = ref('medium')
-const SPEED_LABEL = { slow: '慢', medium: '中', fast: '快' }
-const SPEED_ORDER = ['slow', 'medium', 'fast']
+type DanmakuSpeed = 'slow' | 'medium' | 'fast'
+const danmakuSpeed = ref<DanmakuSpeed>('medium')
+const SPEED_LABEL: Record<DanmakuSpeed, string> = { slow: '慢', medium: '中', fast: '快' }
+const SPEED_ORDER: DanmakuSpeed[] = ['slow', 'medium', 'fast']
 
 const danmakuInputMode = ref(false)
 const danmakuDraft = ref('')
 const danmakuError = ref('')
 const danmakuCooldown = ref(0)
-let cooldownTimer = null
+let cooldownTimer: ReturnType<typeof setInterval> | null = null
 
-const barrages = ref([])
+interface Barrage {
+  barrageGuid: string
+  userGuid: string
+  userName: string
+  body: string
+  timeOffset: number
+  likeCount: number
+  isOwn?: boolean
+}
+
+const barrages = ref<Barrage[]>([])
 
 function restorePref() {
   try {
@@ -161,13 +173,13 @@ async function loadBarrages() {
     const res = await getBarrages(props.videoGuid)
     const data = res && res.data ? res.data : res
     const list = data.items || data.list || data || []
-    barrages.value = list.map(b => ({
-      barrageGuid: b.barrageGuid || b.videoBarrageGuid,
-      userGuid: b.userGuid,
-      userName: b.userName || '匿名',
-      body: b.body || b.videoBarrageBody || '',
-      timeOffset: b.timeOffset || 0,
-      likeCount: b.likeCount || 0
+    barrages.value = list.map((b: Record<string, unknown>) => ({
+      barrageGuid: (b.barrageGuid as string) || (b.videoBarrageGuid as string),
+      userGuid: b.userGuid as string,
+      userName: (b.userName as string) || '匿名',
+      body: (b.body as string) || (b.videoBarrageBody as string) || '',
+      timeOffset: (b.timeOffset as number) || 0,
+      likeCount: (b.likeCount as number) || 0
     }))
   } catch (e) {
     console.error('加载弹幕失败:', e)
@@ -189,7 +201,7 @@ async function sendDanmaku() {
   if (danmakuCooldown.value > 0) return
 
   // 乐观显示（品牌色高亮 2 秒后恢复）
-  const own = {
+  const own: Barrage = {
     barrageGuid: 'local-' + Date.now(),
     userGuid: 'me',
     userName: '我',
@@ -249,14 +261,14 @@ function onEnded() {
   paused.value = true
 }
 
-function seek(e) {
-  const t = Number(e.target.value)
+function seek(e: Event) {
+  const t = Number((e.target as HTMLInputElement).value)
   if (videoEl.value) videoEl.value.currentTime = t
   currentTime.value = t
 }
 
-function setVolume(e) {
-  volume.value = Number(e.target.value)
+function setVolume(e: Event) {
+  volume.value = Number((e.target as HTMLInputElement).value)
   if (videoEl.value) videoEl.value.volume = volume.value
 }
 
@@ -266,7 +278,7 @@ function toggleFullscreen() {
   else container.value.requestFullscreen()
 }
 
-function fmtTime(t) {
+function fmtTime(t: number): string {
   if (!t || t < 0) return '00:00'
   const m = Math.floor(t / 60)
   const s = Math.floor(t % 60)

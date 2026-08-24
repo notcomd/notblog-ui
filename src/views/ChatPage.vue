@@ -6,11 +6,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'ChatPage' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 // 会话页：将原 ChatView 拆分为侧边栏与主视窗两个功能组件
 import ChatSidebar from '@/components/chat/ChatSidebar.vue'
 import ChatConversation from '@/components/chat/ChatConversation.vue'

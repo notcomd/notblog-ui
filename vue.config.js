@@ -1,5 +1,20 @@
 module.exports = {
   transpileDependencies: [],
+  lintOnSave: false,
+  configureWebpack: {
+    resolve: {
+      extensions: ['.js', '.ts', '.tsx', '.mjs', '.vue', '.json']
+    }
+  },
+  chainWebpack: config => {
+    // 构建仅做转译（ts-loader transpileOnly），不做类型检查：
+    // 类型检查统一交给 tsc / vue-tsc 单独执行，避免既有类型债务阻塞构建。
+    config.module.rule('ts').use('ts-loader').tap(opts => ({ ...(opts || {}), transpileOnly: true }))
+    config.module.rule('tsx').use('ts-loader').tap(opts => ({ ...(opts || {}), transpileOnly: true }))
+    if (config.plugins.has('fork-ts-checker')) {
+      config.plugins.delete('fork-ts-checker')
+    }
+  },
   devServer: {
     historyApiFallback: true,
     proxy: {

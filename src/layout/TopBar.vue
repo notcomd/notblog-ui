@@ -3,7 +3,7 @@
     <div class="h-16 px-5 flex items-center">
       <!-- 左上：当前功能标题（随功能栏激活项变化，如：首页/社区/会话/广场、个人空间 Tab） -->
       <div v-if="titleItem" class="shrink-0">
-        <span class="text-lg font-bold tracking-wide text-zinc-800 dark:text-zinc-100">{{ titleItem.label }}</span>
+        <span class="text-lg font-bold tracking-wide font-display text-zinc-800 dark:text-zinc-100">{{ titleItem.label }}</span>
       </div>
       <!-- 广场页信息流切换（并入顶部栏，仅 /home 显示）：热门 | 最新 -->
       <div v-if="isHome" class="flex items-center ml-6 shrink-0">
@@ -160,13 +160,11 @@
   </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-defineProps({
-  blurred: { type: Boolean, default: false }
-})
+withDefaults(defineProps<{ blurred?: boolean }>(), { blurred: false })
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useFeedTabStore } from '@/stores/feedTab'
@@ -186,9 +184,10 @@ const route = useRoute()
 // 左上角功能标题：与功能栏激活项一致（主页面导航 / 个人空间 Tab），单一事实源见 navItems.js
 const titleItem = computed(() => {
   if (route.path.startsWith('/users/')) {
-    const isSelf = !!auth.user && String(auth.user.id) === String(route.params.id || '')
+    const id = (route.params.id as string) || ''
+    const isSelf = !!auth.user && String(auth.user.id) === String(id)
     const tab = route.query.tab || 'home'
-    return buildSpaceNavItems(route.params.id || '', isSelf).find(i => i.to.query.tab === tab) || null
+    return buildSpaceNavItems(id, isSelf).find(i => i.to.query.tab === tab) || null
   }
   return MAIN_NAV_ITEMS.find(i => route.path === i.to.path || route.path.startsWith(i.to.path + '/')) || null
 })
@@ -197,7 +196,7 @@ const titleItem = computed(() => {
 const feedTab = useFeedTabStore()
 const isHome = computed(() => route.path === '/home')
 
-function onTabSwitch(t) {
+function onTabSwitch(t: string): void {
   // 最新 Tab 需要登录
   if (t === 'latest' && !auth.isLoggedIn()) {
     toast.push('请先登录后再查看最新动态', 'info')
@@ -214,21 +213,21 @@ const avatarFallback = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="h
 // ==================== 用户下拉菜单（点击展开/关闭） ====================
 const userMenuOpen = ref(false)
 // 用户数据：等级 / 经验 / 硬币（GET /api/user-info/me；未创建资料时后端返回默认 1 级 / 0 币）
-const userInfo = ref(null)
+const userInfo = ref<any>(null)
 
 const MAX_LEVEL = 9 // 与后端 UserInfo.MaxLevel 一致
 
 // 升级所需经验：后端 LevelUpThreshold(level) = 500 × 5 × level = 2500 × level
-const levelThreshold = computed(() => (userInfo.value ? 2500 * userInfo.value.level : 2500))
-const isMaxLevel = computed(() => !!userInfo.value && userInfo.value.level >= MAX_LEVEL)
-const expPercent = computed(() => {
+const levelThreshold = computed<number>(() => (userInfo.value ? 2500 * userInfo.value.level : 2500))
+const isMaxLevel = computed<boolean>(() => !!userInfo.value && userInfo.value.level >= MAX_LEVEL)
+const expPercent = computed<number>(() => {
   if (!userInfo.value) return 0
   if (isMaxLevel.value) return 100
   const t = 2500 * userInfo.value.level
   return t > 0 ? Math.min(100, Math.round((userInfo.value.experience / t) * 100)) : 0
 })
 
-async function loadUserInfo() {
+async function loadUserInfo(): Promise<void> {
   if (!auth.isLoggedIn()) {
     userInfo.value = null
     return
@@ -244,7 +243,7 @@ async function loadUserInfo() {
 
 // 每日签到（POST /api/user-info/sign-in → SignInResultDto{level, experience, coins, upgradedLevels}）
 const signingIn = ref(false)
-async function onSignIn() {
+async function onSignIn(): Promise<void> {
   if (signingIn.value || !auth.isLoggedIn()) return
   signingIn.value = true
   try {
@@ -264,12 +263,12 @@ async function onSignIn() {
   }
 }
 
-function onDocClick() {
+function onDocClick(): void {
   userMenuOpen.value = false
   notifOpen.value = false
 }
 
-watch(userMenuOpen, open => {
+watch(userMenuOpen, (open: boolean) => {
   if (open) {
     notifOpen.value = false
     document.addEventListener('click', onDocClick)
@@ -279,7 +278,7 @@ watch(userMenuOpen, open => {
 })
 
 // 通知面板开合：与用户下拉互斥 + 点击外部关闭
-watch(notifOpen, open => {
+watch(notifOpen, (open: boolean) => {
   if (open) {
     userMenuOpen.value = false
     document.addEventListener('click', onDocClick)
@@ -289,7 +288,7 @@ watch(notifOpen, open => {
 })
 
 // 登录状态变化时重新拉取/清空用户数据
-watch(() => auth.isLoggedIn(), logged => {
+watch(() => auth.isLoggedIn(), (logged: boolean) => {
   if (logged) {
     loadUserInfo()
     loadUnread()
@@ -307,7 +306,7 @@ onMounted(() => {
 })
 onUnmounted(() => document.removeEventListener('click', onDocClick))
 
-async function loadUnread() {
+async function loadUnread(): Promise<void> {
   if (!auth.isLoggedIn()) {
     unread.value = 0
     return
@@ -321,7 +320,7 @@ async function loadUnread() {
   }
 }
 
-function onBellClick() {
+function onBellClick(): void {
   if (!auth.isLoggedIn()) {
     toast.push('请先登录后查看消息', 'info')
     router.push('/login')
@@ -330,7 +329,7 @@ function onBellClick() {
   notifOpen.value = !notifOpen.value
 }
 
-function onLogout() {
+function onLogout(): void {
   auth.logout()
   userMenuOpen.value = false
   toast.push('已退出登录', 'success')

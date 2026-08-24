@@ -37,23 +37,38 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import PostCard from './PostCard.vue'
 
-const props = defineProps({
+interface LoaderParams {
+  page: number
+  pageSize: number
+}
+
+interface FeedData {
+  list?: unknown[]
+  items?: unknown[]
+  page?: number
+  total?: number
+}
+
+interface Props {
   // 数据加载函数：(page, size) => Promise<{ list, total, page, size }>
-  loader: { type: Function, required: true },
-  emptyText: { type: String, default: '还没有内容，快来发布第一条吧～' }
+  loader: (params: LoaderParams) => Promise<unknown>
+  emptyText?: string
+}
+const props = withDefaults(defineProps<Props>(), {
+  emptyText: '还没有内容，快来发布第一条吧～'
 })
 
-const posts = ref([])
+const posts = ref<unknown[]>([])
 const loading = ref(false)
 const page = ref(0)
 const size = 9
 const hasMore = ref(true)
-const sentinel = ref(null)
-let observer = null
+const sentinel = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
 
 async function loadMore(reset = false) {
   if (loading.value) return
@@ -66,8 +81,8 @@ async function loadMore(reset = false) {
 
   loading.value = true
   try {
-    const res = await props.loader({ page: page.value + 1, pageSize: size })
-    const data = res && res.data ? res.data : res
+    const res: unknown = await props.loader({ page: page.value + 1, pageSize: size })
+    const data = (res && (res as { data?: FeedData }).data) ? (res as { data: FeedData }).data : (res as FeedData)
     const list = data.list || data.items || []
     posts.value = reset ? list : [...posts.value, ...list]
     page.value = data.page || page.value + 1

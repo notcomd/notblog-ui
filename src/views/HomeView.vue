@@ -11,11 +11,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'HomeView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import PostGrid from '@/components/post/PostGrid.vue'
@@ -28,7 +28,7 @@ const router = useRouter()
 // 热门/最新切换状态：由全局 TopBar 切换，此处只消费
 const feedTab = useFeedTabStore()
 
-const emptyText = computed(() => {
+const emptyText = computed<string>(() => {
   if (!auth.isLoggedIn()) return '登录后查看最新动态与更多内容'
   return feedTab.tab === 'latest' ? '暂无最新动态，去看看热门内容吧' : '暂无热门内容'
 })

@@ -213,21 +213,22 @@
   </div>
 </template>
 
-<script setup>
-import { ref, defineProps, defineEmits } from 'vue'
+<script setup lang="ts">
+import { ref } from 'vue'
 import { oauthLoginInit } from '@/api/auth'
 
 // ==================== Props & Emits ====================
-defineProps({
-  showLoginForm: { type: Boolean, default: true },
-  showRegisterForm: { type: Boolean, default: false }
-})
+interface Props {
+  showLoginForm?: boolean
+  showRegisterForm?: boolean
+}
+defineProps<Props>()
 
-const emit = defineEmits([
-  'showLoginForm',
-  'showRegisterForm',
-  'submitEmailLogin'
-])
+const emit = defineEmits<{
+  (e: 'showLoginForm', v: boolean): void
+  (e: 'showRegisterForm', v: boolean): void
+  (e: 'submitEmailLogin', data: { type: string; email: string; password: string; rememberMe: boolean }): void
+}>()
 
 // ==================== 邮箱登录状态 ====================
 const email = ref('')
@@ -238,7 +239,7 @@ const loading = ref(false)
 
 // ==================== 通用状态 ====================
 const errorMessage = ref('')
-const errors = ref({})
+const errors = ref<Record<string, string>>({})
 
 // ==================== 注册页跳转 ====================
 const handleRegisterClick = () => {
@@ -257,7 +258,7 @@ const handleForgotPassword = () => {
 }
 
 // ==================== 邮箱密码登录 ====================
-const validateEmailForm = () => {
+const validateEmailForm = (): boolean => {
   errors.value = {}
   let valid = true
 
@@ -309,14 +310,14 @@ const handleEmailPasswordSubmit = async () => {
 // ==================== 第三方登录（后端 OAuth） ====================
 // 回调地址：后端 OAuth 白名单校验（AllowedRedirectUris 配置）需包含该地址；
 // 提供方完成授权后带 code/state 回到 /login，由 LoginPage 换取 Token
-const oauthRedirectUri = () => window.location.origin + '/login'
+const oauthRedirectUri = (): string => window.location.origin + '/login'
 
-const handleOAuthLogin = async (provider) => {
+const handleOAuthLogin = async (provider: string) => {
   try {
     // 记录当前提供商，供回调页（/login?code=&state=）换取 Token 时使用
     sessionStorage.setItem('oauth_provider', provider)
     // 后端返回拼接好的授权地址（含 state，存入 Redis 防 CSRF）
-    const res = await oauthLoginInit(provider, oauthRedirectUri())
+    const res = (await oauthLoginInit(provider, oauthRedirectUri())) as any
     const oauthUrl = res && res.authorizationUrl
     if (oauthUrl) {
       window.location.href = oauthUrl

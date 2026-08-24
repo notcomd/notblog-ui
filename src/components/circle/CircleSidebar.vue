@@ -43,18 +43,30 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 社区侧边栏：我的社区列表（含示例数据徽标）+ 创建/加入入口（固定展开态）
-defineProps({
-  circles: { type: Array, default: () => [] },
-  current: { type: Object, default: null },
-  loading: { type: Boolean, default: false }
-})
-defineEmits(['select', 'create', 'join'])
+interface CircleItem {
+  circleGuid?: string
+  name?: string
+  avatarUrl?: string
+  memberCount?: number
+  isSample?: boolean
+}
+
+defineProps<{
+  circles?: CircleItem[]
+  current?: CircleItem | null
+  loading?: boolean
+}>()
+defineEmits<{
+  select: [c: CircleItem]
+  create: []
+  join: []
+}>()
 
 const fallback = 'data:image/svg+xml;utf8,' + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="8" fill="#f59e0b"/><path d="M14 50 L40 24 L66 50 Z" fill="#fff"/><path d="M40 50v-16" stroke="#f59e0b" stroke-width="4"/></svg>'
 )
 
-function hideImg(e) { e.target.style.visibility = 'hidden' }
+function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 </script>

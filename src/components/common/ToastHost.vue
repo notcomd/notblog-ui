@@ -34,7 +34,7 @@
   </Teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 全局通知弹窗宿主：消费 toast store（原 ToastHost 纯文本提示已升级为此通知样式，
 // 顶部右侧堆叠：图标 + 通知名称 + 消息 + 时间，兼容 push('文案', type) 简写调用）
 import { useToastStore } from '@/stores/toast'

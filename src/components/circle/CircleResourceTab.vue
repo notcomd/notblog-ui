@@ -21,16 +21,24 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 社区资源：circleLoader 拉取社区动态，提取 mediaUrls 去重展示
 import { ref, watch } from 'vue'
 import { getCirclePosts } from '@/api/circle'
 
-const props = defineProps({
-  current: { type: Object, default: null }
-})
+interface CircleData {
+  circleGuid?: string
+}
 
-const resources = ref([])
+interface Resource {
+  url: string
+}
+
+const props = defineProps<{
+  current: CircleData | null
+}>()
+
+const resources = ref<Resource[]>([])
 const loading = ref(false)
 const previewIndex = ref(-1)
 
@@ -49,7 +57,7 @@ async function load() {
     const seen = new Set()
     resources.value = []
     for (const p of list) {
-      const urls = [...(p.mediaUrls || []), ...(p.cover ? [p.cover] : [])]
+      const urls = [...(p.mediaUrls || []), ...(p.cover ? [p.cover] : [])] as string[]
       for (const u of urls) {
         if (u && !seen.has(u)) {
           seen.add(u)
@@ -64,5 +72,5 @@ async function load() {
   }
 }
 
-function hideImg(e) { e.target.style.visibility = 'hidden' }
+function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 </script>

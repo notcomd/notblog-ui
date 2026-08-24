@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 // 兜底壁纸：打包进前端，官方接口不可达时也能保证登录页有背景
 import fallbackImg from '@/assets/images/120498537_p0_master1200.jpg'
@@ -12,7 +12,7 @@ import fallbackImg from '@/assets/images/120498537_p0_master1200.jpg'
 const imageUrl = ref('')
 
 // 主源：cn.bing.com 官方每日壁纸接口（中国区可达；idx 随机取最近 8 天，图片更丰富）
-const fetchFromBing = async () => {
+const fetchFromBing = async (): Promise<void> => {
   const resp = await fetch(
     `https://cn.bing.com/HPImageArchive.aspx?format=js&idx=${Math.floor(Math.random() * 8)}&n=1&mkt=zh-CN`,
     { signal: AbortSignal.timeout(8000) }
@@ -24,7 +24,7 @@ const fetchFromBing = async () => {
 }
 
 // 次源：第三方聚合（原实现；官方接口失败时尝试）
-const fetchFromImgRun = async () => {
+const fetchFromImgRun = async (): Promise<void> => {
   imageUrl.value = 'https://bing.img.run/rand_uhd.php'
 }
 
@@ -43,7 +43,7 @@ onMounted(async () => {
 })
 
 // <img> 实际加载失败（网络抖动/图片 404）→ 本地兜底图
-const onImageError = () => {
+const onImageError = (): void => {
   if (imageUrl.value !== fallbackImg) {
     imageUrl.value = fallbackImg
   }

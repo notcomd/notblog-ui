@@ -88,11 +88,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'AdminFilesView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import AdminModal from '@/components/admin/AdminModal.vue'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
@@ -111,17 +111,17 @@ const fileTypes = [
 ]
 const type = ref('all')
 const keyword = ref('')
-const files = ref([])
-const previewing = ref(null)
-const inspecting = ref(null)
-const deleteTarget = ref(null)
+const files = ref<any[]>([])
+const previewing = ref<any>(null)
+const inspecting = ref<any>(null)
+const deleteTarget = ref<any>(null)
 
-function switchType(t) {
+function switchType(t: string): void {
   type.value = t
   load()
 }
 
-async function load() {
+async function load(): Promise<void> {
   try {
     const res = await getAdminFiles({ type: type.value, keyword: keyword.value })
     const data = res && res.data ? res.data : res
@@ -131,19 +131,19 @@ async function load() {
   }
 }
 
-function preview(f) {
+function preview(f: any): void {
   previewing.value = f
 }
 
-function inspect(f) {
+function inspect(f: any): void {
   inspecting.value = f
 }
 
-function openDelete(f) {
+function openDelete(f: any): void {
   deleteTarget.value = f
 }
 
-async function doDelete(reason) {
+async function doDelete(reason: string): Promise<void> {
   try {
     await deleteAdminFile(deleteTarget.value.fileId)
     files.value = files.value.filter(f => f.fileId !== deleteTarget.value.fileId)
@@ -154,14 +154,14 @@ async function doDelete(reason) {
   }
 }
 
-function formatSize(bytes) {
+function formatSize(bytes: number): string {
   if (!bytes) return '0 B'
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / 1024 / 1024).toFixed(1) + ' MB'
 }
 
-function hideImg(e) {
+function hideImg(e: any): void {
   e.target.style.visibility = 'hidden'
 }
 

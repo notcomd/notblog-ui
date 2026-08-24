@@ -5,7 +5,7 @@
   <ToastHost />
 </template>
 
-<script>
+<script lang="ts">
 import ToastHost from '@/components/common/ToastHost.vue'
 
 export default {

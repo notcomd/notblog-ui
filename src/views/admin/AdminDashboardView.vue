@@ -81,11 +81,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'AdminDashboardView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminModal from '@/components/admin/AdminModal.vue'
@@ -96,13 +96,13 @@ import { compactNumber, relativeTime } from '@/utils/format'
 const router = useRouter()
 const toast = useToastStore()
 
-const stats = ref({ totalUsers: 0, userGrowth: 0, onlineUsers: 0, pendingTweets: 0, pendingReports: 0 })
-const logs = ref([])
-const onlineUsers = ref([])
+const stats = ref<{ totalUsers: number; userGrowth: number; onlineUsers: number; pendingTweets: number; pendingReports: number }>({ totalUsers: 0, userGrowth: 0, onlineUsers: 0, pendingTweets: 0, pendingReports: 0 })
+const logs = ref<any[]>([])
+const onlineUsers = ref<any[]>([])
 const showOnline = ref(false)
 
-function typeClass(t) {
-  const map = {
+function typeClass(t: string): string {
+  const map: Record<string, string> = {
     '用户注册': 'bg-emerald-400/15 text-emerald-500',
     '内容发布': 'bg-blue-400/15 text-amber-600',
     '举报提交': 'bg-red-400/15 text-red-500',
@@ -114,15 +114,15 @@ function typeClass(t) {
   return map[t] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
 }
 
-function exportReport() {
+function exportReport(): void {
   toast.push('导出运营日报开发中', 'info')
 }
 
 onMounted(async () => {
   const [s, l, o] = await Promise.all([getAdminStats(), getAdminActivityLog(), getAdminOnlineUsers()])
-  const sd = s && s.data ? s.data : s
-  const ld = l && l.data ? l.data : l
-  const od = o && o.data ? o.data : o
+  const sd: any = s && s.data ? s.data : s
+  const ld: any = l && l.data ? l.data : l
+  const od: any = o && o.data ? o.data : o
   if (sd) stats.value = { ...stats.value, ...sd }
   logs.value = Array.isArray(ld) ? ld : (ld.items || ld.list || [])
   onlineUsers.value = Array.isArray(od) ? od : (od.items || od.list || [])

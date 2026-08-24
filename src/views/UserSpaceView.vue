@@ -207,11 +207,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'UserSpaceView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PostGrid from '@/components/post/PostGrid.vue'
@@ -238,8 +238,8 @@ const isSelf = computed(() => !!auth.user && String(auth.user.id) === String(use
 const following = ref(false)
 
 // 工具栏由全局 SideNav 提供（?tab=home|works|favorites|files|security），此处只消费 query
-const activeTab = ref(route.query.tab || 'home')
-watch(() => route.query.tab, (v) => { if (v) activeTab.value = v })
+const activeTab = ref((route.query.tab as string) || 'home')
+watch(() => route.query.tab, (v) => { if (v) activeTab.value = v as string })
 const fileType = ref('all')
 const fileTypes = [
   { key: 'all', label: '全部' },
@@ -248,16 +248,16 @@ const fileTypes = [
   { key: 'doc', label: '文档' }
 ]
 
-const user = ref({})
-const files = ref([])
-const linkedAccounts = ref([])
+const user = ref<Record<string, any>>({})
+const files = ref<any[]>([])
+const linkedAccounts = ref<any[]>([])
 
 // ===== 主页概览 =====
-const overview = ref({ posts: 0 }) // 作品总数（真实 total）
-const recentPosts = ref([]) // 最近 4 个作品
-const recentFavorites = ref([]) // 最近 4 个收藏（后端缺口，当前空态）
+const overview = ref<{ posts: number }>({ posts: 0 }) // 作品总数（真实 total）
+const recentPosts = ref<any[]>([]) // 最近 4 个作品
+const recentFavorites = ref<any[]>([]) // 最近 4 个收藏（后端缺口，当前空态）
 const recentFiles = computed(() => files.value.slice(0, 4)) // 最近 4 个文件
-const userInfo = ref(null) // Message /api/user-info/me（等级/经验/硬币，仅自己）
+const userInfo = ref<any>(null) // Message /api/user-info/me（等级/经验/硬币，仅自己）
 const MAX_LEVEL = 9 // 与后端 UserInfo.MaxLevel 一致
 const levelThreshold = computed(() => (userInfo.value ? 2500 * userInfo.value.level : 2500))
 const isMaxLevel = computed(() => !!userInfo.value && userInfo.value.level >= MAX_LEVEL)
@@ -267,28 +267,28 @@ const expPercent = computed(() => {
   const t = 2500 * userInfo.value.level
   return t > 0 ? Math.min(100, Math.round((userInfo.value.experience / t) * 100)) : 0
 })
-function goTab(key) {
+function goTab(key: string): void {
   router.push({ path: `/users/${userId.value}`, query: { tab: key } })
 }
 // 概览缩略辅助（与 PostCard 同字段约定：mediaUrls[0] 封面 / isVideo 或 URL 后缀）
-function postThumb(p) {
+function postThumb(p: any): string {
   const urls = p.mediaUrls || []
   return urls[0] || ''
 }
-function postIsVideo(p) {
+function postIsVideo(p: any): boolean {
   if (p.isVideo) return true
   return /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(postThumb(p))
 }
-function postTitle(p) {
-  const t = (p.content || '').replace(/[#*`>~-]/g, '').trim()
+function postTitle(p: any): string {
+  const t: string = (p.content || '').replace(/[#*`>~-]/g, '').trim()
   return t ? t.split('\n')[0].slice(0, 30) : '未命名作品'
 }
 // 作品取最近 4 个 + 总数；收藏接真实端点（当前后端缺口返回空态）
-async function loadOverview() {
+async function loadOverview(): Promise<void> {
   try {
     const res = await getUserPosts(userId.value, { page: 1, pageSize: 4 })
-    const d = res && res.data ? res.data : res
-    let list = d.items || d.list || []
+    const d: any = res && res.data ? res.data : res
+    let list: any[] = d.items || d.list || []
     // 他人主页只显示公开作品（私密作品仅作者可见）
     if (!isSelf.value) list = list.filter(p => p.visibility !== 'Private')
     recentPosts.value = list.slice(0, 4)
@@ -304,7 +304,7 @@ async function loadOverview() {
   }
   try {
     const res = await getUserFavorites()
-    const d = res && res.data ? res.data : res
+    const d: any = res && res.data ? res.data : res
     recentFavorites.value = (d.items || d.list || []).slice(0, 4)
   } catch (e) {
     recentFavorites.value = []
@@ -318,15 +318,15 @@ const pwdSaving = ref(false)
 
 const filteredFiles = computed(() => fileType.value === 'all' ? files.value : files.value.filter(f => f.type === fileType.value))
 
-function worksLoader(params) {
+function worksLoader(params: any): Promise<any> {
   return getUserPosts(userId.value, params)
 }
 
-function favoritesLoader(params) {
+function favoritesLoader(params: any) {
   return getUserFavorites(params)
 }
 
-async function loadUser() {
+async function loadUser(): Promise<void> {
   // 真实用户信息：自己的从 JWT + /api/user-info/me；他人信息后端缺 /api/users/{guid} 端点（缺口清单），先展示 mock + JWT 混合
   following.value = false
   userInfo.value = null
@@ -373,12 +373,12 @@ async function loadUser() {
 }
 
 // 关注状态：拉取「我关注的人」列表比对（后端暂无 is-following 端点，与详情页同法）
-async function checkFollowing() {
+async function checkFollowing(): Promise<void> {
   if (isSelf.value || !auth.isLoggedIn()) return
   try {
     const res = await getFollowing({ page: 1, pageSize: 200 })
-    const data = res && res.data ? res.data : res
-    const list = data.items || data.list || []
+    const data: any = res && res.data ? res.data : res
+    const list: any[] = data.items || data.list || []
     following.value = list.some(u => String(u.userGuid || u.userId) === String(userId.value))
   } catch (e) {
     following.value = false
@@ -386,7 +386,7 @@ async function checkFollowing() {
 }
 
 // 关注 / 取关（Message：POST|DELETE /api/follows/{userGuid}）
-async function toggleFollow() {
+async function toggleFollow(): Promise<void> {
   if (!auth.isLoggedIn()) {
     toast.push('请先登录后关注', 'info')
     router.push('/login')
@@ -405,7 +405,7 @@ async function toggleFollow() {
 }
 
 // 发起聊天：POST /api/sessions（私聊幂等，已存在返回现有会话）→ 跳 /chat/:sessionId
-async function onChat() {
+async function onChat(): Promise<void> {
   if (!auth.isLoggedIn()) {
     toast.push('请先登录后聊天', 'info')
     router.push('/login')
@@ -413,7 +413,7 @@ async function onChat() {
   }
   try {
     const res = await createSession(userId.value)
-    const d = res && res.data ? res.data : res
+    const d: any = res && res.data ? res.data : res
     const sessionId = (d && (d.sessionId || d.id)) || (typeof d === 'string' ? d : '')
     if (!sessionId) throw new Error('no sessionId')
     router.push('/chat/' + sessionId)
@@ -423,9 +423,9 @@ async function onChat() {
 }
 
 // 签名本地持久化 key（后端暂无 bio 字段/端点；补齐后改为服务端存取）
-const bioStorageKey = () => `notblog-bio-${userId.value}`
+const bioStorageKey = (): string => `notblog-bio-${userId.value}`
 
-function onBioChanged(bio) {
+function onBioChanged(bio: string): void {
   if (!user.value) return
   user.value.bio = bio
   try {
@@ -434,35 +434,35 @@ function onBioChanged(bio) {
 }
 
 // 用户卡片事件：头像/封面更新（上传逻辑在 UserCard 组件内）
-function onAvatarChanged(url) {
+function onAvatarChanged(url: string): void {
   if (url && user.value) user.value.avatar = url
 }
 
-function onCoverChanged(url) {
+function onCoverChanged(url: string): void {
   if (url && user.value) user.value.coverUrl = url
 }
 
-async function loadFiles() {
+async function loadFiles(): Promise<void> {
   try {
     const res = await getUserFiles({ type: fileType.value })
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     files.value = data.items || data.list || []
   } catch (e) {
     files.value = []
   }
 }
 
-async function loadLinked() {
+async function loadLinked(): Promise<void> {
   try {
     const res = await getLinkedAccounts()
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     linkedAccounts.value = Array.isArray(data) ? data : (data.items || data.list || [])
   } catch (e) {
     linkedAccounts.value = []
   }
 }
 
-async function submitPassword() {
+async function submitPassword(): Promise<void> {
   pwdError.value = ''
   if (!pwd.value.oldPassword || !pwd.value.newPassword) {
     pwdError.value = '请填写旧密码和新密码'
@@ -489,7 +489,7 @@ async function submitPassword() {
   }
 }
 
-async function unlink(a) {
+async function unlink(a: any): Promise<void> {
   try {
     await unlinkAccount(a.provider, a.providerUserId)
     linkedAccounts.value = linkedAccounts.value.filter(x => x.provider !== a.provider || x.providerUserId !== a.providerUserId)
@@ -499,8 +499,8 @@ async function unlink(a) {
   }
 }
 
-function providerIcon(p) {
-  const map = {
+function providerIcon(p: string): string {
+  const map: Record<string, string> = {
     github: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="#24292f"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>',
     google: '<svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>',
     microsoft: '<svg class="w-5 h-5" viewBox="0 0 24 24"><rect x="2" y="2" width="10" height="10" fill="#F25022"/><rect x="13" y="2" width="9" height="10" fill="#7FBA00"/><rect x="2" y="13" width="10" height="9" fill="#00A4EF"/><rect x="13" y="13" width="9" height="9" fill="#FFB900"/></svg>',
@@ -510,19 +510,19 @@ function providerIcon(p) {
   return map[p] || '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
 }
 
-function previewFile(f) {
+function previewFile(f: any): void {
   toast.push(`预览 ${f.name} 功能开发中`, 'info')
 }
 
-function formatSize(bytes) {
+function formatSize(bytes: number): string {
   if (!bytes) return '0 B'
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / 1024 / 1024).toFixed(1) + ' MB'
 }
 
-function hideImg(e) {
-  e.target.style.visibility = 'hidden'
+function hideImg(e: Event) {
+  (e.target as HTMLElement).style.visibility = 'hidden'
 }
 
 watch(() => route.params.id, () => {

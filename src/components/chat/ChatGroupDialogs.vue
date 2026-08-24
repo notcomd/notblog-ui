@@ -62,7 +62,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 群聊创建/搜索面板：处理群头像上传、建群、搜索公开群、打开已有群会话
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -73,10 +73,12 @@ import { uploadImage } from '@/api/publish'
 import { getMyUserInfo } from '@/api/userinfo'
 import { validateImageFile, compressImage, blobToDataUri } from '@/utils/image'
 
-defineProps({
-  mode: { type: String, default: '' }
-})
-defineEmits(['close'])
+defineProps<{
+  mode?: string
+}>()
+defineEmits<{
+  close: []
+}>()
 
 const chat = useChatStore()
 const toast = useToastStore()
@@ -85,7 +87,7 @@ const router = useRouter()
 const groupName = ref('')
 const groupDesc = ref('')
 const groupPublic = ref(false)
-const groupMembers = ref([])
+const groupMembers = ref<string[]>([])
 const groupSending = ref(false)
 const groupAvatarPreview = ref('')
 const groupAvatarValue = ref('')
@@ -93,17 +95,18 @@ const groupAvatarUpdating = ref(false)
 const myLevel = ref(1)
 
 const groupKeyword = ref('')
-const groupResults = ref([])
+const groupResults = ref<any[]>([])
 const groupSearching = ref(false)
 const groupSearched = ref(false)
 
-function groupAvatarKey(groupId) {
+function groupAvatarKey(groupId: string): string {
   return 'notblog-group-avatar-' + groupId
 }
 
-async function onGroupAvatarChange(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onGroupAvatarChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files && input.files[0]
+  input.value = ''
   if (!file || groupAvatarUpdating.value) return
   const v = validateImageFile(file)
   if (!v.ok) { toast.push(v.error, 'error'); return }
@@ -190,11 +193,11 @@ async function doGroupSearch() {
   }
 }
 
-function isJoinedGroup(g) {
+function isJoinedGroup(g: any): boolean {
   return chat.groups.some(x => String(x.groupId) === String(g.groupId))
 }
 
-function onGroupResultClick(g) {
+function onGroupResultClick(g: any) {
   if (!isJoinedGroup(g)) {
     toast.push('该群暂不支持直接加入', 'info')
     return

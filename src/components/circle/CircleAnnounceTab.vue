@@ -22,15 +22,20 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 社区公告：Owner/Admin 可编辑，localStorage 持久化（notblog-circle-announce-{guid}）
 import { computed, ref, watch } from 'vue'
 import { useToastStore } from '@/stores/toast'
 
-const props = defineProps({
-  current: { type: Object, default: null },
-  canManage: { type: Boolean, default: false }
-})
+interface CircleData {
+  circleGuid?: string
+  announcement?: string
+}
+
+const props = defineProps<{
+  current: CircleData | null
+  canManage?: boolean
+}>()
 
 const toast = useToastStore()
 const announceEdit = ref(false)

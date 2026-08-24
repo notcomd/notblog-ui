@@ -34,11 +34,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'CirclePage' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 // 社区页容器：负责社区数据加载、选择、加入/退出、直邀接收与示例数据兜底
 import { computed, onMounted, ref } from 'vue'
 import { charAvatar as demoAvatar } from '@/utils/avatar'
@@ -50,20 +50,20 @@ import { useToastStore } from '@/stores/toast'
 
 const toast = useToastStore()
 
-const circles = ref([])
-const current = ref(null)
+const circles = ref<any[]>([])
+const current = ref<any>(null)
 const loading = ref(false)
 const createMode = ref(false)
 const joinOpen = ref(false)
 const joining = ref(false)
 const gridKey = ref(0)
-const myInvites = ref([])
-const inviteBusy = ref('')
+const myInvites = ref<any[]>([])
+const inviteBusy = ref<string>('')
 
 const myRole = computed(() => (current.value ? (current.value.myRole || 'Member') : 'Member'))
 
 // ===== 示例社区数据（后端离线/未加入社区时展示；isSample 标记「示例」徽标） =====
-const DEMO_CIRCLES = [
+const DEMO_CIRCLES: any[] = [
   { circleGuid: 'demo-circle-photo', name: '轻芒摄影部落', description: '用镜头记录生活，分享光影之美', avatarUrl: demoAvatar('摄', '#6366f1'), coverUrl: '', memberCount: 128, myRole: 'Owner', unread: 3, isSample: true },
   { circleGuid: 'demo-circle-outdoor', name: '周末户外俱乐部', description: '徒步 · 露营 · 骑行，周末一起出发', avatarUrl: demoAvatar('户', '#10b981'), coverUrl: '', memberCount: 86, myRole: 'Admin', unread: 0, isSample: true },
   { circleGuid: 'demo-circle-coffee', name: '咖啡研究所', description: '手冲、拉花、烘焙，重度咖啡爱好者聚集地', avatarUrl: demoAvatar('咖', '#f59e0b'), coverUrl: '', memberCount: 210, myRole: 'Member', unread: 1, isSample: true },
@@ -72,11 +72,11 @@ const DEMO_CIRCLES = [
 
 // ===== 示例数据兜底（后端离线/未加入社区时展示；isSample 标记「示例」徽标） =====
 
-async function loadCircles() {
+async function loadCircles(): Promise<void> {
   loading.value = true
   try {
     const res = await getMyCircles()
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     circles.value = data.items || data.list || data || []
     if (!circles.value.length) circles.value = DEMO_CIRCLES
   } catch (e) {
@@ -87,17 +87,17 @@ async function loadCircles() {
   if (circles.value.length && !current.value) select(circles.value[0])
 }
 
-async function select(c) {
+async function select(c: any): Promise<void> {
   current.value = c
   gridKey.value++
   try {
     const res = await getCircle(c.circleGuid)
-    const d = res && res.data ? res.data : res
+    const d: any = res && res.data ? res.data : res
     if (d && d.circleGuid) current.value = { ...c, ...d }
   } catch (e) { /* 使用列表数据兜底 */ }
 }
 
-async function onCreated(guid) {
+async function onCreated(guid: string): Promise<void> {
   createMode.value = false
   await loadCircles()
   if (guid) {
@@ -106,7 +106,7 @@ async function onCreated(guid) {
   }
 }
 
-async function doLeave() {
+async function doLeave(): Promise<void> {
   if (!current.value) return
   if (current.value.isSample) {
     circles.value = circles.value.filter(c => String(c.circleGuid) !== String(current.value.circleGuid))
@@ -123,13 +123,13 @@ async function doLeave() {
   }
 }
 
-async function doJoin(input) {
+async function doJoin(input: string): Promise<void> {
   const text = (input || '').trim()
   if (!text) return
   joining.value = true
   try {
     const tokenMatch = text.match(/[?&]token=([0-9a-f-]+)/i) || text.match(/\/([0-9a-f-]{36})/i)
-    const payload = tokenMatch ? { token: tokenMatch[1] } : { code: text }
+    const payload: any = tokenMatch ? { token: tokenMatch[1] } : { code: text }
     await joinCircle(payload)
     toast.push('已加入社区', 'success')
     joinOpen.value = false
@@ -144,7 +144,7 @@ async function doJoin(input) {
 }
 
 // 审核制社区申请加入（示例社区本地入队；真实社区后端暂无审核端点）
-function doApplyJoin(input) {
+function doApplyJoin(input: string): void {
   const name = (input || '').trim()
   if (!name) return
   const target = DEMO_CIRCLES.find(c => c.name === name && c.joinMode === 'review')
@@ -168,16 +168,16 @@ function doApplyJoin(input) {
 }
 
 // ===== 收到的直邀（真实端点） =====
-async function loadMyInvites() {
+async function loadMyInvites(): Promise<void> {
   try {
     const res = await getMyCircleInvitations()
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     myInvites.value = (data && (data.items || data.list)) || data || []
   } catch (e) {
     myInvites.value = []
   }
 }
-async function onAcceptInvite(inv) {
+async function onAcceptInvite(inv: any): Promise<void> {
   inviteBusy.value = inv.inviteGuid
   try {
     await acceptCircleInvitation(inv.inviteGuid)
@@ -190,7 +190,7 @@ async function onAcceptInvite(inv) {
     inviteBusy.value = ''
   }
 }
-async function onRejectInvite(inv) {
+async function onRejectInvite(inv: any): Promise<void> {
   inviteBusy.value = inv.inviteGuid
   try {
     await rejectCircleInvitation(inv.inviteGuid)

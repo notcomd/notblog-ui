@@ -106,7 +106,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useCallStore } from '@/stores/call'
 import { useChatStore } from '@/stores/chat'
@@ -118,9 +118,9 @@ const muted = ref(false)
 const cameraOff = ref(false)
 const startTime = ref(Date.now())
 const durationText = ref('00:00')
-let timer = null
+let timer: ReturnType<typeof setInterval> | null = null
 
-const END_REASON_TEXT = {
+const END_REASON_TEXT: Record<number, string> = {
   0: '呼叫已取消',
   1: '对方拒绝了通话',
   2: '无人接听，通话已结束',

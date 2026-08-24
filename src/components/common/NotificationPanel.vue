@@ -61,29 +61,42 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from '@/api/notification'
-import { notificationMeta, SAMPLE_NOTIFICATIONS } from '@/utils/notifications'
+import { notificationMeta, SAMPLE_NOTIFICATIONS, type NotificationMeta } from '@/utils/notifications'
 import { relativeTime } from '@/utils/format'
 
-const emit = defineEmits(['read-all', 'unread-changed'])
+interface NotificationItem {
+  notifyGuid: string
+  type: string
+  title: string
+  content: string
+  isRead: boolean
+  createTime: number | string
+  isSample?: boolean
+}
 
-const list = ref([])
+const emit = defineEmits<{
+  (e: 'read-all'): void
+  (e: 'unread-changed', delta: number): void
+}>()
+
+const list = ref<NotificationItem[]>([])
 const loading = ref(false)
 const sampleMode = ref(false) // 后端离线/空列表 → 示例数据展示
-const expanded = ref([])
-const truncatable = ref([])
-const itemEls = []
+const expanded = ref<boolean[]>([])
+const truncatable = ref<boolean[]>([])
+const itemEls: (HTMLElement | null)[] = []
 
 const hasUnread = computed(() => list.value.some(n => !n.isRead))
 
-function meta(n) {
+function meta(n: NotificationItem): NotificationMeta {
   return notificationMeta(n.type)
 }
 
-function setItemRef(el, i) {
-  if (el) itemEls[i] = el
+function setItemRef(el: unknown, i: number) {
+  if (el) itemEls[i] = el as HTMLElement
 }
 
 // 测量正文是否超两行（决定是否显示「展开」）
@@ -91,12 +104,12 @@ async function measure() {
   await nextTick()
   list.value.forEach((n, i) => {
     if (expanded.value[i]) return // 已展开项保留「收起」按钮，不再测量
-    const body = itemEls[i] && itemEls[i].querySelector('.notify-body')
+    const body = itemEls[i] && itemEls[i]!.querySelector('.notify-body')
     truncatable.value[i] = !!(body && body.scrollHeight > body.clientHeight + 2)
   })
 }
 
-function toggleExpand(i) {
+function toggleExpand(i: number) {
   const next = !expanded.value[i]
   expanded.value[i] = next
   setTimeout(measure, 50) // 展开/收起后重新测量（expanded 项在 measure 中跳过）
@@ -111,12 +124,12 @@ async function load() {
       list.value = items
       sampleMode.value = false
     } else {
-      list.value = SAMPLE_NOTIFICATIONS
+      list.value = SAMPLE_NOTIFICATIONS as NotificationItem[]
       sampleMode.value = true
     }
   } catch (e) {
     // 后端离线/未鉴权 → 示例数据兜底（仅用于展示）
-    list.value = SAMPLE_NOTIFICATIONS
+    list.value = SAMPLE_NOTIFICATIONS as NotificationItem[]
     sampleMode.value = true
   } finally {
     loading.value = false
@@ -139,7 +152,7 @@ async function onReadAll() {
   }
 }
 
-async function onItemClick(n, i) {
+async function onItemClick(n: NotificationItem, i: number) {
   if (!n.isRead) {
     n.isRead = true
     emit('unread-changed', -1)

@@ -119,11 +119,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'AdminContentView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import AdminModal from '@/components/admin/AdminModal.vue'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
@@ -145,21 +145,21 @@ const status = ref('Pending')
 const sortBy = ref('latest')
 const keyword = ref('')
 
-const items = ref([])
+const items = ref<any[]>([])
 const loading = ref(false)
 const page = ref(1)
 const pageSize = 10
 const total = ref(0)
 
-const auditTarget = ref(null)
+const auditTarget = ref<any>(null)
 const rejectReason = ref('')
-const blockTarget = ref(null)
+const blockTarget = ref<any>(null)
 const blockReason = ref('')
-const deleteTarget = ref(null)
+const deleteTarget = ref<any>(null)
 
-const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
+const totalPages = computed<number>(() => Math.max(1, Math.ceil(total.value / pageSize)))
 
-function statusClass(s) {
+function statusClass(s: string): string {
   return {
     Pending: 'bg-amber-400/15 text-amber-600 dark:text-amber-400',
     Approved: 'bg-emerald-400/15 text-emerald-500',
@@ -167,16 +167,16 @@ function statusClass(s) {
   }[s] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
 }
 
-function statusText(s) {
+function statusText(s: string): string {
   return { Pending: '待审核', Approved: '已通过', Rejected: '已驳回' }[s] || s
 }
 
-function switchTab(t) {
+function switchTab(t: string): void {
   tab.value = t
   load(1)
 }
 
-async function load(p) {
+async function load(p: number): Promise<void> {
   loading.value = true
   page.value = p || 1
   try {
@@ -197,12 +197,12 @@ async function load(p) {
   }
 }
 
-function openAudit(t) {
+function openAudit(t: any): void {
   auditTarget.value = t
   rejectReason.value = ''
 }
 
-async function doApprove() {
+async function doApprove(): Promise<void> {
   try {
     if (tab.value === 'blog') {
       await approveMarkdown(auditTarget.value.tweetGuid)
@@ -217,7 +217,7 @@ async function doApprove() {
   }
 }
 
-async function doReject() {
+async function doReject(): Promise<void> {
   try {
     if (tab.value === 'blog') {
       await rejectMarkdown(auditTarget.value.tweetGuid, rejectReason.value)
@@ -232,12 +232,12 @@ async function doReject() {
   }
 }
 
-function openBlock(t) {
+function openBlock(t: any): void {
   blockTarget.value = t
   blockReason.value = ''
 }
 
-async function doBlock() {
+async function doBlock(): Promise<void> {
   try {
     await blockTweet(blockTarget.value.tweetGuid, blockReason.value)
     toast.push('内容已屏蔽（全站不可见）', 'success')
@@ -248,11 +248,11 @@ async function doBlock() {
   }
 }
 
-function openDelete(t) {
+function openDelete(t: any): void {
   deleteTarget.value = t
 }
 
-async function doDelete(reason) {
+async function doDelete(reason: string): Promise<void> {
   try {
     await deleteTweet(deleteTarget.value.tweetGuid)
     toast.push('内容已永久删除', 'success')
@@ -263,7 +263,7 @@ async function doDelete(reason) {
   }
 }
 
-function hideImg(e) {
+function hideImg(e: any): void {
   e.target.style.visibility = 'hidden'
 }
 

@@ -78,7 +78,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -108,10 +108,10 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToastStore()
 
-const doc = ref(null)
+const doc = ref<any>(null)
 
 // 评论配置（通用评论组件，Markdown 后端：全量 + 图片评论 + 子评论接口）
-const commentCfg = {
+const commentCfg: any = {
   idField: 'markReviewGuid',
   contentField: 'content',
   timeField: 'reviewTime',
@@ -140,7 +140,7 @@ const quote = computed(() => doc.value?.quote || { LoveCount: 0, FavoriteCount: 
 const renderedContent = computed(() => renderMarkdown(content.value))
 const shortAuthor = computed(() => (doc.value ? String(doc.value.markUserGuid).slice(0, 8) : ''))
 
-async function load() {
+async function load(): Promise<void> {
   loading.value = true
   doc.value = null
   content.value = ''
@@ -173,17 +173,17 @@ async function load() {
 }
 
 // 收藏初始状态：从我的收藏列表比对（后端详情无 isFavorited 字段）
-async function checkFavorite() {
+async function checkFavorite(): Promise<void> {
   try {
     const res = await getMyFavorites({ page: 1, pageSize: 50 })
     const items = unwrap(res) || []
-    favorited.value = items.some((i) => String(i.markDownGuid) === String(route.params.guid))
+    favorited.value = items.some((i: any) => String(i.markDownGuid) === String(route.params.guid))
   } catch (e) {
     favorited.value = false
   }
 }
 
-async function toggleLike() {
+async function toggleLike(): Promise<void> {
   if (!doc.value) return
   try {
     const res = liked.value
@@ -198,7 +198,7 @@ async function toggleLike() {
   }
 }
 
-async function toggleFavorite() {
+async function toggleFavorite(): Promise<void> {
   if (!doc.value) return
   try {
     if (favorited.value) {
@@ -215,7 +215,7 @@ async function toggleFavorite() {
   }
 }
 
-function hideImg(e) { e.target.style.visibility = 'hidden' }
+function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 
 onMounted(load)
 // keep-alive 缓存内切换文档时重新加载

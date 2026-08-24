@@ -105,11 +105,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'AdminReportsView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import AdminTable from '@/components/admin/AdminTable.vue'
 import AdminModal from '@/components/admin/AdminModal.vue'
@@ -128,14 +128,14 @@ const columns = [
   { key: 'status', label: '状态' }
 ]
 
-const reports = ref([])
+const reports = ref<any[]>([])
 const loading = ref(false)
 const page = ref(1)
 const pageSize = 10
 const total = ref(0)
-const selected = ref([])
-const viewing = ref(null)
-const resolveTarget = ref(null)
+const selected = ref<any[]>([])
+const viewing = ref<any>(null)
+const resolveTarget = ref<any>(null)
 const resolveAction = ref('dismiss')
 const resolveNote = ref('')
 
@@ -148,21 +148,21 @@ const resolveOptions = [
 const pendingCount = computed(() => reports.value.filter(r => r.status === 'Pending').length)
 const resolvedCount = computed(() => reports.value.filter(r => r.status !== 'Pending').length)
 
-function categoryClass(c) {
+function categoryClass(c: number): string {
   const map = ['bg-red-400/15 text-red-500', 'bg-orange-400/15 text-orange-500', 'bg-amber-400/15 text-amber-600', 'bg-blue-400/15 text-amber-600', 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400']
   return map[c] || map[4]
 }
 
-function categoryText(c) {
+function categoryText(c: number): string {
   return ['色情', '暴力', '政治', '广告', '其他'][c] || '其他'
 }
 
-async function load(p) {
+async function load(p?: number): Promise<void> {
   loading.value = true
   page.value = p || 1
   try {
     const res = await getReports({ page: page.value, pageSize })
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     reports.value = data.items || data.list || []
     total.value = data.totalCount !== undefined ? data.totalCount : (data.total || reports.value.length)
   } catch (e) {
@@ -172,17 +172,17 @@ async function load(p) {
   }
 }
 
-function viewDetail(row) {
+function viewDetail(row: any): void {
   viewing.value = row
 }
 
-function openResolve(row) {
+function openResolve(row: any): void {
   resolveTarget.value = row
   resolveAction.value = 'dismiss'
   resolveNote.value = ''
 }
 
-async function doResolve() {
+async function doResolve(): Promise<void> {
   try {
     await resolveReport(resolveTarget.value.reportGuid, { action: resolveAction.value, note: resolveNote.value })
     toast.push('举报已处理', 'success')
@@ -193,7 +193,7 @@ async function doResolve() {
   }
 }
 
-function batchResolve() {
+function batchResolve(): void {
   toast.push('批量处理举报尚未接入后端，操作未执行', 'error')
   selected.value = []
   load(page.value)

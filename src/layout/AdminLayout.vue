@@ -100,7 +100,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
@@ -117,9 +117,17 @@ const toast = useToastStore()
 const collapsed = ref(false)
 const keyword = ref('')
 const pendingCount = ref(0)
-let savedTheme = null
+let savedTheme: boolean | null = null
 
-const navItems = [
+interface AdminNavItem {
+  path: string;
+  label: string;
+  icon: string;
+  match?: string;
+  badge?: string;
+}
+
+const navItems: AdminNavItem[] = [
   { path: '/admin', label: '工作台', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>', match: '/admin' },
   { path: '/admin/users', label: '用户管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
   { path: '/admin/content', label: '内容管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' },
@@ -131,17 +139,17 @@ const navItems = [
 
 const adminAvatar = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#3b82f6"/><text x="50" y="62" font-size="40" text-anchor="middle" fill="white">管</text></svg>')
 
-function isActive(path) {
+function isActive(path: string): boolean {
   if (path === '/admin') return route.path === '/admin'
   return route.path.startsWith(path)
 }
 
-function onSearch() {
+function onSearch(): void {
   if (!keyword.value.trim()) return
   toast.push(`全站检索「${keyword.value.trim()}」开发中`, 'info')
 }
 
-function onLogout() {
+function onLogout(): void {
   auth.logout()
   router.push('/login')
 }

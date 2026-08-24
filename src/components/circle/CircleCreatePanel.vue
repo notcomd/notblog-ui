@@ -97,7 +97,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
@@ -105,13 +105,16 @@ import { createCircle, uploadCircleFile } from '@/api/circle'
 import { useToastStore } from '@/stores/toast'
 import { unwrap } from '@/utils/response'
 
-const emit = defineEmits(['close', 'created'])
+const emit = defineEmits<{
+  close: []
+  created: [guid: string]
+}>()
 const toast = useToastStore()
 
 const form = ref({ name: '', description: '', maxMembers: 500 })
 
 // ===== 封面 =====
-const coverInput = ref(null)
+const coverInput = ref<HTMLInputElement | null>(null)
 const coverUploading = ref(false)
 const coverProgress = ref(0)
 const coverPreview = ref('') // fileUri（后端可用）或 objectURL（上传失败本地预览）
@@ -120,7 +123,7 @@ const coverUrl = ref('') // 真实可提交的 fileUri
 const coverIsVideo = computed(() => /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(coverPreview.value || ''))
 
 // ===== 头像 =====
-const avatarInput = ref(null)
+const avatarInput = ref<HTMLInputElement | null>(null)
 const avatarUploading = ref(false)
 const avatarPreview = ref('')
 const avatarUrl = ref('')
@@ -129,14 +132,15 @@ const avatarUrl = ref('')
 const cropOpen = ref(false)
 const cropMode = ref('avatar')
 const cropSrc = ref('')
-const cropFile = ref(null) // 原始文件（裁剪结果上传）
-const cropImg = ref(null)
-const cropper = ref(null)
+const cropFile = ref<File | null>(null) // 原始文件（裁剪结果上传）
+const cropImg = ref<HTMLImageElement | null>(null)
+const cropper = ref<Cropper | null>(null)
 const cropUploading = ref(false)
 
-function onCoverPick(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+function onCoverPick(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files && input.files[0]
+  input.value = ''
   if (!file) return
   const isImage = file.type.startsWith('image/')
   const isVideo = file.type.startsWith('video/')
@@ -160,9 +164,10 @@ function onCoverPick(e) {
   }
 }
 
-function onAvatarPick(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+function onAvatarPick(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files && input.files[0]
+  input.value = ''
   if (!file) return
   if (!file.type.startsWith('image/')) {
     toast.push('请选择图片文件', 'error')
@@ -242,7 +247,7 @@ function confirmCrop() {
 }
 
 // ===== 上传（拿到 fileUri 后写预览） =====
-async function uploadAvatar(file) {
+async function uploadAvatar(file: File) {
   avatarUploading.value = true
   try {
     const res = await uploadCircleFile(file, 'circle-avatar')
@@ -259,7 +264,7 @@ async function uploadAvatar(file) {
   }
 }
 
-async function uploadCover(file) {
+async function uploadCover(file: File) {
   coverUploading.value = true
   coverProgress.value = 0
   try {
