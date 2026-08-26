@@ -8,6 +8,10 @@ declare module '*.vue' {
 
 interface ImportMetaEnv {
   readonly VUE_APP_API_BASE_URL?: string;
+  readonly VUE_APP_TURN_URL?: string;
+  readonly VUE_APP_TURN_USERNAME?: string;
+  readonly VUE_APP_TURN_CREDENTIAL?: string;
+  readonly VUE_APP_TURN_REST_URL?: string;
 }
 
 interface ImportMeta {
@@ -19,6 +23,10 @@ declare namespace NodeJS {
   interface ProcessEnv {
     NODE_ENV?: string;
     VUE_APP_API_BASE_URL?: string;
+    VUE_APP_TURN_URL?: string;
+    VUE_APP_TURN_USERNAME?: string;
+    VUE_APP_TURN_CREDENTIAL?: string;
+    VUE_APP_TURN_REST_URL?: string;
   }
 }
 

@@ -2,45 +2,26 @@ import service from '@/axios';
 import { setToken, setRefreshToken, removeToken, removeRefreshToken } from '@/utils/auth';
 import type { TokenResult, OAuthProvider } from '@/types';
 
-/** 注册请求体 */
-export interface RegisterData {
-  email: string;
-  password: string;
-  code: string;
-}
-
-/** 邮箱登录请求体 */
+/** 邮箱登录请求体（统一登录/注册）：
+ * - 仅验证码登录：email + code（未注册邮箱自动注册并下发初始密码）
+ * - 密码登入：email + password + code（开启二次验证时 code 必填；关闭二次验证可省略 code） */
 export interface EmailLoginData {
   email: string;
-  password: string;
   code?: string;
+  password?: string;
 }
 
-// ==================== 邮箱注册/登录（后端 Identity：/api/identity/ready/identity/*） ====================
+// ==================== 邮箱登录（后端 Identity：/api/identity/ready/identity/*） ====================
 
-// 注册：POST /api/identity/ready/identity/Register { userEmail, userPassword, verificationCode }
-// 成功返回 200 { message: '注册成功' }；用户已存在/验证码错误返回 400
-export function register(data: RegisterData) {
-  return service.post('/api/identity/ready/identity/Register', {
-    userEmail: data.email,
-    userPassword: data.password,
-    verificationCode: data.code
-  });
-}
-
-// 邮箱登录：POST /api/identity/ready/identity/Login { email, password, code, ... }
-// code 为空 = 纯密码登录；传 code = 密码 + 邮箱验证码两步登录（后端校验并一次性消费）
-// 成功返回 { accessToken, refreshToken, tokenType, expiresAt, claims }；失败返回 200 + 空 body（null）
-export function login({ email, password, code = '' }: EmailLoginData) {
+// 登录：POST /api/identity/ready/identity/Login { email, code?, password? }
+// 携带密码走「密码登入」（开启二次验证的用户需同时传入 code）；仅携带 code 走「验证码登入/自动注册」。
+// 成功返回 { accessToken, refreshToken, tokenType, expiresAt, isNewUser }
+// 验证码/密码错误或账号锁定返回 401
+export function login({ email, code, password }: EmailLoginData) {
   return service.post('/api/identity/ready/identity/Login', {
     email,
-    password,
     code,
-    provider: null,
-    redirectUri: null,
-    clientId: null,
-    clientSecret: null,
-    grantType: null
+    password
   });
 }
 

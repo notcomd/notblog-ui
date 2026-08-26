@@ -40,3 +40,20 @@ export function changePassword(payload: ChangePasswordData) {
     code: null
   });
 }
+
+// ===== 二次验证（Identity：/api/identity/ready/identity/UserSafety，需认证） =====
+
+// 读取当前二次验证开关状态：GET .../UserSafety -> { isTwoFactorEnabled }
+export function getUserSafety() {
+  return service.get('/api/identity/ready/identity/UserSafety');
+}
+
+// 更新二次验证开关：POST .../UserSafety { isTwoFactorEnabled, password?, code? }
+// 关闭（置 false）为降级操作，后端要求携带 password 或 code 之一进行二次确认。
+export function updateUserSafety(isTwoFactorEnabled: boolean, password?: string, code?: string) {
+  return service.post('/api/identity/ready/identity/UserSafety', {
+    isTwoFactorEnabled,
+    password,
+    code
+  });
+}

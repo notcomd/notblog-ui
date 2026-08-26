@@ -182,6 +182,87 @@
           </form>
         </div>
 
+        <!-- 二次验证 -->
+        <div class="glass-card p-5">
+          <div class="flex items-start justify-between mb-1">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+              <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100">二次验证</h3>
+            </div>
+            <!-- 开关 -->
+            <button
+              type="button"
+              role="switch"
+              :aria-checked="twoFactorEnabled"
+              :aria-label="twoFactorEnabled ? '点击关闭二次验证' : '点击开启二次验证'"
+              :class="twoFactorEnabled ? 'bg-gradient-to-r from-amber-400 to-orange-500' : 'bg-zinc-300 dark:bg-zinc-600'"
+              class="relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1 disabled:opacity-60"
+              :disabled="toggleBusy"
+              @click="handleToggleTwoFactor"
+            >
+              <span
+                :class="twoFactorEnabled ? 'translate-x-5' : 'translate-x-0.5'"
+                class="absolute top-0.5 left-0 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200"
+              ></span>
+            </button>
+          </div>
+          <p class="text-xs text-zinc-500 dark:text-zinc-300 mb-4">
+            开启后使用密码登入需额外输入邮箱验证码；关闭二次验证需进行身份二次确认
+          </p>
+
+          <!-- 关闭二次验证的二次确认面板 -->
+          <div v-if="confirmOpen" class="space-y-3 p-3 rounded-[5%] bg-amber-50/70 dark:bg-zinc-800/50 border border-amber-200/70 dark:border-white/10">
+            <div class="flex gap-2">
+              <button
+                type="button"
+                class="flex-1 h-9 rounded-[5%] text-xs font-medium transition-colors"
+                :class="secConfirmMethod === 'password' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'bg-white/70 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-200 border border-white/60 dark:border-white/10'"
+                @click="secConfirmMethod = 'password'"
+              >
+                使用密码确认
+              </button>
+              <button
+                type="button"
+                class="flex-1 h-9 rounded-[5%] text-xs font-medium transition-colors"
+                :class="secConfirmMethod === 'code' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'bg-white/70 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-200 border border-white/60 dark:border-white/10'"
+                @click="secConfirmMethod = 'code'"
+              >
+                使用验证码确认
+              </button>
+            </div>
+
+            <!-- 密码确认 -->
+            <div v-if="secConfirmMethod === 'password'">
+              <input v-model="confirmPassword" type="password" placeholder="请输入密码确认" class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" autocomplete="current-password" />
+            </div>
+
+            <!-- 验证码确认 -->
+            <div v-else class="flex gap-2">
+              <input v-model="confirmCode" type="text" maxlength="9" placeholder="9 位验证码" class="flex-1 h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" @input="confirmCode = confirmCode.replace(/[^A-Za-z0-9]/g, '').slice(0, 9)" />
+              <button
+                type="button"
+                class="px-3 h-11 rounded-[5%] text-xs font-medium whitespace-nowrap transition-colors"
+                :class="codeCountdown > 0 ? 'bg-amber-100 text-amber-500 cursor-not-allowed dark:bg-zinc-800 dark:text-amber-300' : 'bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:brightness-110'"
+                :disabled="codeCountdown > 0 || toggleBusy"
+                @click="handleSendSecurityCode"
+              >
+                {{ codeCountdown > 0 ? `${codeCountdown}s 后重发` : '获取验证码' }}
+              </button>
+            </div>
+
+            <p v-if="securityMsg" class="text-xs" :class="securityError ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'">{{ securityMsg }}</p>
+
+            <button
+              type="button"
+              class="w-full h-11 rounded-[5%] bg-red-500/90 text-white text-sm font-medium hover:bg-red-500 transition-colors disabled:opacity-50"
+              :disabled="toggleBusy"
+              @click="handleConfirmDisable"
+            >
+              {{ toggleBusy ? '提交中...' : '确认关闭二次验证' }}
+            </button>
+          </div>
+        </div>
+
         <!-- OAuth 绑定 -->
         <div class="glass-card p-5">
           <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 mb-4 flex items-center gap-2">
@@ -217,7 +298,8 @@ import { useRoute, useRouter } from 'vue-router'
 import PostGrid from '@/components/post/PostGrid.vue'
 import UserCard from '@/components/user/UserCard.vue'
 import { getUserPosts } from '@/api/tweet'
-import { getUserFavorites, getUserFiles, getLinkedAccounts, unlinkAccount, changePassword } from '@/api/space'
+import { getUserFavorites, getUserFiles, getLinkedAccounts, unlinkAccount, changePassword, getUserSafety, updateUserSafety } from '@/api/space'
+import { sendEmailCode } from '@/api/auth'
 import { getFollowing, follow, unfollow } from '@/api/follow'
 import { getMyUserInfo } from '@/api/userinfo'
 import { createSession } from '@/api/chat'
@@ -489,6 +571,118 @@ async function submitPassword(): Promise<void> {
   }
 }
 
+// ===== 二次验证开关（GET/POST /api/identity/ready/identity/UserSafety，需认证） =====
+const twoFactorEnabled = ref(false) // 是否已开启二次验证
+const confirmOpen = ref(false) // 关闭二次验证的二次确认面板是否展开
+const secConfirmMethod = ref<'password' | 'code'>('password') // 二次确认方式
+const confirmPassword = ref('') // 密码二次确认输入
+const confirmCode = ref('') // 验证码二次确认输入
+const codeCountdown = ref(0) // 验证码重发倒计时
+const securityMsg = ref('') // 二次验证操作反馈信息
+const securityError = ref(false) // securityMsg 是否为错误（红色）样式
+const toggleBusy = ref(false) // 二次验证操作进行中（禁用开关及各提交按钮）
+let securityCodeTimer: ReturnType<typeof setInterval> | null = null
+
+// 读取二次验证开关状态
+async function loadSafety(): Promise<void> {
+  if (!isSelf.value) return
+  try {
+    const res = await getUserSafety()
+    const d: any = res && res.data ? res.data : res
+    twoFactorEnabled.value = !!d && !!d.IsTwoFactorEnabled
+  } catch (e) {
+    twoFactorEnabled.value = false
+  }
+}
+
+// 统一提交二次验证开关变更；关闭（降级）时携带密码或验证码二次确认
+async function setTwoFactor(target: boolean, password?: string, code?: string): Promise<boolean> {
+  toggleBusy.value = true
+  securityError.value = false
+  securityMsg.value = ''
+  try {
+    await updateUserSafety(target, password, code)
+    twoFactorEnabled.value = target
+    confirmOpen.value = false
+    confirmPassword.value = ''
+    confirmCode.value = ''
+    toast.push(target ? '已开启二次验证' : '已关闭二次验证', 'success')
+    return true
+  } catch (e) {
+    const data = e.response && e.response.data
+    securityError.value = true
+    securityMsg.value = (data && (data.error || data.message)) || '操作失败，请稍后重试'
+    return false
+  } finally {
+    toggleBusy.value = false
+  }
+}
+
+// 开关切换：开启直接提交；关闭需先展开二次确认面板
+function handleToggleTwoFactor(): void {
+  if (toggleBusy.value) return
+  securityMsg.value = ''
+  if (twoFactorEnabled.value) {
+    // 关闭 → 展开（或收起）二次确认面板，并清空已输入内容
+    confirmOpen.value = !confirmOpen.value
+    if (!confirmOpen.value) {
+      confirmPassword.value = ''
+      confirmCode.value = ''
+    }
+    return
+  }
+  void setTwoFactor(true)
+}
+
+// 发送邮箱二次确认验证码（复用登录验证码通道）
+async function handleSendSecurityCode(): Promise<void> {
+  if (codeCountdown.value > 0 || toggleBusy.value) return
+  if (!auth.user || !auth.user.email) {
+    securityError.value = true
+    securityMsg.value = '无法获取当前账号邮箱'
+    return
+  }
+  securityError.value = false
+  securityMsg.value = ''
+  try {
+    await sendEmailCode(auth.user.email)
+    codeCountdown.value = 60
+    if (securityCodeTimer) clearInterval(securityCodeTimer)
+    securityCodeTimer = setInterval(() => {
+      codeCountdown.value--
+      if (codeCountdown.value <= 0) {
+        if (securityCodeTimer) clearInterval(securityCodeTimer)
+        securityCodeTimer = null
+      }
+    }, 1000)
+    securityMsg.value = '验证码已发送至你的邮箱'
+  } catch (e) {
+    const data = e.response && e.response.data
+    securityError.value = true
+    securityMsg.value = (data && (data.error || data.message)) || '验证码发送失败，请稍后重试'
+  }
+}
+
+// 确认关闭二次验证
+async function handleConfirmDisable(): Promise<void> {
+  if (toggleBusy.value) return
+  if (secConfirmMethod.value === 'password') {
+    if (!confirmPassword.value.trim()) {
+      securityError.value = true
+      securityMsg.value = '请输入当前密码'
+      return
+    }
+    await setTwoFactor(false, confirmPassword.value)
+  } else {
+    if (confirmCode.value.length !== 9) {
+      securityError.value = true
+      securityMsg.value = '请输入 9 位验证码'
+      return
+    }
+    await setTwoFactor(false, undefined, confirmCode.value)
+  }
+}
+
 async function unlink(a: any): Promise<void> {
   try {
     await unlinkAccount(a.provider, a.providerUserId)
@@ -528,6 +722,12 @@ function hideImg(e: Event) {
 watch(() => route.params.id, () => {
   loadUser()
   loadOverview()
+  loadSafety()
+})
+
+// 进入「安全」tab 时加载二次验证开关状态（每页一次性加载即可，切换用户时经上面 watch 刷新）
+watch(activeTab, (v) => {
+  if (v === 'security') loadSafety()
 })
 
 onMounted(() => {
@@ -535,5 +735,15 @@ onMounted(() => {
   loadOverview()
   loadFiles()
   loadLinked()
+  loadSafety()
+  window.addEventListener('beforeunload', clearSecurityTimer)
 })
+
+// 页面卸载时清理验证码倒计时定时器
+function clearSecurityTimer(): void {
+  if (securityCodeTimer) {
+    clearInterval(securityCodeTimer)
+    securityCodeTimer = null
+  }
+}
 </script>

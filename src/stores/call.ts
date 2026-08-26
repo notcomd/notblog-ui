@@ -4,6 +4,7 @@ import type { HubConnection } from '@microsoft/signalr';
 import { connectCallSignalR } from '@/socket/callSignalR';
 import { useToastStore } from '@/stores/toast';
 import { useAuthStore } from '@/stores/auth';
+import { getIceServers } from '@/utils/rtcConfig';
 
 // ============================================================
 // 语音/视频通话 store（CallHub，WebRTC over SignalR，Mesh 全网状）
@@ -60,8 +61,7 @@ interface CallState {
 // 每个远端用户一个 RTCPeerConnection（非响应式，避免 proxy 开销）
 const pcs = new Map<string, RTCPeerConnection>();
 let bound = false; // 事件绑定只做一次
-
-const ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
+let iceServersCache: RTCIceServer[] | null = null; // ICE 服务器配置（首次解析后缓存）
 
 export const useCallStore = defineStore('call', {
   state: (): CallState => ({
@@ -273,10 +273,12 @@ export const useCallStore = defineStore('call', {
       }
     },
 
-    createPc(userId: string): RTCPeerConnection {
+    async createPc(userId: string): Promise<RTCPeerConnection> {
       const key = String(userId);
       if (pcs.has(key)) return pcs.get(key) as RTCPeerConnection;
-      const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+      // ICE 服务器列表（含 TURN）只解析一次并缓存
+      if (!iceServersCache) iceServersCache = await getIceServers();
+      const pc = new RTCPeerConnection({ iceServers: iceServersCache });
       pcs.set(key, pc);
 
       // 本地媒体轨道（若已获取）
@@ -316,7 +318,7 @@ export const useCallStore = defineStore('call', {
 
     async sendOfferTo(userId: string): Promise<void> {
       if (!this.localStream) return;
-      const pc = this.createPc(userId);
+      const pc = await this.createPc(userId);
       try {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
@@ -335,7 +337,7 @@ export const useCallStore = defineStore('call', {
       const from = String(signal.fromUserId);
       try {
         if (signal.kind === 'offer') {
-          const pc = this.createPc(from);
+          const pc = await this.createPc(from);
           await pc.setRemoteDescription({ type: 'offer', sdp: signal.sdp });
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
@@ -349,7 +351,7 @@ export const useCallStore = defineStore('call', {
           const pc = pcs.get(from);
           if (pc) await pc.setRemoteDescription({ type: 'answer', sdp: signal.sdp });
         } else if (signal.kind === 'ice') {
-          const pc = this.createPc(from);
+          const pc = await this.createPc(from);
           await pc.setRemoteDescription({
             type: 'candidate',
             candidate: {
