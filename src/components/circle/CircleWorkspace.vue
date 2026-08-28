@@ -36,6 +36,9 @@
 
         <!-- 成员 -->
         <CircleMemberTab v-else-if="circleTab === 'members'" :current="current" :my-role="myRole" @set-role="onSetRole" @remove-member="onRemoveMember" />
+
+        <!-- 聊天 -->
+        <CircleChatTab v-else-if="circleTab === 'chat'" :current="current" />
       </div>
     </template>
 
@@ -59,6 +62,7 @@ import CircleManagePanel from '@/components/circle/CircleManagePanel.vue'
 import CircleAnnounceTab from '@/components/circle/CircleAnnounceTab.vue'
 import CircleResourceTab from '@/components/circle/CircleResourceTab.vue'
 import CircleMemberTab from '@/components/circle/CircleMemberTab.vue'
+import CircleChatTab from '@/components/circle/CircleChatTab.vue'
 import { getCirclePosts, setCircleMemberRole, leaveCircle } from '@/api/circle'
 import { useToastStore } from '@/stores/toast'
 

@@ -101,7 +101,7 @@ const myId = computed(() => chat.currentUserId ? chat.currentUserId() : '')
 const activeTitle = computed(() => active.value ? (active.value.sessionName || '会话') : '轻芒会话')
 const activeSubtitle = computed(() => {
   if (!active.value) return '选择左侧会话开始聊天'
-  if (active.value.groupId) return `${active.value.participants ? active.value.participants.length : 0} 人`
+  if (active.value.groupId || active.value.circleId) return `${active.value.participants ? active.value.participants.length : 0} 人`
   const peerId = chat.peerIdOf(active.value.sessionId)
   return chat.onlineUsers[String(peerId)] ? '在线' : '离线'
 })

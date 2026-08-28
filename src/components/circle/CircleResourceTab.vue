@@ -72,5 +72,9 @@ async function load() {
   }
 }
 
+function preview(i: number) {
+  if (i >= 0 && i < resources.value.length) previewIndex.value = i
+}
+
 function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 </script>

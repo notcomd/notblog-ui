@@ -57,6 +57,12 @@ export function getCirclePosts(circleGuid: string, params: QueryParams = {}) {
   });
 }
 
+// 社区聊天会话：GET /api/circles/{circleGuid}/session -> ApiResponse<SessionDto{sessionId, sessionType, circleId, ...}>
+// 返回社区对应的 Channel 聊天会话，仅社区成员可访问
+export function getCircleSession(circleGuid: string) {
+  return service.get(`/api/circles/${circleGuid}/session`);
+}
+
 function mapCommunityPost(p: any) {
   return {
     ...p,
