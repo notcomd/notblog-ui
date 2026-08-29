@@ -7,7 +7,7 @@
       <button class="px-4 h-9 shrink-0 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all" @click="router.push('/login')">立即登录</button>
     </div>
 
-    <PostGrid :loader="feedTab.tab === 'latest' ? getTimeline : getTrending" :key="feedTab.tab" :empty-text="emptyText" />
+    <PostGrid :loader="feedLoader" :key="feedTab.tab" :empty-text="emptyText" />
   </div>
 </template>
 
@@ -32,4 +32,10 @@ const emptyText = computed<string>(() => {
   if (!auth.isLoggedIn()) return '登录后查看最新动态与更多内容'
   return feedTab.tab === 'latest' ? '暂无最新动态，去看看热门内容吧' : '暂无热门内容'
 })
+
+// PostGrid loader：接收分页参数并返回数据体（axios service 返回 AxiosResponse，需取 .data）
+function feedLoader(params: { page: number; pageSize: number }): Promise<unknown> {
+  const fn = feedTab.tab === 'latest' ? getTimeline : getTrending
+  return fn(params).then((res: any) => res.data)
+}
 </script>

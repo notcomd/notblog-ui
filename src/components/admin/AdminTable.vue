@@ -102,8 +102,9 @@ const emit = defineEmits<{
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const colspan = computed(() => props.columns.length + (props.selectable ? 1 : 0) + 1)
 
-function rowKey(row: Record<string, unknown>, index: number): unknown {
-  return row[props.rowKeyField] !== undefined ? row[props.rowKeyField] : index
+function rowKey(row: Record<string, unknown>, index: number): PropertyKey {
+  const key = row[props.rowKeyField]
+  return key !== undefined ? (key as PropertyKey) : index
 }
 
 const allSelected = computed(() => props.rows.length > 0 && props.rows.every(r => props.selected.includes(r[props.rowKeyField])))

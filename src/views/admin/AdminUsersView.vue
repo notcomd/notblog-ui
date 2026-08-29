@@ -40,8 +40,8 @@
 
       <template #cell-userName="{ row }">
         <div class="flex items-center gap-2.5">
-          <img v-if="row.imageCover" :src="row.imageCover" alt="" class="w-9 h-9 rounded-full object-cover border border-white/60 dark:border-white/10" @error="hideImg" />
-          <span v-else class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs">{{ (row.userName || '?').slice(0, 1) }}</span>
+          <img v-if="row.imageCover" :src="row.imageCover as string" alt="" class="w-9 h-9 rounded-full object-cover border border-white/60 dark:border-white/10" @error="hideImg" />
+          <span v-else class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs">{{ String(row.userName || '?').slice(0, 1) }}</span>
           <div>
             <div class="font-medium text-zinc-700 dark:text-zinc-200">{{ row.userName }}</div>
             <div class="text-[11px] text-zinc-400">{{ row.userEmail }}</div>
@@ -50,15 +50,15 @@
       </template>
 
       <template #cell-status="{ row }">
-        <span class="text-xs px-2 py-1 rounded-full font-medium" :class="statusClass(row.status)">{{ statusText(row.status) }}</span>
+        <span class="text-xs px-2 py-1 rounded-full font-medium" :class="statusClass(row.status as string)">{{ statusText(row.status as string) }}</span>
       </template>
 
       <template #cell-createDatetime="{ row }">
-        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ relativeTime(row.createDatetime) }}</span>
+        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ relativeTime(row.createDatetime as string | number | Date) }}</span>
       </template>
 
       <template #cell-lastOnline="{ row }">
-        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ row.lastOnline ? relativeTime(row.lastOnline) : '离线' }}</span>
+        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ row.lastOnline ? relativeTime(row.lastOnline as string | number | Date) : '离线' }}</span>
       </template>
 
       <template #actions="{ row }">
@@ -205,7 +205,7 @@ async function load(p?: number): Promise<void> {
   loading.value = true
   page.value = p || 1
   try {
-    const res = await getAdminUsers({ page: page.value, pageSize, keyword: keyword.value, status: status.value })
+    const res = await getAdminUsers()
     const data: any = res && res.data ? res.data : res
     users.value = data.items || data.list || []
     total.value = data.totalCount !== undefined ? data.totalCount : (data.total || users.value.length)
@@ -227,7 +227,7 @@ function banUser(row: any): void {
 
 async function submitBan(reason: string): Promise<void> {
   try {
-    await banAdminUser(banTarget.value.userGuid, { reason, duration: banDuration.value })
+    await banAdminUser()
     toast.push(`已封禁 ${banTarget.value.userName}`, 'success')
     banTarget.value = null
     load(page.value)
@@ -242,7 +242,7 @@ function deleteUser(row: any): void {
 
 async function submitDelete(reason: string): Promise<void> {
   try {
-    await deleteAdminUser(deleteTarget.value.userGuid)
+    await deleteAdminUser()
     toast.push(`已删除 ${deleteTarget.value.userName} 及其全部数据`, 'success')
     deleteTarget.value = null
     load(page.value)
@@ -253,7 +253,7 @@ async function submitDelete(reason: string): Promise<void> {
 
 async function submitAdd(): Promise<void> {
   try {
-    await addAdminUser(addForm.value)
+    await addAdminUser()
     toast.push('用户创建成功', 'success')
     showAdd.value = false
     addForm.value = { userName: '', userEmail: '', password: '', role: 'Member' }

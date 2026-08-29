@@ -27,10 +27,10 @@
       @page-change="load($event)"
     >
       <template #cell-category="{ row }">
-        <span class="text-xs px-2 py-1 rounded-full font-medium" :class="categoryClass(row.category)">{{ categoryText(row.category) }}</span>
+        <span class="text-xs px-2 py-1 rounded-full font-medium" :class="categoryClass(Number(row.category))">{{ categoryText(Number(row.category)) }}</span>
       </template>
       <template #cell-createTime="{ row }">
-        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ relativeTime(row.createTime) }}</span>
+        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ relativeTime(row.createTime as string | number | Date) }}</span>
       </template>
       <template #cell-status="{ row }">
         <span class="text-xs px-2 py-1 rounded-full font-medium" :class="row.status === 'Pending' ? 'bg-amber-400/15 text-amber-600 dark:text-amber-400' : 'bg-emerald-400/15 text-emerald-500'">

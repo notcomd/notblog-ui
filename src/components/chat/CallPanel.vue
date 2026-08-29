@@ -40,7 +40,7 @@
     <!-- ===== 通话中 ===== -->
     <div v-else-if="call.status === 'active'" class="w-full h-full relative flex items-center justify-center">
       <!-- 远端视频（视频通话） -->
-      <div v-if="hasVideo && remoteVideos.length" class="w-full h-full p-6 grid gap-3" :class="remoteVideos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'">
+      <div v-if="hasVideo && Object.keys(remoteVideos).length" class="w-full h-full p-6 grid gap-3" :class="Object.keys(remoteVideos).length === 1 ? 'grid-cols-1' : 'grid-cols-2'">
         <video
           v-for="(stream, uid) in remoteVideos"
           :key="uid"

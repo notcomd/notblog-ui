@@ -125,7 +125,7 @@ const members = computed(() => {
 // 可通话会话：排除通知会话（notifyGuid）；后端限制私聊/群聊/频道可发起通话
 const canCall = computed(() => !!active.value && !active.value.notifyGuid)
 
-function startCall(type: string) {
+function startCall(type: 'Audio' | 'Video') {
   if (!active.value) return
   call.startCall(active.value.sessionId, type)
 }
@@ -239,7 +239,8 @@ watch(() => chat.activeSessionId, async (id) => {
     scrollToBottom(true)
   }
 })
-watch(() => route.params.sessionId, async (id) => {
+watch(() => route.params.sessionId, async (rawId) => {
+  const id = typeof rawId === 'string' ? rawId : (rawId as string[])?.[0] ?? ''
   if (id) {
     const s = chat.sessions.find(x => x.sessionId === id)
     if (s) {
@@ -265,7 +266,8 @@ watch(() => route.params.sessionId, async (id) => {
 onMounted(async () => {
   await Promise.all([chat.loadSessions(), chat.loadFriends(), chat.loadGroups(), chat.loadUnread()])
   await chat.initRealtime()
-  const id = route.params.sessionId
+  const rawId = route.params.sessionId
+  const id = typeof rawId === 'string' ? rawId : (rawId as string[])?.[0] ?? ''
   if (id) {
     const s = chat.sessions.find(x => x.sessionId === id)
     if (s) {

@@ -312,7 +312,10 @@ const router = useRouter()
 const auth = useAuthStore()
 const toast = useToastStore()
 
-const userId = computed(() => route.params.id)
+const userId = computed(() => {
+  const v = route.params.id
+  return typeof v === 'string' ? v : (v as string[])?.[0] ?? ''
+})
 // auth store 已把 JWT claims 归一化为 user.id（NameIdentifier→id），必须用 id 比较
 const isSelf = computed(() => !!auth.user && String(auth.user.id) === String(userId.value))
 
@@ -404,8 +407,8 @@ function worksLoader(params: any): Promise<any> {
   return getUserPosts(userId.value, params)
 }
 
-function favoritesLoader(params: any) {
-  return getUserFavorites(params)
+function favoritesLoader() {
+  return getUserFavorites()
 }
 
 async function loadUser(): Promise<void> {
@@ -526,7 +529,7 @@ function onCoverChanged(url: string): void {
 
 async function loadFiles(): Promise<void> {
   try {
-    const res = await getUserFiles({ type: fileType.value })
+    const res = await getUserFiles()
     const data: any = res && res.data ? res.data : res
     files.value = data.items || data.list || []
   } catch (e) {

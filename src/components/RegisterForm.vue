@@ -213,8 +213,9 @@ const handleEmailLogin = async (): Promise<void> => {
       email: email.value,
       code: generatecode.value
     })
-    saveLoginResult(res)
-    if (res && res.isNewUser) {
+    const data = res.data
+    saveLoginResult(data)
+    if (data && data.isNewUser) {
       errorMessage.value = '账号已自动注册，初始密码已发送到您的邮箱，请注意查收。'
     }
     router.push('/')

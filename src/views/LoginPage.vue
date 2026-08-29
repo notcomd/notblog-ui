@@ -98,7 +98,7 @@ onMounted(async () => {
     sessionStorage.removeItem('oauth_provider')
     try {
       const res = await oauthCallback(provider, code as string, state as string, window.location.origin + '/login')
-      if (saveLoginResult(res)) {
+      if (saveLoginResult(res && res.data)) {
         router.replace('/home')
       } else {
         console.error('OAuth 登录失败：响应缺少 accessToken', res)

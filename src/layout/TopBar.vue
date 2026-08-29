@@ -75,7 +75,7 @@
             @click.stop="userMenuOpen = !userMenuOpen"
           >
             <img
-              :src="auth.user && auth.user.avatar ? auth.user.avatar : avatarFallback"
+              :src="userAvatar"
               alt="avatar"
               class="w-9 h-9 rounded-full object-cover border-2 border-white/60 dark:border-white/10"
             />
@@ -93,7 +93,7 @@
               <div class="px-3 pt-2 pb-3">
                 <div class="flex items-center gap-3">
                   <img
-                    :src="auth.user && auth.user.avatar ? auth.user.avatar : avatarFallback"
+                    :src="userAvatar"
                     alt="avatar"
                     class="w-10 h-10 rounded-full object-cover border-2 border-white/60 dark:border-white/10"
                   />
@@ -167,7 +167,7 @@ import { useRoute, useRouter } from 'vue-router'
 withDefaults(defineProps<{ blurred?: boolean }>(), { blurred: false })
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
-import { useFeedTabStore } from '@/stores/feedTab'
+import { useFeedTabStore, type FeedTab } from '@/stores/feedTab'
 import SkinPanel from '@/components/common/SkinPanel.vue'
 import NotificationPanel from '@/components/common/NotificationPanel.vue'
 import { getMyUserInfo, signIn } from '@/api/userinfo'
@@ -196,7 +196,7 @@ const titleItem = computed(() => {
 const feedTab = useFeedTabStore()
 const isHome = computed(() => route.path === '/home')
 
-function onTabSwitch(t: string): void {
+function onTabSwitch(t: FeedTab): void {
   // 最新 Tab 需要登录
   if (t === 'latest' && !auth.isLoggedIn()) {
     toast.push('请先登录后再查看最新动态', 'info')
@@ -209,6 +209,12 @@ function onTabSwitch(t: string): void {
 const unread = ref(0) // 通知未读数（GET /api/notifications/unread-count）
 const notifOpen = ref(false) // 通知下拉面板
 const avatarFallback = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#fbbf24"/><text x="50" y="62" font-size="40" text-anchor="middle" fill="white">芒</text></svg>')
+
+// 用户头像：CurrentUser 无 avatar 字段，从 JWT 派生的 user 可能带扩展字段，仅作展示
+const userAvatar = computed<string>(() => {
+  const u = auth.user as { id: string; email: string; name: string; role: string; avatar?: string } | null
+  return (u && u.avatar) || avatarFallback
+})
 
 // ==================== 用户下拉菜单（点击展开/关闭） ====================
 const userMenuOpen = ref(false)

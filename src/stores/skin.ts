@@ -175,7 +175,7 @@ export const useSkinStore = defineStore('skin', () => {
     let fileId = null;
     let localOnly = false;
     try {
-      const res = await uploadBackground(result.blob);
+      const res = await uploadBackground(new File([result.blob], 'wallpaper.webp', { type: 'image/webp' }));
       const data = res?.data?.data ?? res?.data ?? res;
       if (data && data.fileUri) {
         url = data.fileUri;

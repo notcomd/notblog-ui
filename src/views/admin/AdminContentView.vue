@@ -181,9 +181,10 @@ async function load(p: number): Promise<void> {
   page.value = p || 1
   try {
     // 博客 Tab：Markdown 服务审核（真实端点 /api/markdown/list + approve/reject）
-    const res = tab.value === 'blog'
+    const pendingParams = { page: page.value, pageSize, status: status.value, sortBy: sortBy.value, keyword: keyword.value, type: tab.value }
+    const res = await (tab.value === 'blog'
       ? getMarkdownDocs({ page: page.value, pageSize, keyword: keyword.value })
-      : getPendingTweets({ page: page.value, pageSize, status: status.value, sortBy: sortBy.value, keyword: keyword.value, type: tab.value })
+      : getPendingTweets(pendingParams))
     const data = res && res.data ? res.data : res
     // 客户端排序（最多举报）
     let list = data.items || data.list || []
@@ -239,7 +240,7 @@ function openBlock(t: any): void {
 
 async function doBlock(): Promise<void> {
   try {
-    await blockTweet(blockTarget.value.tweetGuid, blockReason.value)
+    await blockTweet()
     toast.push('内容已屏蔽（全站不可见）', 'success')
     blockTarget.value = null
     load(page.value)
@@ -254,7 +255,7 @@ function openDelete(t: any): void {
 
 async function doDelete(reason: string): Promise<void> {
   try {
-    await deleteTweet(deleteTarget.value.tweetGuid)
+    await deleteTweet()
     toast.push('内容已永久删除', 'success')
     deleteTarget.value = null
     load(page.value)

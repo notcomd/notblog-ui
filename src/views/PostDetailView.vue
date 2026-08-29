@@ -275,7 +275,7 @@ const isAuthor = computed(() => !!authorId.value && !!auth.user && auth.user.id 
 interface BodyBlock { type: 'quote' | 'p'; text: string }
 const bodyBlocks = computed<BodyBlock[]>(() => {
   const body: string = (tweet.value && tweet.value.body) || tweet.value.content || ''
-  return body.split('\n').map(line => {
+  return body.split('\n').map((line): BodyBlock => {
     const t = line.trim()
     if (t.startsWith('> ')) return { type: 'quote', text: t.slice(2) }
     return { type: 'p', text: line }
@@ -301,7 +301,8 @@ function highlightMentions(text: string): MentionSeg[] {
 async function load(): Promise<void> {
   loading.value = true
   try {
-    const res = await getTweetDetail(route.params.id)
+    const rawId = route.params.id
+    const res = await getTweetDetail(typeof rawId === 'string' ? rawId : (rawId as string[])?.[0] ?? '')
     const data: any = res && res.data ? res.data : res
     tweet.value = data.tweet || data
     detail.value = {
@@ -410,7 +411,7 @@ async function submitReportReport(): Promise<void> {
     await submitReport({
       targetType: 'Tweet',
       targetGuid: tweet.value.tweetGuid,
-      category: reportCategory.value,
+      category: String(reportCategory.value),
       reason: reportReason.value.trim() || REPORT_CATEGORIES[reportCategory.value],
       evidenceUrls: []
     })

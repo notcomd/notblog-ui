@@ -175,8 +175,8 @@ onMounted(async () => {
   if (!theme.isDark) theme.toggle()
   try {
     const res = await getAdminStats()
-    const data = res && res.data ? res.data : res
-    pendingCount.value = (data && (data.pendingTweets || 0)) + (data && (data.pendingReports || 0))
+    const data = (res && res.data ? res.data : res) as { pendingTweets?: number; pendingReports?: number }
+    pendingCount.value = (data.pendingTweets || 0) + (data.pendingReports || 0)
   } catch (e) { /* 忽略 */ }
 })
 

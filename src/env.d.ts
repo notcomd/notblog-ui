@@ -38,6 +38,5 @@ declare module '*.gif'
 declare module '*.svg'
 declare module '*.webp'
 
-// 缺少类型声明的第三方模块
-declare module '@microsoft/signalr'
+// 缺少类型声明的第三方模块（@microsoft/signalr 已自带完整类型声明，无需 shim）
 declare module 'cropperjs';

@@ -94,17 +94,17 @@ const wordCount = computed(() => {
 })
 
 const toolButtons = [
-  { icon: '𝐁', tip: '加粗 **文本**', syntax: '**加粗文字**' },
-  { icon: '𝐼', tip: '斜体 *文本*', syntax: '*斜体文字*' },
-  { icon: 'S̶', tip: '删除线 ~~文本~~', syntax: '~~删除线~~' },
-  { icon: 'H', tip: '标题 ## 二级标题', syntax: '## 标题' },
-  { icon: '❝', tip: '引用 > 引用内容', syntax: '> 引用内容' },
-  { icon: '•', tip: '无序列表 - 项目', syntax: '- 列表项目' },
-  { icon: '1.', tip: '有序列表 1. 项目', syntax: '1. 列表项目' },
-  { icon: '</>', tip: '代码块 ```js', syntax: '```js\nconsole.log("hello")\n```' },
-  { icon: '🔗', svg: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>', tip: '链接 [文字](url)', syntax: '[链接文字](https://)' },
-  { icon: '☰', tip: '表格', syntax: '| 列1 | 列2 |\n| --- | --- |\n| 内容 | 内容 |' },
-  { icon: '—', tip: '分隔线 ---', syntax: '\n---\n' }
+  { label: 'bold', icon: '𝐁', tip: '加粗 **文本**', syntax: '**加粗文字**' },
+  { label: 'italic', icon: '𝐼', tip: '斜体 *文本*', syntax: '*斜体文字*' },
+  { label: 'strike', icon: 'S̶', tip: '删除线 ~~文本~~', syntax: '~~删除线~~' },
+  { label: 'heading', icon: 'H', tip: '标题 ## 二级标题', syntax: '## 标题' },
+  { label: 'quote', icon: '❝', tip: '引用 > 引用内容', syntax: '> 引用内容' },
+  { label: 'ul', icon: '•', tip: '无序列表 - 项目', syntax: '- 列表项目' },
+  { label: 'ol', icon: '1.', tip: '有序列表 1. 项目', syntax: '1. 列表项目' },
+  { label: 'code', icon: '</>', tip: '代码块 ```js', syntax: '```js\nconsole.log("hello")\n```' },
+  { label: 'link', icon: '🔗', svg: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>', tip: '链接 [文字](url)', syntax: '[链接文字](https://)' },
+  { label: 'table', icon: '☰', tip: '表格', syntax: '| 列1 | 列2 |\n| --- | --- |\n| 内容 | 内容 |' },
+  { label: 'hr', icon: '—', tip: '分隔线 ---', syntax: '\n---\n' }
 ]
 
 // ---------- 文本操作（使用组件内 ref，不依赖全局 DOM 查询） ----------

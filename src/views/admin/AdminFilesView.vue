@@ -123,8 +123,8 @@ function switchType(t: string): void {
 
 async function load(): Promise<void> {
   try {
-    const res = await getAdminFiles({ type: type.value, keyword: keyword.value })
-    const data = res && res.data ? res.data : res
+    const res = await getAdminFiles()
+    const data = (res && res.data ? res.data : res) as { items?: any[]; list?: any[] }
     files.value = data.items || data.list || []
   } catch (e) {
     files.value = []
@@ -145,7 +145,7 @@ function openDelete(f: any): void {
 
 async function doDelete(reason: string): Promise<void> {
   try {
-    await deleteAdminFile(deleteTarget.value.fileId)
+    await deleteAdminFile()
     files.value = files.value.filter(f => f.fileId !== deleteTarget.value.fileId)
     toast.push('文件已永久删除', 'success')
     deleteTarget.value = null

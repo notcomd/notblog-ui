@@ -152,7 +152,7 @@ const handleSubmit = async () => {
     // 两步登录：邮箱 + 密码 + 验证码（后端校验并一次性消费验证码）
     // 成功返回 { accessToken, ... }；失败返回 200 + 空 body（null）
     const res = await login({ email: target.value, password, code: code.value })
-    if (saveLoginResult(res)) {
+    if (saveLoginResult(res && res.data)) {
       // 清除内存中的密码后进入主页
       window.history.replaceState({}, '')
       router.replace('/home')

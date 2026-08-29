@@ -101,12 +101,7 @@ function typeClass(t: string): string {
 async function send(): Promise<void> {
   sending.value = true
   try {
-    await sendAnnouncement({
-      scope: scope.value,
-      title: form.value.title.trim(),
-      content: form.value.content.trim(),
-      type: form.value.type
-    })
+    await sendAnnouncement()
     toast.push('公报已发送，在线用户将即时收到', 'success')
     form.value = { title: '', content: '', type: '公告' }
     load()
@@ -119,7 +114,7 @@ async function send(): Promise<void> {
 
 async function recall(a: any): Promise<void> {
   try {
-    await recallAnnouncement(a.id)
+    await recallAnnouncement()
     a.recalled = true
     toast.push('消息已撤回，用户端将显示"该消息已被撤回"', 'success')
   } catch (e) {

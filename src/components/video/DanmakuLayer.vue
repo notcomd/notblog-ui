@@ -10,7 +10,7 @@
       @click.stop="likeDanmaku(d)"
       @contextmenu.prevent.stop="openMenu($event, d)"
       @touchstart.passive="touchStart($event, d)"
-      @touchend="touchEnd($event, d)"
+      @touchend="touchEnd()"
     >{{ d.body }}</div>
     <!-- 右键/长按菜单 -->
     <div v-if="menu" class="danmaku-menu pointer-events-auto" :style="{ left: menu.x + 'px', top: menu.y + 'px' }">
@@ -172,7 +172,7 @@ function likeDanmaku(d: Barrage) {
   // 热门弹幕停留时间延长（重新设置移除计时器由 CSS 动画控制，这里仅更新样式）
 }
 
-function openMenu(e: MouseEvent, d: Barrage) {
+function openMenu(e: { clientX: number; clientY: number }, d: Barrage) {
   menu.value = { x: Math.min(e.clientX, window.innerWidth - 140), y: e.clientY, d }
 }
 

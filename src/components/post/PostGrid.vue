@@ -53,6 +53,30 @@ interface FeedData {
   total?: number
 }
 
+// 与 PostCard 的 PostItem 结构保持一致（含 tweetGuid 必填），仅用于本地类型化
+interface PostAuthor {
+  userName?: string
+  name?: string
+  nickname?: string
+  avatar?: string
+}
+
+interface PostItem {
+  tweetGuid: string
+  content?: string
+  isVideo?: boolean
+  isLiked?: boolean
+  isFavorited?: boolean
+  likeCount?: number
+  favoriteCount?: number
+  mediaUrls?: string[]
+  publishTime?: string | number
+  createTime?: string | number
+  visibility?: string
+  author?: PostAuthor
+  [key: string]: unknown
+}
+
 interface Props {
   // 数据加载函数：(page, size) => Promise<{ list, total, page, size }>
   loader: (params: LoaderParams) => Promise<unknown>
@@ -62,7 +86,7 @@ const props = withDefaults(defineProps<Props>(), {
   emptyText: '还没有内容，快来发布第一条吧～'
 })
 
-const posts = ref<unknown[]>([])
+const posts = ref<PostItem[]>([])
 const loading = ref(false)
 const page = ref(0)
 const size = 9
@@ -84,7 +108,7 @@ async function loadMore(reset = false) {
     const res: unknown = await props.loader({ page: page.value + 1, pageSize: size })
     const data = (res && (res as { data?: FeedData }).data) ? (res as { data: FeedData }).data : (res as FeedData)
     const list = data.list || data.items || []
-    posts.value = reset ? list : [...posts.value, ...list]
+    posts.value = reset ? (list as PostItem[]) : [...posts.value, ...(list as PostItem[])]
     page.value = data.page || page.value + 1
     hasMore.value = list.length >= size && (posts.value.length < (data.total || Infinity))
   } catch (e) {

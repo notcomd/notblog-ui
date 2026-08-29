@@ -103,7 +103,7 @@
                 <span class="text-xs text-zinc-500 dark:text-zinc-400">背景虚化 / 模糊度</span>
                 <span class="text-xs font-medium text-zinc-700 dark:text-zinc-200">{{ skin.blur }}px</span>
               </div>
-              <input type="range" min="0" max="12" step="1" class="w-full accent-amber-500" :value="skin.blur" @input="skin.setBlur(Number($event.target.value))" />
+              <input type="range" min="0" max="12" step="1" class="w-full accent-amber-500" :value="skin.blur" @input="onBlurInput" />
               <div class="flex justify-between text-[10px] text-zinc-400 dark:text-zinc-500"><span>柔和</span><span>清晰</span></div>
             </div>
             <div>
@@ -111,7 +111,7 @@
                 <span class="text-xs text-zinc-500 dark:text-zinc-400">蒙层深浅</span>
                 <span class="text-xs font-medium text-zinc-700 dark:text-zinc-200">{{ skin.mask }}%</span>
               </div>
-              <input type="range" :min="skin.MIN_MASK" :max="skin.MAX_MASK" step="1" class="w-full accent-amber-500" :value="skin.mask" @input="skin.setMask(Number($event.target.value))" />
+              <input type="range" :min="skin.MIN_MASK" :max="skin.MAX_MASK" step="1" class="w-full accent-amber-500" :value="skin.mask" @input="onMaskInput" />
               <div class="flex justify-between text-[10px] text-zinc-400 dark:text-zinc-500"><span>浅（不低于 {{ skin.MIN_MASK }}%，保证可读性）</span><span>深</span></div>
             </div>
           </div>
@@ -170,6 +170,14 @@ function thumbStyle(w: { id: string; name: string; cat: string; svg: string }): 
 
 function setDark(v: boolean) {
   if (theme.isDark !== v) theme.toggle()
+}
+
+function onBlurInput(e: Event) {
+  skin.setBlur(Number((e.target as HTMLInputElement).value))
+}
+
+function onMaskInput(e: Event) {
+  skin.setMask(Number((e.target as HTMLInputElement).value))
 }
 
 function onKeydown(e: KeyboardEvent) {

@@ -33,7 +33,7 @@
             <div v-for="d in draftsByType(t.type)" :key="d.id" class="group/draft flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-white/50 dark:bg-zinc-800/50 hover:bg-white/80 dark:hover:bg-zinc-800/80 transition-colors">
               <!-- 缩略图 -->
               <div class="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-                <img v-if="d.cover || (d.images && d.images[0])" :src="d.cover || d.images[0].preview || d.images[0].url" alt="" class="w-full h-full object-cover" @error="hideImg" />
+                <img v-if="d.cover || (d.images && d.images[0])" :src="draftImage(d)" alt="" class="w-full h-full object-cover" @error="hideImg" />
                 <span v-else class="text-base" v-html="t.icon"></span>
               </div>
               <div class="flex-1 min-w-0">
@@ -90,6 +90,13 @@ const types: any[] = [
 
 function draftsByType(t: string) {
   return getDraftsByType(t)
+}
+
+// 草稿缩略图：images 元素可能是记录（{ preview, url }）或字符串，取首个可用地址
+function draftImage(d: any): string {
+  if (d && d.cover) return d.cover
+  const img: any = d && d.images && d.images[0]
+  return (img && (img.preview || img.url)) || ''
 }
 
 function createNew(type: string): void {

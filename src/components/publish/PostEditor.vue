@@ -110,13 +110,21 @@ import { unwrap } from '@/utils/response'
 import { useToastStore } from '@/stores/toast'
 
 interface Props {
-  myCircles?: unknown[]
+  myCircles?: Array<{ circleGuid: string; name: string }>
   draft?: unknown
 }
 const props = withDefaults(defineProps<Props>(), {
   myCircles: () => [],
   draft: null
 })
+
+interface DraftShape {
+  id?: string
+  content?: string
+  images?: Array<{ fileId: string; url: string }>
+  circleGuid?: string
+  visibility?: string
+}
 
 const router = useRouter()
 const toast = useToastStore()
@@ -236,7 +244,7 @@ async function onSplitPick(e: Event) {
         const ctx = canvas.getContext('2d')
         ctx.imageSmoothingQuality = 'high'
         ctx.drawImage(img, sx + c * cell, sy + r * cell, cell, cell, 0, 0, 512, 512)
-        const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.9))
+        const blob = await new Promise<Blob>(res => canvas.toBlob(res, 'image/jpeg', 0.9))
         const item = { fileId: 'split-' + Date.now() + '-' + (r * 3 + c), preview: URL.createObjectURL(blob) }
         images.value.push(item)
         uploadGridPart(item, blob)
@@ -296,11 +304,12 @@ function removeImage(i) {
 // 载入草稿
 watch(() => props.draft, (d) => {
   if (!d) return
-  draftId.value = d.id
-  content.value = d.content || ''
-  images.value = (d.images || []).map(i => ({ fileId: i.fileId, preview: i.url || i.fileId }))
-  if (d.circleGuid) circleGuid.value = d.circleGuid
-  visibility.value = d.visibility || 'Public'
+  const draft = d as DraftShape
+  draftId.value = draft.id
+  content.value = draft.content || ''
+  images.value = (draft.images || []).map(i => ({ fileId: i.fileId, preview: i.url || i.fileId }))
+  if (draft.circleGuid) circleGuid.value = draft.circleGuid
+  visibility.value = draft.visibility || 'Public'
 }, { immediate: true })
 
 function firstLine(s?: string): string {
@@ -316,10 +325,10 @@ function saveAsDraft() {
       type: 'post',
       title: firstLine(content.value),
       content: content.value,
-      images: images.value.map(i => ({ fileId: i.fileId, url: i.preview })),
+      images: images.value.map(i => ({ fileId: i.fileId, url: i.preview })) as unknown as string[],
       circleGuid: circleGuid.value,
       visibility: visibility.value
-    })
+    } as unknown as Parameters<typeof saveDraft>[0])
     draftId.value = saved.id
     toast.push('草稿已保存', 'success')
   } finally {

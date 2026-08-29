@@ -220,7 +220,7 @@ async function submit() {
   try {
     const root = replyingTo.value ? replyingTo.value.root : null
     const target = replyingTo.value ? replyingTo.value.target : null
-    const payload = { content }
+    const payload: { content: string; reviewImages?: string[] | null; parentGuid?: string; replyToGuid?: string } = { content }
     if (props.cfg.images) payload.reviewImages = images.value.length ? [...images.value] : null
 
     if (target) {

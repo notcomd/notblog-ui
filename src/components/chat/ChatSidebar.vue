@@ -35,7 +35,7 @@
 
       <button
         v-for="s in visibleSessions"
-        :key="s.sessionId || s.notifyGuid"
+        :key="String(s.sessionId || s.notifyGuid)"
         class="w-full flex items-center gap-3 px-3 py-2 rounded-[5%] transition-all text-left"
         :class="isActiveRow(s) ? 'bg-gradient-to-r from-amber-400/15 to-orange-400/10' : 'hover:bg-white/60 dark:hover:bg-zinc-800/60'"
         @click="onItemClick(s)"
@@ -265,7 +265,7 @@ function sessionAvatar(s: SessionItem): string {
   }
   const peerId = chat.peerIdOf(s.sessionId || '')
   const f = chat.friends.find(x => String(x.friendId) === String(peerId))
-  return f ? f.friendAvatar : 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#d6d3d1"/><path d="M30 32h40v26H47l-11 11v-11h-6z" fill="#fff"/></svg>')
+  return f ? (f.friendAvatar as string) : 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#d6d3d1"/><path d="M30 32h40v26H47l-11 11v-11h-6z" fill="#fff"/></svg>')
 }
 
 function isOnline(s: SessionItem): boolean {
@@ -350,7 +350,7 @@ async function markOneRead(s: SessionItem) {
     const data = res && res.data ? res.data : res
     const list = (data && (data.items || data.list || data)) || []
     const ids = [...new Set(list.filter(m => String(m.sessionId) === String(s.sessionId)).map(m => m.messageId))].filter(Boolean)
-    await Promise.all(ids.map(id => markRead(id).catch(() => {})))
+    await Promise.all(ids.map(id => markRead(id as string).catch(() => {})))
   } catch (e) { /* 后端未就绪 */ }
   if (s.unreadCount) s.unreadCount = 0
   chat.loadUnread()
@@ -366,7 +366,7 @@ async function markAllRead() {
       const data = res && res.data ? res.data : res
       const list = (data && (data.items || data.list || data)) || []
       const ids = [...new Set(list.map(m => m.messageId))].filter(Boolean)
-      await Promise.all(ids.map(id => markRead(id).catch(() => {})))
+      await Promise.all(ids.map(id => markRead(id as string).catch(() => {})))
     } catch (e) { /* 忽略 */ }
     try { await markAllNotificationsRead() } catch (e) { /* 忽略 */ }
     chat.sessions.forEach(s => { s.unreadCount = 0 })

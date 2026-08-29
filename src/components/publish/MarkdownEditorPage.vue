@@ -79,6 +79,16 @@ const props = withDefaults(defineProps<Props>(), {
   draft: null
 })
 
+interface DraftData {
+  id?: string
+  title?: string
+  content?: string
+  images?: string[]
+  cover?: string
+  coverUrl?: string
+  visibility?: string
+}
+
 const router = useRouter()
 const toast = useToastStore()
 
@@ -96,12 +106,13 @@ const draftId = ref('')
 // 载入草稿
 watch(() => props.draft, (d) => {
   if (!d) return
-  draftId.value = d.id
-  title.value = d.title || ''
-  content.value = d.content || ''
-  mdImages.value = d.images || []
-  coverUrl.value = d.coverUrl || d.cover || ''
-  visibility.value = d.visibility || 'Public'
+  const draft = d as DraftData
+  draftId.value = draft.id
+  title.value = draft.title || ''
+  content.value = draft.content || ''
+  mdImages.value = draft.images || []
+  coverUrl.value = draft.coverUrl || draft.cover || ''
+  visibility.value = draft.visibility || 'Public'
 }, { immediate: true })
 
 async function onCoverPick(e: Event) {
@@ -143,12 +154,12 @@ function saveAsDraft() {
       type: 'markdown',
       title: title.value.trim(),
       content: content.value,
-      images: mdImages.value,
+      images: mdImages.value as string[],
       cover: coverUrl.value,
       coverUrl: coverUrl.value,
       circleGuid: '',
       visibility: visibility.value
-    })
+    } as unknown as Parameters<typeof saveDraft>[0])
     draftId.value = saved.id
     toast.push('草稿已保存', 'success')
   } finally {
@@ -168,6 +179,7 @@ async function publish() {
     const cover = coverUrl.value.startsWith('blob:') ? '' : coverUrl.value
     const payload = {
       name: title.value.trim(),
+      title: title.value.trim(),
       content: content.value.trim(),
       coverUrl: cover,
       auth: visibility.value === 'Private' ? 'private' : 'public'

@@ -174,7 +174,7 @@ async function select(c: any): Promise<void> {
 
 async function doBanCircle(): Promise<void> {
   try {
-    await banCircle(current.value.circleGuid, banReason.value)
+    await banCircle()
     toast.push(`已封禁社区「${current.value.name}」`, 'success')
     current.value.status = 'Banned'
     banCircleOpen.value = false

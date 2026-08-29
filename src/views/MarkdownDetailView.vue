@@ -108,6 +108,12 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToastStore()
 
+// 路由参数可能是 string | string[]，统一取首值字符串
+const q = (k: string): string => {
+  const v = route.params[k]
+  return typeof v === 'string' ? v : (v as string[])?.[0] ?? ''
+}
+
 const doc = ref<any>(null)
 
 // 评论配置（通用评论组件，Markdown 后端：全量 + 图片评论 + 子评论接口）
@@ -121,13 +127,13 @@ const commentCfg: any = {
   images: true,
   sortable: false,
   replyMode: 'direct',
-  loader: () => getMarkdownReviews(route.params.guid),
-  creator: (payload) => addMarkdownReview(route.params.guid, payload),
-  remove: (id) => deleteMarkdownReview(route.params.guid, id),
-  replyLoader: (parentId) => getMarkdownReviewChildren(route.params.guid, parentId),
-  replier: (parentId, payload) => replyMarkdownReview(route.params.guid, parentId, payload),
-  like: (id) => likeMarkdownReview(route.params.guid, id),
-  unlike: (id) => unlikeMarkdownReview(route.params.guid, id),
+  loader: () => getMarkdownReviews(q('guid')),
+  creator: (payload) => addMarkdownReview(q('guid'), payload),
+  remove: (id) => deleteMarkdownReview(q('guid'), id),
+  replyLoader: (parentId) => getMarkdownReviewChildren(q('guid'), parentId),
+  replier: (parentId, payload) => replyMarkdownReview(q('guid'), parentId, payload),
+  like: (id) => likeMarkdownReview(q('guid'), id),
+  unlike: (id) => unlikeMarkdownReview(q('guid'), id),
   authorName: (r) => (r.userId ? '用户 ' + String(r.userId).slice(0, 8) : '用户'),
   authorId: (r) => r.userId
 }
@@ -148,15 +154,15 @@ async function load(): Promise<void> {
   favorited.value = false
   try {
     const [docRes, contentRes] = await Promise.all([
-      getMarkdownDoc(route.params.guid),
-      getMarkdownContent(route.params.guid)
+      getMarkdownDoc(q('guid')),
+      getMarkdownContent(q('guid'))
     ])
     const d = unwrap(docRes)
     if (!d || !d.markDownGuid) return
     doc.value = d
     content.value = unwrap(contentRes) || ''
     // 浏览 +1（尽力而为，失败不影响展示）
-    viewMarkdown(route.params.guid)
+    viewMarkdown(q('guid'))
       .then((r) => {
         const v = unwrap(r)
         if (typeof v === 'number' && doc.value) {
@@ -187,8 +193,8 @@ async function toggleLike(): Promise<void> {
   if (!doc.value) return
   try {
     const res = liked.value
-      ? await unlikeMarkdown(route.params.guid)
-      : await likeMarkdown(route.params.guid)
+      ? await unlikeMarkdown(q('guid'))
+      : await likeMarkdown(q('guid'))
     const v = unwrap(res)
     if (typeof v === 'number') doc.value.quote = { ...doc.value.quote, LoveCount: v }
     liked.value = !liked.value
@@ -202,10 +208,10 @@ async function toggleFavorite(): Promise<void> {
   if (!doc.value) return
   try {
     if (favorited.value) {
-      await unfavoriteMarkdown(route.params.guid)
+      await unfavoriteMarkdown(q('guid'))
       doc.value.quote = { ...doc.value.quote, FavoriteCount: Math.max(0, (doc.value.quote.FavoriteCount || 0) - 1) }
     } else {
-      await favoriteMarkdown({ markDownGuid: route.params.guid })
+      await favoriteMarkdown(q('guid'))
       doc.value.quote = { ...doc.value.quote, FavoriteCount: (doc.value.quote.FavoriteCount || 0) + 1 }
     }
     favorited.value = !favorited.value

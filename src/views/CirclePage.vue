@@ -46,8 +46,10 @@ import CircleSidebar from '@/components/circle/CircleSidebar.vue'
 import CircleWorkspace from '@/components/circle/CircleWorkspace.vue'
 import CircleJoinDialog from '@/components/circle/CircleJoinDialog.vue'
 import { getMyCircles, getCircle, joinCircle, leaveCircle, getMyCircleInvitations, acceptCircleInvitation, rejectCircleInvitation } from '@/api/circle'
+import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 
+const auth = useAuthStore()
 const toast = useToastStore()
 
 const circles = ref<any[]>([])
@@ -115,7 +117,7 @@ async function doLeave(): Promise<void> {
     return
   }
   try {
-    await leaveCircle(current.value.circleGuid)
+    await leaveCircle(current.value.circleGuid, auth.user ? auth.user.id : '')
     toast.push('已退出社区', 'success')
     await loadCircles()
   } catch (e) {

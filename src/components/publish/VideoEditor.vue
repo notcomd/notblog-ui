@@ -97,13 +97,25 @@ import { unwrap } from '@/utils/response'
 import { useToastStore } from '@/stores/toast'
 
 interface Props {
-  myCircles?: unknown[]
+  myCircles?: Array<{ circleGuid: string; name: string }>
   draft?: unknown
 }
 const props = withDefaults(defineProps<Props>(), {
   myCircles: () => [],
   draft: null
 })
+
+interface DraftShape {
+  id?: string
+  videoFileId?: string
+  videoUrl?: string
+  cover?: string
+  coverUrl?: string
+  coverFileId?: string
+  content?: string
+  circleGuid?: string
+  visibility?: string
+}
 
 const router = useRouter()
 const toast = useToastStore()
@@ -125,14 +137,15 @@ const coverInput = ref<HTMLInputElement | null>(null)
 
 watch(() => props.draft, (d) => {
   if (!d) return
-  draftId.value = d.id
-  videoFileId.value = d.videoFileId || ''
-  videoUrl.value = d.videoUrl || ''
-  coverUrl.value = d.coverUrl || d.cover || ''
-  coverFileId.value = d.coverFileId || ''
-  content.value = d.content || ''
-  if (d.circleGuid) circleGuid.value = d.circleGuid
-  visibility.value = d.visibility || 'Public'
+  const draft = d as DraftShape
+  draftId.value = draft.id
+  videoFileId.value = draft.videoFileId || ''
+  videoUrl.value = draft.videoUrl || ''
+  coverUrl.value = draft.coverUrl || draft.cover || ''
+  coverFileId.value = draft.coverFileId || ''
+  content.value = draft.content || ''
+  if (draft.circleGuid) circleGuid.value = draft.circleGuid
+  visibility.value = draft.visibility || 'Public'
 }, { immediate: true })
 
 // 点击区域触发文件选择
@@ -221,13 +234,13 @@ function saveAsDraft() {
       title: firstLine(content.value),
       content: content.value,
       videoUrl: videoUrl.value,
-        videoFileId: videoFileId.value,
+      videoFileId: videoFileId.value,
       cover: coverUrl.value,
       coverUrl: coverUrl.value,
       coverFileId: coverFileId.value,
       circleGuid: circleGuid.value,
       visibility: visibility.value
-    })
+    } as unknown as Parameters<typeof saveDraft>[0])
     draftId.value = saved.id
     toast.push('草稿已保存', 'success')
   } finally {
