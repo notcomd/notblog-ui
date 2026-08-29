@@ -7,9 +7,17 @@
 
 <script lang="ts">
 import ToastHost from '@/components/common/ToastHost.vue'
+import { useNotificationStore } from '@/stores/notification'
+import { getToken } from '@/utils/auth'
 
 export default {
   name: 'App',
-  components: { ToastHost }
+  components: { ToastHost },
+  mounted() {
+    // 登录态下初始化站内通知实时通道（SignalR PushNotification + 未读数）
+    if (getToken()) {
+      useNotificationStore().initNotifications()
+    }
+  }
 }
 </script>
