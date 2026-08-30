@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">用户管理</h1>
         <p class="text-sm text-zinc-400 mt-1">用户列表与管控（封禁/删除后端缺口，当前为演示数据）</p>
       </div>
-      <button disabled title="后端缺口，暂不可用" class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white/60 cursor-not-allowed transition-all" @click="showAdd = true">＋ 添加用户</button>
+      <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all" @click="showAdd = true">＋ 添加用户</button>
     </div>
 
     <AdminTable
@@ -63,8 +63,8 @@
 
       <template #actions="{ row }">
         <button class="px-2.5 h-8 rounded-[5%] text-xs text-amber-600 hover:bg-amber-500/10 transition-colors" @click="viewUser(row)">查看</button>
-        <button v-if="row.status !== 'Banned'" disabled title="后端缺口，暂不可用" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500/50 cursor-not-allowed transition-colors" @click="banUser(row)">封禁</button>
-        <button disabled title="后端缺口，暂不可用" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500/50 cursor-not-allowed transition-colors" @click="deleteUser(row)">删除</button>
+        <button v-if="row.status !== 'Banned'" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10 transition-colors" @click="banUser(row)">封禁</button>
+        <button class="px-2.5 h-8 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10 transition-colors" @click="deleteUser(row)">删除</button>
       </template>
     </AdminTable>
 
@@ -205,7 +205,7 @@ async function load(p?: number): Promise<void> {
   loading.value = true
   page.value = p || 1
   try {
-    const res = await getAdminUsers()
+    const res = await getAdminUsers({ page: page.value, pageSize, keyword: keyword.value })
     const data: any = res && res.data ? res.data : res
     users.value = data.items || data.list || []
     total.value = data.totalCount !== undefined ? data.totalCount : (data.total || users.value.length)
@@ -227,12 +227,12 @@ function banUser(row: any): void {
 
 async function submitBan(reason: string): Promise<void> {
   try {
-    await banAdminUser()
+    await banAdminUser(banTarget.value.userGuid, reason, banDuration.value)
     toast.push(`已封禁 ${banTarget.value.userName}`, 'success')
     banTarget.value = null
     load(page.value)
   } catch (e) {
-    toast.push('封禁失败（后端缺口，演示数据）', 'error')
+    toast.push('封禁失败，请重试', 'error')
   }
 }
 
@@ -242,8 +242,8 @@ function deleteUser(row: any): void {
 
 async function submitDelete(reason: string): Promise<void> {
   try {
-    await deleteAdminUser()
-    toast.push(`已删除 ${deleteTarget.value.userName} 及其全部数据`, 'success')
+    await deleteAdminUser(deleteTarget.value.userGuid, reason)
+    toast.push(`已删除（停用）${deleteTarget.value.userName}`, 'success')
     deleteTarget.value = null
     load(page.value)
   } catch (e) {
@@ -253,7 +253,7 @@ async function submitDelete(reason: string): Promise<void> {
 
 async function submitAdd(): Promise<void> {
   try {
-    await addAdminUser()
+    await addAdminUser({ email: addForm.value.userEmail, password: addForm.value.password })
     toast.push('用户创建成功', 'success')
     showAdd.value = false
     addForm.value = { userName: '', userEmail: '', password: '', role: 'Member' }

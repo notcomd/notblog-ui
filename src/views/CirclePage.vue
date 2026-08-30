@@ -40,12 +40,13 @@ export default { name: 'CirclePage' }
 
 <script setup lang="ts">
 // 社区页容器：负责社区数据加载、选择、加入/退出、直邀接收与示例数据兜底
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { charAvatar as demoAvatar } from '@/utils/avatar'
 import CircleSidebar from '@/components/circle/CircleSidebar.vue'
 import CircleWorkspace from '@/components/circle/CircleWorkspace.vue'
 import CircleJoinDialog from '@/components/circle/CircleJoinDialog.vue'
 import { getMyCircles, getCircle, joinCircle, leaveCircle, getMyCircleInvitations, acceptCircleInvitation, rejectCircleInvitation } from '@/api/circle'
+import { connectCommunity, onCommunityEvent, offCommunityEvent, joinCircle as subscribeCircle, leaveCircle as unsubscribeCircle } from '@/socket/communitySignalR'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 
@@ -90,8 +91,14 @@ async function loadCircles(): Promise<void> {
 }
 
 async function select(c: any): Promise<void> {
+  // 切圈子：退订旧圈 → 订阅新圈（示例社区/离线状态跳过）
+  const prev = current.value
+  if (prev && !prev.isSample && String(prev.circleGuid) !== String(c.circleGuid)) {
+    unsubscribeCircle(prev.circleGuid)
+  }
   current.value = c
   gridKey.value++
+  if (!c.isSample) subscribeCircle(c.circleGuid)
   try {
     const res = await getCircle(c.circleGuid)
     const d: any = res && res.data ? res.data : res
@@ -118,6 +125,7 @@ async function doLeave(): Promise<void> {
   }
   try {
     await leaveCircle(current.value.circleGuid, auth.user ? auth.user.id : '')
+    unsubscribeCircle(current.value.circleGuid)
     toast.push('已退出社区', 'success')
     await loadCircles()
   } catch (e) {
@@ -205,8 +213,75 @@ async function onRejectInvite(inv: any): Promise<void> {
   }
 }
 
+// ===== CommunityHub 实时事件（前端统一分发，数据刷新交给各 Tab 的 gridKey） =====
+let realtimeReady = false
+
+function handleCommunityEvent(event: string, ...args: any[]): void {
+  const c = current.value
+  if (c && c.isSample) return
+  switch (event) {
+    case 'PostPublished': {
+      const post: any = args[0]
+      if (c && post && String(post.circleGuid) === String(c.circleGuid)) {
+        toast.push('社区有新帖子', 'info')
+        gridKey.value++
+      }
+      break
+    }
+    case 'CommentAdded': {
+      if (c) {
+        toast.push('有新评论', 'info')
+        gridKey.value++
+      }
+      break
+    }
+    case 'PostLiked':
+    case 'PostFavorited': {
+      // 点赞/收藏实时计数：低频刷新榜单，不需要打扰用户
+      gridKey.value++
+      break
+    }
+    case 'MemberJoined': {
+      toast.push('有新成员加入社区', 'info')
+      gridKey.value++
+      break
+    }
+    case 'MemberLeft':
+    case 'MemberRemoved': {
+      toast.push('社区成员发生变动', 'info')
+      gridKey.value++
+      break
+    }
+    case 'InvitedToCircle': {
+      toast.push('你收到新的社区邀请', 'info')
+      loadMyInvites()
+      break
+    }
+  }
+}
+
+async function initRealtime(): Promise<void> {
+  if (!auth.isLoggedIn && !localStorage.getItem('token')) return
+  try {
+    await connectCommunity()
+  } catch (e) {
+    // 连接失败：REST 轮询兜底，不阻断页面
+  }
+  if (realtimeReady) return
+  realtimeReady = true
+  onCommunityEvent(handleCommunityEvent)
+  // 订阅当前选中的圈子
+  if (current.value && !current.value.isSample) subscribeCircle(current.value.circleGuid)
+}
+
 onMounted(async () => {
   await loadCircles()
   loadMyInvites()
+  await initRealtime()
+})
+
+onBeforeUnmount(() => {
+  offCommunityEvent(handleCommunityEvent)
+  if (current.value && !current.value.isSample) unsubscribeCircle(current.value.circleGuid)
 })
 </script>

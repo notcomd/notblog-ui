@@ -40,9 +40,60 @@
         <div v-if="!active" class="py-24 text-center text-sm text-zinc-400">选择一个会话开始聊天</div>
         <template v-else>
           <div v-for="m in activeMessages" :key="m.messageId" class="flex" :class="isMine(m) ? 'justify-end' : 'justify-start'">
-            <div class="max-w-[70%] rounded-[10px] px-3 py-2 text-sm"
+            <div class="max-w-[70%] rounded-[10px] px-3 py-2 text-sm overflow-hidden"
               :class="isMine(m) ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white' : 'bg-white/70 dark:bg-zinc-800/70 text-zinc-700 dark:text-zinc-200'">
-              <div class="whitespace-pre-wrap break-words">{{ m.content }}</div>
+              <!-- 消息主体（按类型渲染：文本/图片/视频/音频/文件/位置/链接） -->
+              <div class="whitespace-pre-wrap break-words">{{ messageBody(m) }}</div>
+
+              <!-- 图片消息 -->
+              <template v-if="m.messageType === MsgType.Image">
+                <a v-if="m.mediaUrl" :href="m.mediaUrl" target="_blank" rel="noopener" class="block mt-1">
+                  <img :src="m.thumbnailUrl || m.mediaUrl" alt="图片消息"
+                    class="max-h-64 w-auto max-w-full rounded-lg object-cover cursor-zoom-in"
+                    loading="lazy" />
+                </a>
+              </template>
+
+              <!-- 视频消息 -->
+              <video v-else-if="m.messageType === MsgType.Video && m.mediaUrl" :src="m.mediaUrl" controls
+                class="mt-1 max-h-64 w-auto max-w-full rounded-lg bg-black"></video>
+
+              <!-- 音频消息 -->
+              <audio v-else-if="m.messageType === MsgType.Audio && m.mediaUrl" :src="m.mediaUrl" controls
+                class="mt-1 w-full max-w-[240px]"></audio>
+
+              <!-- 文件消息：文件名 + 大小 + 下载 -->
+              <div v-else-if="m.messageType === MsgType.File" class="mt-1 flex items-center gap-2">
+                <span class="h-9 w-9 rounded-lg flex items-center justify-center shrink-0"
+                  :class="isMine(m) ? 'bg-white/20' : 'bg-zinc-100 dark:bg-zinc-700'">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </span>
+                <div class="min-w-0 flex-1">
+                  <div class="text-[13px] font-medium truncate">{{ m.fileName || '文件' }}</div>
+                  <div class="text-[10px] opacity-70">{{ sizeText(m.fileSize) }}</div>
+                </div>
+                <a v-if="m.mediaUrl" :href="m.mediaUrl" download :title="m.fileName || '下载文件'"
+                  class="shrink-0 text-xs underline opacity-80 hover:opacity-100">下载</a>
+                <a v-else-if="m.attachments && m.attachments.length" :href="String((m.attachments as any[])[0].fileUrl || '')" download
+                  class="shrink-0 text-xs underline opacity-80 hover:opacity-100">下载</a>
+              </div>
+
+              <!-- 位置消息 -->
+              <div v-else-if="m.messageType === MsgType.Location" class="mt-1 text-[13px]">
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  {{ m.locationName || '位置' }}
+                </span>
+              </div>
+
+              <!-- 链接卡片 -->
+              <a v-else-if="m.messageType === MsgType.Link && m.linkUrl" :href="m.linkUrl" target="_blank" rel="noopener"
+                class="mt-1 block rounded-lg px-3 py-2 text-[13px]"
+                :class="isMine(m) ? 'bg-white/20' : 'bg-zinc-100 dark:bg-zinc-700'">
+                <div class="font-medium">{{ m.linkTitle || m.linkUrl }}</div>
+                <div v-if="m.linkDescription" class="text-xs opacity-80 mt-0.5 line-clamp-2">{{ m.linkDescription }}</div>
+              </a>
+
               <div class="mt-1 flex items-center gap-2 text-[10px] opacity-70">
                 <span>{{ timeText(m.sentTime) }}</span>
                 <span v-if="isMine(m) && m.status === 0">发送中...</span>
@@ -55,6 +106,16 @@
 
       <!-- 输入区 -->
       <div class="border-t border-zinc-200/60 dark:border-zinc-700/60 p-3 flex items-end gap-2">
+        <!-- 图片发送 -->
+        <label class="h-10 w-10 shrink-0 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 flex items-center justify-center cursor-pointer text-zinc-500 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors" title="发送图片">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <input type="file" accept="image/*" class="hidden" :disabled="sending || sendingMedia" @change="onPickImage" />
+        </label>
+        <!-- 文件发送 -->
+        <label class="h-10 w-10 shrink-0 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 flex items-center justify-center cursor-pointer text-zinc-500 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors" title="发送文件">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <input type="file" class="hidden" :disabled="sending || sendingMedia" @change="onPickFile" />
+        </label>
         <textarea
           ref="draftBox"
           v-model="draft"
@@ -64,8 +125,10 @@
           @keydown.enter.exact.prevent="onEnter"
           @input="onInput"
         ></textarea>
-        <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium shrink-0" :disabled="!draft.trim() || sending" @click="send">发送</button>
+        <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium shrink-0" :disabled="(!draft.trim() && !sendingMedia) || sending" @click="send">发送</button>
       </div>
+      <!-- 上传中提示 -->
+      <div v-if="sendingMedia" class="px-3 pb-2 text-xs text-amber-500">{{ uploadTip }}</div>
     </template>
   </div>
 </template>
@@ -78,6 +141,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useChatStore } from '@/stores/chat'
 import { useToastStore } from '@/stores/toast'
 import { useCallStore } from '@/stores/call'
+import { MessageType, uploadChatImage, uploadChatFile } from '@/api/chat'
 import ChatGroupDialogs from '@/components/chat/ChatGroupDialogs.vue'
 
 const chat = useChatStore()
@@ -86,8 +150,13 @@ const call = useCallStore()
 const route = useRoute()
 const router = useRouter()
 
+// 模板中使用消息类型常量（与后端 MessageType 枚举数字一致）
+const MsgType = MessageType
+
 const draft = ref('')
 const sending = ref(false)
+const sendingMedia = ref(false)
+const uploadTip = ref('')
 const msgBox = ref<HTMLElement | null>(null)
 const draftBox = ref<HTMLTextAreaElement | null>(null)
 const memberOpen = ref(false)
@@ -133,6 +202,97 @@ function startCall(type: 'Audio' | 'Video') {
 
 function isMine(m: any): boolean {
   return String(m.senderId) === String(myId.value)
+}
+
+/** 消息主体文本（媒体/文件消息不重复展示占位文案） */
+function messageBody(m: any): string {
+  const t = Number(m.messageType)
+  if (t === MsgType.Image || t === MsgType.Video || t === MsgType.Audio || t === MsgType.File) return ''
+  return m.content || ''
+}
+
+/** 文件大小可读化（B → KB/MB/GB） */
+function sizeText(bytes: any): string {
+  const n = Number(bytes)
+  if (!n || n <= 0) return ''
+  if (n < 1024) return n + ' B'
+  const kb = n / 1024
+  if (kb < 1024) return kb.toFixed(1) + ' KB'
+  const mb = kb / 1024
+  if (mb < 1024) return mb.toFixed(1) + ' MB'
+  return (mb / 1024).toFixed(2) + ' GB'
+}
+
+/** 从上传响应中解出 FileRef（{ fileId, fileUri, fileName, fileSize, mimeType, ... }） */
+function fileRefOf(res: any): any {
+  const d = res && res.data ? res.data : res
+  return (d && d.data) || d
+}
+
+async function onPickImage(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input && input.files && input.files[0]
+  input.value = ''
+  if (!file || !chat.activeSessionId || sendingMedia.value) return
+  if (file.size > 50 * 1024 * 1024) {
+    toast.push('图片过大，请选择 50MB 以内的文件', 'error')
+    return
+  }
+  sendingMedia.value = true
+  uploadTip.value = '正在上传图片…'
+  try {
+    const res = await uploadChatImage(file)
+    const ref_ = fileRefOf(res)
+    if (!ref_ || !ref_.fileId) throw new Error('上传失败：未返回文件')
+    uploadTip.value = '图片已上传，发送中…'
+    await chat.sendImage(chat.activeSessionId, {
+      fileId: ref_.fileId,
+      thumbnailFileId: ref_.fileId,
+      mediaUrl: ref_.fileUri,
+      thumbnailUrl: ref_.fileUri,
+      fileName: ref_.fileName || file.name,
+      fileSize: ref_.fileSize || file.size,
+      mimeType: file.type
+    })
+    scrollToBottom(true)
+  } catch (err: any) {
+    toast.push('图片发送失败：' + (err && err.message ? err.message : '请重试'), 'error')
+  } finally {
+    sendingMedia.value = false
+    uploadTip.value = ''
+  }
+}
+
+async function onPickFile(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input && input.files && input.files[0]
+  input.value = ''
+  if (!file || !chat.activeSessionId || sendingMedia.value) return
+  if (file.size > 500 * 1024 * 1024) {
+    toast.push('文件过大，请选择 500MB 以内的文件', 'error')
+    return
+  }
+  sendingMedia.value = true
+  uploadTip.value = '正在上传文件…'
+  try {
+    const res = await uploadChatFile(file)
+    const ref_ = fileRefOf(res)
+    if (!ref_ || !ref_.fileId) throw new Error('上传失败：未返回文件')
+    uploadTip.value = '文件已上传，发送中…'
+    await chat.sendFile(chat.activeSessionId, {
+      fileId: ref_.fileId,
+      mediaUrl: ref_.fileUri,
+      fileName: ref_.fileName || file.name,
+      fileSize: ref_.fileSize || file.size,
+      mimeType: file.type || 'application/octet-stream'
+    })
+    scrollToBottom(true)
+  } catch (err: any) {
+    toast.push('文件发送失败：' + (err && err.message ? err.message : '请重试'), 'error')
+  } finally {
+    sendingMedia.value = false
+    uploadTip.value = ''
+  }
 }
 function timeText(t: any): string {
   const d = new Date(t)

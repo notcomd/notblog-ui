@@ -40,7 +40,36 @@ interface MessageDto {
   sentTime?: number;
   isRead?: boolean;
   isRecalled?: boolean;
+  /** 媒体/文件消息字段（与后端 MessageDto 对齐） */
+  mediaUrl?: string;
+  thumbnailUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+  duration?: number | null;
+  caption?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  locationName?: string | null;
+  linkUrl?: string | null;
+  linkTitle?: string | null;
+  linkDescription?: string | null;
+  attachments?: Array<Record<string, unknown>> | null;
   [key: string]: unknown;
+}
+
+/** 消息类型简易文案（未读摘要与会话列表展示用） */
+function messageSummary(m: MessageDto): string {
+  switch (m.messageType ?? MessageType.Text) {
+    case MessageType.Image: return '[图片]';
+    case MessageType.Video: return '[视频]';
+    case MessageType.Audio: return '[语音]';
+    case MessageType.File: return `[文件${m.fileName ? ' ' + m.fileName : ''}]`;
+    case MessageType.Location: return '[位置]';
+    case MessageType.Link: return m.linkTitle || '[链接]';
+    case MessageType.Expression: return '[表情]';
+    default: return m.content || '[消息]';
+  }
 }
 
 export const useChatStore = defineStore('chat', () => {
@@ -219,6 +248,101 @@ export const useChatStore = defineStore('chat', () => {
     return true;
   }
 
+  // ===== 媒体/文件消息 =====
+
+  /**
+   * 发送媒体/文件消息（图片/视频/音频走 SendMessage 指定 MessageType；
+   * 文件走 SendFileMessage 由服务端按 MessageFile 建消息与附件）。
+   * 乐观插入本地消息，服务端 ReceiveMessage 回执按 messageId 去重。
+   */
+  async function sendMedia(sessionId: string, payload: {
+    type: number;
+    fileId: string;
+    thumbnailFileId?: string | null;
+    content?: string;
+    fileName?: string;
+    fileSize?: number;
+    mimeType?: string;
+    mediaUrl?: string;
+    thumbnailUrl?: string;
+    duration?: number | null;
+  }): Promise<MessageDto> {
+    const me = currentUserId();
+    const messageId = 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    const msg: MessageDto = {
+      messageId,
+      sessionId,
+      senderId: me,
+      receiverId: null,
+      messageType: payload.type,
+      status: 0,
+      content: payload.content || '',
+      fileName: payload.fileName,
+      fileSize: payload.fileSize,
+      mimeType: payload.mimeType,
+      mediaUrl: payload.mediaUrl,
+      thumbnailUrl: payload.thumbnailUrl,
+      duration: payload.duration ?? null,
+      sentTime: Date.now()
+    };
+    pushMessage(msg);
+    bumpSession(sessionId, messageSummary(msg));
+
+    try {
+      const conn = await connectSignalR();
+      if (payload.type === MessageType.File) {
+        // v2 专用文件通道：服务端自动创建 MessageFile 消息 + 附件记录
+        await conn.invoke('SendFileMessage', sessionId, payload.fileId);
+      } else {
+        await conn.invoke('SendMessage', sessionId, {
+          sessionId,
+          messageType: payload.type,
+          content: payload.content || '',
+          fileId: payload.fileId,
+          thumbnailFileId: payload.thumbnailFileId || null,
+          duration: payload.duration ?? null,
+          caption: null,
+          latitude: null,
+          longitude: null,
+          locationName: null,
+          linkUrl: null,
+          linkTitle: null,
+          linkDescription: null,
+          expressionCode: null,
+          replyToMessageId: null
+        });
+      }
+      const sent = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
+      if (sent) sent.status = 1;
+    } catch (e) {
+      console.error('发送媒体消息失败:', e);
+      const failed = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
+      if (failed) failed.status = -1;
+      throw e;
+    }
+    return msg;
+  }
+
+  /** 发送图片消息 */
+  function sendImage(sessionId: string, opts: { fileId: string; thumbnailFileId?: string | null; mediaUrl?: string; thumbnailUrl?: string; fileName?: string; fileSize?: number; mimeType?: string }) {
+    return sendMedia(sessionId, { type: MessageType.Image, content: '[图片]', ...opts });
+  }
+
+  /** 发送视频消息 */
+  function sendVideo(sessionId: string, opts: { fileId: string; thumbnailFileId?: string | null; mediaUrl?: string; thumbnailUrl?: string; fileName?: string; fileSize?: number; mimeType?: string }) {
+    return sendMedia(sessionId, { type: MessageType.Video, content: '[视频]', ...opts });
+  }
+
+  /** 发送语音消息 */
+  function sendAudio(sessionId: string, opts: { fileId: string; mediaUrl?: string; duration?: number | null }) {
+    return sendMedia(sessionId, { type: MessageType.Audio, content: '[语音]', duration: opts.duration ?? null, ...opts });
+  }
+
+  /** 发送文件消息（SendFileMessage 通道） */
+  function sendFile(sessionId: string, opts: { fileId: string; fileName?: string; fileSize?: number; mimeType?: string; mediaUrl?: string }) {
+    return sendMedia(sessionId, { type: MessageType.File, content: opts.fileName || '[文件]', ...opts });
+  }
+
   async function sendTyping(sessionId: string): Promise<void> {
     if (!isConnected()) return;
     try {
@@ -315,7 +439,7 @@ export const useChatStore = defineStore('chat', () => {
 
       conn.on('ReceiveMessage', (message: MessageDto) => {
         pushMessage(message);
-        bumpSession(message.sessionId, message.content || '[附件消息]');
+        bumpSession(message.sessionId, messageSummary(message));
         if (message.sessionId !== activeSessionId.value) {
           const s = sessions.value.find((x) => x.sessionId === message.sessionId);
           if (s) {
@@ -389,6 +513,10 @@ export const useChatStore = defineStore('chat', () => {
     loadMessages,
     retryMessage,
     sendText,
+    sendImage,
+    sendVideo,
+    sendAudio,
+    sendFile,
     sendTyping,
     markSessionRead,
     clearUnread,

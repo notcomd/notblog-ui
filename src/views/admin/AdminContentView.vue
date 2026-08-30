@@ -240,7 +240,7 @@ function openBlock(t: any): void {
 
 async function doBlock(): Promise<void> {
   try {
-    await blockTweet()
+    await blockTweet(blockTarget.value.tweetGuid, blockReason.value)
     toast.push('内容已屏蔽（全站不可见）', 'success')
     blockTarget.value = null
     load(page.value)
@@ -255,7 +255,7 @@ function openDelete(t: any): void {
 
 async function doDelete(reason: string): Promise<void> {
   try {
-    await deleteTweet()
+    await deleteTweet(deleteTarget.value.tweetGuid, reason)
     toast.push('内容已永久删除', 'success')
     deleteTarget.value = null
     load(page.value)

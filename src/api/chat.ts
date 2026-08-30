@@ -175,6 +175,88 @@ export function searchGroups(params: QueryParams = {}) {
   return service.get('/api/groups/search', { params });
 }
 
+// ==================== 消息附件与详情 ====================
+
+// 消息详情：GET /api/messages/{id}（含 FileName/MediaUrl/ThumbnailUrl/Attachments 等完整字段）
+export function getMessageDetail(messageId: string) {
+  return service.get(`/api/messages/${messageId}`);
+}
+
+// 消息附件列表：GET /api/messages/{messageId}/attachments -> ApiResponse<List<FileAttachmentDto>>
+export function getMessageAttachments(messageId: string) {
+  return service.get(`/api/messages/${messageId}/attachments`);
+}
+
+// 删除附件：DELETE /api/messages/attachments/{attachmentId}（软删 + 级联 FileDev 物理删除）
+export function deleteMessageAttachment(attachmentId: string) {
+  return service.delete(`/api/messages/attachments/${attachmentId}`);
+}
+
+// ==================== 聊天文件上传 ====================
+
+/** 聊天小文件/图片直传上限（与后端 SmallFileSizeLimit 一致，超限按分片处理） */
+const CHAT_UPLOAD_LIMIT = 10 * 1024 * 1024;
+/** 上传不走默认 5s 超时（大文件耗时） */
+const CHAT_UPLOAD_TIMEOUT = 60000;
+
+export async function uploadChatImage(file: File, description = 'chat-image') {
+  if (file.size > CHAT_UPLOAD_LIMIT) return uploadChatByChunks(file, description);
+  const form = new FormData();
+  form.append('file', file);
+  form.append('description', description);
+  // ⚠️ 消息附件走权限通道（isPublic=false），媒体渲染用返回的 FileRef.FileUri 直链
+  return service.post('/api/files/upload-image', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: CHAT_UPLOAD_TIMEOUT
+  });
+}
+
+export async function uploadChatFile(file: File, description = 'chat-file') {
+  if (file.size <= CHAT_UPLOAD_LIMIT) {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('description', description);
+    form.append('isPublic', 'false');
+    return service.post('/api/files/upload', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: CHAT_UPLOAD_TIMEOUT
+    });
+  }
+  return uploadChatByChunks(file, description);
+}
+
+/** 大文件分片上传（init → 逐片 upload → merge），返回与直传一致的响应结构 */
+async function uploadChatByChunks(file: File, description: string) {
+  const buf = await file.arrayBuffer();
+  const init = await service.post(
+    '/api/files/chunk/init',
+    { fileName: file.name, totalSize: file.size, fileMd5: null, description, isPublic: false },
+    { timeout: CHAT_UPLOAD_TIMEOUT }
+  );
+  const meta = init && init.data ? init.data : init;
+  const { fileKey, totalChunks, chunkSize, uploadedChunks = [] } = meta || {};
+  if (!fileKey || !totalChunks) throw new Error('分片初始化失败');
+  const uploaded = new Set(uploadedChunks);
+  for (let i = 0; i < totalChunks; i++) {
+    if (uploaded.has(i)) continue;
+    const start = i * chunkSize;
+    const chunk = new Blob([buf.slice(start, Math.min(start + chunkSize, file.size))]);
+    const form = new FormData();
+    form.append('fileKey', fileKey);
+    form.append('chunkIndex', String(i));
+    form.append('file', chunk, `chunk-${i}`);
+    await service.post('/api/files/chunk/upload', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: CHAT_UPLOAD_TIMEOUT
+    });
+  }
+  return service.post(
+    '/api/files/chunk/merge',
+    { fileKey, fileName: file.name, description },
+    { timeout: CHAT_UPLOAD_TIMEOUT }
+  );
+}
+
 // ==================== 常量 ====================
 
 // 与后端 MessageType 枚举一致（数字序列化）

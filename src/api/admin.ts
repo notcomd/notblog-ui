@@ -11,48 +11,104 @@ interface QueryParams {
   [key: string]: unknown;
 }
 
-// ==================== 工作台 ====================
-export function getAdminStats() {
-  // ⚠️ 后端缺口：无运营统计聚合端点，返回空态
-  return Promise.resolve({ data: {} });
+/** 从后端响应中解出业务数据（兼容 ApiResponse 包装与裸对象） */
+function unwrap(res: any): any {
+  if (!res) return null;
+  const d = res && res.data !== undefined ? res.data : res;
+  return d && d.data !== undefined ? d.data : d;
 }
 
-export function getAdminActivityLog() {
-  // ⚠️ 后端缺口：无操作日志端点，返回空态
-  return Promise.resolve({ data: [] });
+/** 短 ID 展示（8 位） */
+function shortId(id: any): string {
+  return String(id || '').slice(0, 8);
 }
 
-// ==================== 用户管理 ====================
-// ⚠️ 原实现调用无鉴权 Identity GetUserAllAsync，会泄露完整 User 实体（含 PasswordHash）。
-// 已从前端移除；需后端提供安全的鉴权管理接口后再恢复。
-export function getAdminUsers() {
-  return Promise.resolve({ data: { items: [], totalCount: 0, page: 1, pageSize: 10 } });
+// ==================== 工作台（/api/audit/*） ====================
+// 运营统计：消息域统计 + 用户总数（借道用户管理 API 的 totalCount）
+export async function getAdminStats() {
+  const [s, u] = await Promise.all([
+    service.get('/api/audit/stats').catch(() => null),
+    service.get('/api/identity/manger/users', { params: { page: 1, pageSize: 1 } }).catch(() => null)
+  ]);
+  const sd: any = unwrap(s) || {};
+  const ud: any = unwrap(u) || {};
+  return {
+    data: {
+      totalUsers: ud.totalCount || 0,
+      userGrowth: 0,
+      onlineUsers: sd.onlineUsers || 0,
+      pendingTweets: sd.pendingTweets || 0,
+      pendingReports: sd.pendingReports || 0
+    }
+  };
 }
 
-// ⚠️ 封禁/删除用户后端无端点（缺口 #1/#2），先用 mock
-export function addAdminUser() {
-  // ⚠️ 后端缺口：无添加用户端点；禁止 mock 成功，避免误操作
-  return Promise.reject(new Error('添加用户功能尚未接入后端，操作未执行'));
+// 操作日志：GET /api/audit/activity-logs（来自 TweetAuditLog 审核记录）
+export async function getAdminActivityLog(params: PageParams = {}) {
+  const res = await service.get('/api/audit/activity-logs', { params });
+  const d: any = unwrap(res) || {};
+  const items = (d.items || []).map((l: any) => ({
+    id: l.auditGuid,
+    type: l.action === 'Approve' ? '审核通过' : l.action === 'Reject' ? '审核驳回' : (l.action || '操作'),
+    actor: shortId(l.auditorGuid),
+    target: shortId(l.tweetGuid),
+    time: l.auditTime
+  }));
+  return { data: items };
 }
 
-export function banAdminUser() {
-  // ⚠️ 后端缺口：无封禁用户端点；禁止 mock 成功，避免误操作
-  return Promise.reject(new Error('封禁用户功能尚未接入后端，操作未执行'));
+// 在线用户：GET /api/audit/online-users（Redis 在线集合）
+export async function getAdminOnlineUsers() {
+  const res = await service.get('/api/audit/online-users');
+  const d: any = unwrap(res) || [];
+  const ids: string[] = Array.isArray(d) ? d : [];
+  return {
+    data: ids.map((id) => ({
+      userGuid: id,
+      userName: shortId(id),
+      page: '在线',
+      lastActive: Date.now()
+    }))
+  };
 }
 
-export function deleteAdminUser() {
-  // ⚠️ 后端缺口：无删除用户端点；禁止 mock 成功，避免误操作
-  return Promise.reject(new Error('删除用户功能尚未接入后端，操作未执行'));
+// ==================== 用户管理（/api/identity/manger，AdminOnly） ====================
+export async function getAdminUsers(params: { page?: number; pageSize?: number; keyword?: string } = {}) {
+  const res = await service.get('/api/identity/manger/users', {
+    params: { page: params.page || 1, pageSize: params.pageSize || 10, keyword: params.keyword || '' }
+  });
+  const d: any = unwrap(res) || {};
+  const rows = (d.items || []).map((u: any) => ({
+    userGuid: u.userGuid,
+    userName: u.userName || u.userEmail,
+    userEmail: u.userEmail,
+    imageCover: u.avatarUrl,
+    phone: u.phone,
+    status: u.isLockedOut ? 'Banned' : 'Normal',
+    createDatetime: u.createDatetime,
+    lastOnline: null
+  }));
+  return { data: { items: rows, totalCount: d.totalCount || 0, page: d.page || 1, pageSize: d.pageSize || 10 } };
 }
 
-export function getAdminOnlineUsers() {
-  // ⚠️ 后端缺口：无在线用户列表端点，返回空态
-  return Promise.resolve({ data: [] });
+// 添加用户：POST /api/identity/manger/users { email, password }
+export function addAdminUser(payload: { userName?: string; email: string; password: string }) {
+  return service.post('/api/identity/manger/users', { email: payload.email, password: payload.password });
+}
+
+// 封禁用户：POST /api/identity/manger/users/{userGuid}/ban
+export function banAdminUser(userGuid: string, reason = '', duration = 'forever') {
+  return service.post(`/api/identity/manger/users/${userGuid}/ban`, { reason, duration });
+}
+
+// 删除（停用）用户：DELETE /api/identity/manger/users/{userGuid}
+export function deleteAdminUser(userGuid: string, reason = '') {
+  return service.delete(`/api/identity/manger/users/${userGuid}`, { data: { reason } });
 }
 
 // ==================== 内容审核（后端完整：AuditApi） ====================
 // GET /api/audit/tweets/pending?page&pageSize（PagedResult 字段是 TotalCount！）
-export function getPendingTweets(params: PageParams = {}) {
+export function getPendingTweets(params: PageParams & { [k: string]: unknown } = {}) {
   return service.get('/api/audit/tweets/pending', { params });
 }
 
@@ -64,15 +120,14 @@ export function rejectTweet(tweetGuid: string, reason: string) {
   return service.post(`/api/audit/tweets/${tweetGuid}/reject`, { reason });
 }
 
-// ⚠️ 屏蔽/删除内容后端无管理端点
-export function blockTweet() {
-  // ⚠️ 后端缺口：无屏蔽内容端点；禁止 mock 成功，避免误操作
-  return Promise.reject(new Error('屏蔽内容功能尚未接入后端，操作未执行'));
+// 屏蔽内容：POST /api/audit/tweets/{tweetGuid}/block（置驳回 + 审计日志）
+export function blockTweet(tweetGuid: string, reason = '') {
+  return service.post(`/api/audit/tweets/${tweetGuid}/block`, { reason });
 }
 
-export function deleteTweet() {
-  // ⚠️ 后端缺口：无删除内容端点；禁止 mock 成功，避免误操作
-  return Promise.reject(new Error('删除内容功能尚未接入后端，操作未执行'));
+// 删除内容（管理员）：POST /api/audit/tweets/{tweetGuid}/delete
+export function deleteTweet(tweetGuid: string, reason = '') {
+  return service.post(`/api/audit/tweets/${tweetGuid}/delete`, { reason });
 }
 
 // ==================== 举报管理（后端完整：AuditApi） ====================
@@ -85,20 +140,36 @@ export function resolveReport(reportGuid: string, payload: QueryParams) {
   return service.post(`/api/audit/reports/${reportGuid}/resolve`, payload);
 }
 
-// ==================== 社区管理 ====================
-// ⚠️ 全量社区列表后端无端点（缺口 #5），操作真实
-export function getAdminCircles() {
-  // ⚠️ 后端缺口：无全量社区列表端点，返回空态
-  return Promise.resolve({ data: [] });
+// ==================== 社区管理（/api/audit/circles + /api/circles） ====================
+// 全量社区列表：GET /api/audit/circles（含已解散/封禁状态，分页）
+export async function getAdminCircles(params: PageParams & { keyword?: string } = {}) {
+  const res = await service.get('/api/audit/circles', {
+    params: { page: params.page || 1, pageSize: params.pageSize || 50, keyword: params.keyword || '' }
+  });
+  const d: any = unwrap(res) || {};
+  const rows = (d.items || []).map((c: any) => ({
+    circleGuid: c.circleGuid,
+    name: c.name,
+    description: c.description || c.name,
+    avatarUrl: c.avatarUrl || '',
+    coverUrl: c.coverUrl || '',
+    ownerGuid: c.ownerGuid,
+    ownerName: shortId(c.ownerGuid),
+    memberCount: c.memberCount || 0,
+    postCount: c.postCount || 0,
+    status: c.status === 'Dissolved' || c.isDismissed ? 'Banned' : 'Normal',
+    createTime: c.createTime
+  }));
+  return { data: { items: rows, list: rows, totalCount: d.totalCount || 0 } };
 }
 
 export function getAdminCircleMembers(circleGuid: string) {
   return service.get(`/api/circles/${circleGuid}/members`);
 }
 
-export function banCircle() {
-  // ⚠️ 后端缺口：无封禁社区端点；禁止 mock 成功，避免误操作
-  return Promise.reject(new Error('封禁社区功能尚未接入后端，操作未执行'));
+// 封禁社区：POST /api/audit/circles/{circleGuid}/ban（管理员解散）
+export function banCircle(circleGuid: string, reason = '') {
+  return service.post(`/api/audit/circles/${circleGuid}/ban`, { reason });
 }
 
 export function dissolveCircle(circleGuid: string) {
@@ -113,29 +184,63 @@ export function removeCircleMember(circleGuid: string, userGuid: string) {
   return service.delete(`/api/circles/${circleGuid}/members/${userGuid}`);
 }
 
-// ==================== 文件管理（后端缺口 #4，全 mock） ====================
-export function getAdminFiles() {
-  // ⚠️ 后端缺口：无文件管理列表端点，返回空态
-  return Promise.resolve({ data: { items: [], totalCount: 0 } });
+// ==================== 文件管理（/api/filestorage/admin/*） ====================
+// 文件列表：GET /api/filestorage/admin/files?page&pageSize&keyword
+export async function getAdminFiles(params: { page?: number; pageSize?: number; keyword?: string } = {}) {
+  const res = await service.get('/api/filestorage/admin/files', {
+    params: { page: params.page || 1, pageSize: params.pageSize || 50, keyword: params.keyword || '' }
+  });
+  const d: any = res && res.data ? res.data : {};
+  const rows = (d.data || []).map((f: any) => {
+    const isVideo = /\.(mp4|webm|mkv|mov|avi|flv)$/i.test(f.fileName || '');
+    const isImage = f.source === 'Image' || (f.fileUri || '').includes('image');
+    return {
+      fileId: f.fileId,
+      name: f.fileName,
+      size: f.fileSize,
+      url: f.fileUri,
+      type: isImage ? 'image' : isVideo ? 'video' : 'doc',
+      uploader: shortId(f.userId),
+      userId: f.userId,
+      uploadTime: f.uploadTime,
+      md5: f.fileMd5 || '—',
+      path: f.fileUri + (f.userId ? '' : '')
+    };
+  });
+  return { data: { items: rows, list: rows, totalCount: d.totalCount || rows.length } };
 }
 
-export function deleteAdminFile() {
-  // ⚠️ 后端缺口：无删除文件端点；禁止 mock 成功，避免误操作
-  return Promise.reject(new Error('删除文件功能尚未接入后端，操作未执行'));
+// 删除文件：DELETE /api/filestorage/admin/files/{fileId}
+export function deleteAdminFile(fileId: string, reason = '') {
+  return service.delete(`/api/filestorage/admin/files/${fileId}`, { data: { reason } });
 }
 
-// ==================== 公报（后端缺口 #3，全 mock） ====================
-export function getAnnouncements() {
-  // ⚠️ 后端缺口：无公报列表端点，返回空态
-  return Promise.resolve({ data: [] });
+// ==================== 公报（/api/announcements） ====================
+// 公报列表：GET /api/announcements（未撤回，分页）
+export async function getAnnouncements(params: QueryParams = {}) {
+  const res = await service.get('/api/announcements', { params });
+  const d: any = unwrap(res) || {};
+  const rows = (d.items || []).map((a: any) => ({
+    id: a.announcementGuid,
+    announcementGuid: a.announcementGuid,
+    title: a.title,
+    content: a.content,
+    recalled: a.isRecalled,
+    type: '公告',
+    scopeLabel: '全体用户',
+    sender: shortId(a.creatorUserId),
+    sentTime: a.createdAt,
+    delivered: '—'
+  }));
+  return { data: { items: rows, list: rows, totalCount: d.totalCount || rows.length } };
 }
 
-export function sendAnnouncement() {
-  // ⚠️ 后端缺口：无公报发送端点；禁止 mock 成功，避免误操作
-  return Promise.reject(new Error('公报发送功能尚未接入后端，操作未执行'));
+// 发送公报：POST /api/announcements { title, content }
+export function sendAnnouncement(payload: { title: string; content: string }) {
+  return service.post('/api/announcements', payload);
 }
 
-export function recallAnnouncement() {
-  // ⚠️ 后端缺口：无公报撤回端点；禁止 mock 成功，避免误操作
-  return Promise.reject(new Error('公报撤回功能尚未接入后端，操作未执行'));
+// 撤回公报：POST /api/announcements/{announcementGuid}/recall
+export function recallAnnouncement(announcementGuid: string) {
+  return service.post(`/api/announcements/${announcementGuid}/recall`);
 }
