@@ -16,7 +16,6 @@
         <div class="flex-1 min-w-0">
           <div class="text-lg font-bold text-zinc-800 dark:text-zinc-100 truncate">
             {{ name }}
-            <span v-if="isSample" class="align-middle text-[10px] leading-none px-1 py-0.5 rounded-[5%] bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 ml-1">示例</span>
           </div>
           <div class="text-xs text-zinc-500 dark:text-zinc-300 truncate mt-0.5">{{ description }}</div>
           <div class="text-[11px] text-zinc-400 mt-1 flex items-center gap-3">
@@ -26,7 +25,7 @@
         </div>
         <!-- 右上操作：创建者/管理者=社区管理（改信息仅创建者）；普通成员=邀请（邀请码）+ 退出；私密模式仅创建者可邀请 -->
         <button v-if="canManageUsers && !confirmingLeave" class="px-3 h-8 rounded-[5%] text-xs font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:brightness-110 active:scale-95 transition-all inline-flex items-center gap-1" @click="$emit('manage')"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg> 社区管理</button>
-        <button v-if="!canManageUsers && !confirmingLeave && joinMode !== 'private'" class="px-3 h-8 rounded-[5%] text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors inline-flex items-center gap-1" @click="genMemberInvite"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> 邀请</button>
+        <button v-if="!canManageUsers && !confirmingLeave" class="px-3 h-8 rounded-[5%] text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors inline-flex items-center gap-1" @click="genMemberInvite"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> 邀请</button>
         <button v-if="!canManageUsers && !confirmingLeave" class="px-3 h-8 rounded-[5%] text-xs font-medium text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" @click="confirmingLeave = true">退出社区</button>
         <div v-else-if="!canManageUsers && confirmingLeave" class="flex items-center gap-2 shrink-0">
           <span class="text-xs text-zinc-500 dark:text-zinc-400">确定退出？</span>
@@ -88,7 +87,6 @@ interface CircleData {
   name?: string
   description?: string
   memberCount?: number
-  isSample?: boolean
 }
 
 interface CircleTab {
@@ -101,7 +99,6 @@ const props = defineProps<{
   current: CircleData | null
   circleTab?: string
   myRole?: string
-  joinMode?: string
 }>()
 defineEmits<{
   manage: []
@@ -127,7 +124,6 @@ const avatarUrl = computed(() => props.current?.avatarUrl || '')
 const name = computed(() => props.current?.name || '')
 const description = computed(() => props.current?.description || '暂无简介')
 const memberCount = computed(() => props.current?.memberCount || 0)
-const isSample = computed(() => !!props.current?.isSample)
 const coverIsVideo = computed(() => /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(coverUrl.value))
 const isOwner = computed(() => props.myRole === 'Owner')
 const canManageUsers = computed(() => props.myRole === 'Owner' || props.myRole === 'Admin')

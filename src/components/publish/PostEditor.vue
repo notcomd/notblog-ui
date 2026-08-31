@@ -288,10 +288,10 @@ async function onPickImage(e: Event) {
   try {
     const res = await uploadImage(file)
     const data = unwrap(res) || {}
-    images.value.push({ fileId: data.fileId || data.file_id || 'mock-' + Date.now(), preview: data.fileUri || URL.createObjectURL(file) })
+    if (!data.fileId && !data.file_id) throw new Error('上传响应缺少 fileId')
+    images.value.push({ fileId: data.fileId || data.file_id, preview: data.fileUri || '' })
   } catch (err) {
-    images.value.push({ fileId: 'mock-' + Date.now(), preview: URL.createObjectURL(file) })
-    toast.push('上传失败（mock 模式已本地预览）', 'info')
+    toast.push('图片上传失败，请重试', 'error')
   } finally {
     uploading.value = false
   }
@@ -348,8 +348,8 @@ async function publish() {
     const newId = (data && typeof data === 'object' && (data.data || data.tweetGuid)) || data
     toast.push(circleGuid.value ? '已发布到社区' : '发布成功', 'success')
     if (draftId.value) { removeDraft(draftId.value); draftId.value = '' }
-    if (newId && String(newId).startsWith('mock')) router.push('/home')
-    else router.push(`/posts/${newId}`)
+    if (newId) router.push(`/posts/${newId}`)
+    else router.push('/home')
   } catch (e) {
     toast.push('发布失败，请稍后重试', 'error')
   } finally {

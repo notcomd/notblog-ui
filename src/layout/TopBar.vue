@@ -172,7 +172,6 @@ import SkinPanel from '@/components/common/SkinPanel.vue'
 import NotificationPanel from '@/components/common/NotificationPanel.vue'
 import { getMyUserInfo, signIn } from '@/api/userinfo'
 import { getNotificationUnreadCount } from '@/api/notification'
-import { SAMPLE_NOTIFICATIONS } from '@/utils/notifications'
 import { MAIN_NAV_ITEMS, buildSpaceNavItems } from '@/layout/navItems'
 
 const auth = useAuthStore()
@@ -321,8 +320,7 @@ async function loadUnread(): Promise<void> {
     const res = await getNotificationUnreadCount()
     unread.value = (res && res.data) || 0
   } catch (e) {
-    // 后端离线 → 示例未读数（仅用于展示）
-    unread.value = SAMPLE_NOTIFICATIONS.filter(n => !n.isRead).length
+    unread.value = 0
   }
 }
 

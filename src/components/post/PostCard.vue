@@ -133,7 +133,7 @@ function onCoverError() {
 }
 
 function hideAvatar(e: Event) {
-  ;(e.target as HTMLElement).style.visibility = 'hidden'
+  (e.target as HTMLElement).style.visibility = 'hidden'
 }
 
 async function onLike() {

@@ -3,7 +3,7 @@
     <!-- 左：新建公报表单 -->
     <div class="glass-card p-5 space-y-4 h-fit">
       <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
-        <span class="text-lg"><svg class="w-5 h-5 inline-block align-[-3px] text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></span> 新建公报 <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-600 font-normal">后端缺口 · 演示</span>
+        <span class="text-lg"><svg class="w-5 h-5 inline-block align-[-3px] text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></span> 新建公报
       </h3>
       <!-- 发送范围 -->
       <div>

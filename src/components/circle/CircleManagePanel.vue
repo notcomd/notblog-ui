@@ -35,44 +35,6 @@
         </div>
       </div>
 
-      <!-- 加入方式三选（仅创建者可修改；localStorage 本地持久化，后端暂无字段） -->
-      <div>
-        <p class="text-xs font-medium text-zinc-400 mb-2">加入方式</p>
-        <div class="grid grid-cols-3 gap-2">
-          <button
-            v-for="m in JOIN_MODES"
-            :key="m.key"
-            class="rounded-[5%] border px-3 py-2.5 text-left transition-colors"
-            :class="joinMode === m.key ? 'border-amber-400 bg-amber-50 dark:bg-amber-500/10' : 'border-zinc-200/70 dark:border-zinc-700/60 hover:bg-white/60 dark:hover:bg-zinc-800/60'"
-            :disabled="!isOwner"
-            @click="setMode(m.key)"
-          >
-            <span class="block text-xs font-medium text-zinc-700 dark:text-zinc-200 inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="m.icon"></svg>{{ m.label }}</span>
-            <span class="block text-[10px] text-zinc-400 mt-0.5">{{ m.desc }}</span>
-          </button>
-        </div>
-        <p class="text-[10px] text-zinc-400 mt-1.5">加入方式保存在本机（后端暂无字段，跨设备不同步）</p>
-      </div>
-
-      <!-- 审核队列（审核制社区；创建者/管理者处理） -->
-      <div v-if="joinMode === 'review'">
-        <p class="text-xs font-medium text-zinc-400 mb-2">加入申请（{{ joinRequests.length }}）</p>
-        <div v-if="joinRequests.length === 0" class="text-xs text-zinc-400 py-6 text-center bg-white/40 dark:bg-zinc-800/40 rounded-[5%]">暂无待审核申请</div>
-        <div v-else class="space-y-1">
-          <div v-for="r in joinRequests" :key="r.userGuid" class="flex items-center gap-3 px-2 py-2 rounded-[5%] hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors">
-            <img :src="themeAvatar((r.userName || '友').charAt(0))" alt="" class="w-9 h-9 rounded-[5%] object-cover shrink-0" />
-            <span class="flex-1 min-w-0">
-              <span class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ r.userName }}</span>
-              <span class="block text-xs text-zinc-400">{{ new Date(r.time).toLocaleString() }}</span>
-            </span>
-            <div class="flex gap-1.5 shrink-0">
-              <button class="h-7 px-2.5 rounded-[5%] text-[11px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors" @click="approve(r)">通过</button>
-              <button class="h-7 px-2.5 rounded-[5%] text-[11px] font-medium text-red-500 hover:bg-red-500/10 transition-colors" @click="reject(r)">拒绝</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- 邀请码 -->
       <div>
         <div class="flex items-center justify-between mb-2">
@@ -81,14 +43,13 @@
             {{ generating ? '生成中...' : '＋ 生成邀请码' }}
           </button>
         </div>
-        <p v-if="joinMode === 'private' && !isOwner" class="text-xs text-zinc-400 py-3 text-center bg-white/40 dark:bg-zinc-800/40 rounded-[5%]">私密社区仅创建者可邀请</p>
-        <div v-else-if="inviteCodes.length === 0" class="text-xs text-zinc-400 py-3 text-center bg-white/40 dark:bg-zinc-800/40 rounded-[5%]">暂无邀请码，点击上方生成</div>
+        <div v-if="inviteCodes.length === 0" class="text-xs text-zinc-400 py-3 text-center bg-white/40 dark:bg-zinc-800/40 rounded-[5%]">暂无邀请码，点击上方生成</div>
         <div v-for="it in inviteCodes" :key="it.inviteGuid" class="flex items-center gap-2 px-3 py-2 rounded-[5%] bg-white/40 dark:bg-zinc-800/40 mb-1">
           <code class="flex-1 text-sm font-mono tracking-wider text-zinc-700 dark:text-zinc-200">{{ it.code }}</code>
           <button class="h-7 px-2.5 rounded-[5%] text-[11px] text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" @click="copy(it)">复制</button>
           <button class="h-7 px-2.5 rounded-[5%] text-[11px] text-red-500 hover:bg-red-500/10 transition-colors" @click="revoke(it)">撤销</button>
         </div>
-        <p class="text-[10px] text-zinc-400 mt-2">邀请：全员可用邀请码；审核：可公开申请，创建者/管理者审核；私密：仅创建者可邀请</p>
+        <p class="text-[10px] text-zinc-400 mt-2">成员凭邀请码加入圈子</p>
       </div>
     </div>
 
@@ -103,9 +64,8 @@
 </template>
 
 <script setup lang="ts">
-// 社区管理面板：基本信息（Owner）/加入方式三选（Owner）/审核队列/邀请码（localStorage 本地持久化）
+// 社区管理面板：基本信息（Owner）+ 邀请码（真实端点生成/撤销）
 import { computed, ref, watch } from 'vue'
-import { themeAvatar } from '@/utils/avatar'
 import { generateCircleInvitation, getCircleInvitations, revokeCircleInvitation, updateCircle } from '@/api/circle'
 import { useToastStore } from '@/stores/toast'
 
@@ -115,25 +75,11 @@ interface CircleData {
   description?: string
   avatarUrl?: string
   coverUrl?: string
-  isSample?: boolean
-}
-
-interface JoinMode {
-  key: string
-  label: string
-  desc: string
-  icon: string
 }
 
 interface InviteCode {
   inviteGuid?: string
   code: string
-}
-
-interface JoinRequest {
-  userGuid: string
-  userName: string
-  time: any
 }
 
 const props = defineProps<{
@@ -147,12 +93,6 @@ const emit = defineEmits<{
 
 const toast = useToastStore()
 
-const JOIN_MODES: JoinMode[] = [
-  { key: 'invite', label: '邀请', desc: '全员可用邀请码', icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>' },
-  { key: 'private', label: '私密', desc: '仅创建者可邀请', icon: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>' },
-  { key: 'review', label: '审核', desc: '公开申请+审核', icon: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>' }
-]
-
 const isOwner = computed(() => props.myRole === 'Owner')
 
 const name = ref('')
@@ -162,8 +102,6 @@ const coverPreview = ref('')
 const saving = ref(false)
 const avatarInput = ref<HTMLInputElement | null>(null)
 const coverInput = ref<HTMLInputElement | null>(null)
-const joinMode = ref('invite')
-const joinRequests = ref<JoinRequest[]>([])
 const inviteCodes = ref<InviteCode[]>([])
 const generating = ref(false)
 
@@ -178,82 +116,19 @@ watch(() => props.current, (c) => {
   desc.value = c.description || ''
   avatarPreview.value = ''
   coverPreview.value = ''
-  joinMode.value = circleJoinMode(c.circleGuid)
-  joinRequests.value = loadJoinRequests(c.circleGuid)
   loadInviteCodes(c.circleGuid)
 }, { immediate: true })
 
-// ===== 加入方式（localStorage 本地持久化） =====
-function circleJoinMode(guid: string): string {
-  try {
-    return localStorage.getItem('notblog-circle-joinmode-' + guid) || 'invite'
-  } catch (e) {
-    return 'invite'
-  }
-}
-function setMode(m: string) {
-  if (!isOwner.value || !props.current) return
-  joinMode.value = m
-  try {
-    localStorage.setItem('notblog-circle-joinmode-' + props.current.circleGuid, m)
-  } catch (e) { /* 忽略 */ }
-}
-function joinRequestsKey(guid: string): string {
-  return 'notblog-circle-joinreq-' + guid
-}
-function loadJoinRequests(guid: string): JoinRequest[] {
-  try {
-    return JSON.parse(localStorage.getItem(joinRequestsKey(guid)) || '[]')
-  } catch (e) {
-    return []
-  }
-}
-function saveJoinRequests() {
-  if (!props.current) return
-  try {
-    localStorage.setItem(joinRequestsKey(props.current.circleGuid), JSON.stringify(joinRequests.value))
-  } catch (e) { /* 忽略 */ }
-}
-function approve(r: JoinRequest) {
-  joinRequests.value = joinRequests.value.filter(x => x.userGuid !== r.userGuid)
-  saveJoinRequests()
-  toast.push('已通过 ' + (r.userName || '') + ' 的加入申请', 'success')
-}
-function reject(r: JoinRequest) {
-  joinRequests.value = joinRequests.value.filter(x => x.userGuid !== r.userGuid)
-  saveJoinRequests()
-  toast.push('已拒绝 ' + (r.userName || '') + ' 的加入申请', 'info')
-}
-
-// ===== 邀请码 =====
-function invitesKey(guid: string): string {
-  return 'notblog-circle-invites-' + guid
-}
+// ===== 邀请码（真实端点生成/撤销） =====
 async function loadInviteCodes(guid: string) {
-  const local = loadLocalInvites(guid)
   try {
     const res = await getCircleInvitations(guid)
     const data = res && res.data ? res.data : res
     const list = (data && (data.items || data.list)) || data || []
-    if (Array.isArray(list) && list.length) {
-      inviteCodes.value = list.map(x => ({ inviteGuid: x.inviteGuid, code: x.code }))
-      return
-    }
-  } catch (e) { /* 后端未就绪，用本地 */ }
-  inviteCodes.value = local
-}
-function loadLocalInvites(guid: string): InviteCode[] {
-  try {
-    return JSON.parse(localStorage.getItem(invitesKey(guid)) || '[]')
+    inviteCodes.value = (Array.isArray(list) ? list : []).map(x => ({ inviteGuid: x.inviteGuid, code: x.code }))
   } catch (e) {
-    return []
+    inviteCodes.value = []
   }
-}
-function saveLocalInvites() {
-  if (!props.current) return
-  try {
-    localStorage.setItem(invitesKey(props.current.circleGuid), JSON.stringify(inviteCodes.value))
-  } catch (e) { /* 忽略 */ }
 }
 async function genInvite() {
   if (!props.current) return
@@ -264,27 +139,23 @@ async function genInvite() {
     const body = data && data.data ? data.data : data
     const code = (body && (body.code || body.inviteGuid)) || ''
     if (!code) throw new Error('未返回邀请码')
-    inviteCodes.value.unshift({ inviteGuid: body.inviteGuid || 'local-' + Date.now(), code })
-    saveLocalInvites()
+    inviteCodes.value.unshift({ inviteGuid: body.inviteGuid || '', code })
     toast.push('邀请码已生成', 'success')
   } catch (e) {
-    // 后端未就绪：本地生成 8 位邀请码兜底
-    const code = Array.from({ length: 8 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('')
-    inviteCodes.value.unshift({ inviteGuid: 'local-' + Date.now(), code })
-    saveLocalInvites()
-    toast.push('邀请码已生成（本地）', 'success')
+    toast.push('邀请码生成失败：' + (e.message || '请重试'), 'error')
   } finally {
     generating.value = false
   }
 }
 async function revoke(it: InviteCode) {
-  if (!props.current) return
+  if (!props.current || !it.inviteGuid) return
   try {
-    await revokeCircleInvitation(props.current.circleGuid, it.inviteGuid!)
-  } catch (e) { /* 本地删除 */ }
-  inviteCodes.value = inviteCodes.value.filter(x => x.inviteGuid !== it.inviteGuid)
-  saveLocalInvites()
-  toast.push('邀请码已撤销', 'info')
+    await revokeCircleInvitation(props.current.circleGuid, it.inviteGuid)
+    inviteCodes.value = inviteCodes.value.filter(x => x.inviteGuid !== it.inviteGuid)
+    toast.push('邀请码已撤销', 'info')
+  } catch (e) {
+    toast.push('撤销失败：' + (e.message || '请重试'), 'error')
+  }
 }
 function copy(it: InviteCode) {
   try {
@@ -314,8 +185,7 @@ async function onAvatarFile(e: Event) {
     avatarPreview.value = (body && (body.fileUri || body.url)) || URL.createObjectURL(file)
     toast.push('头像已上传', 'success')
   } catch (err) {
-    avatarPreview.value = URL.createObjectURL(file)
-    toast.push('上传失败（本地预览）', 'info')
+    toast.push('头像上传失败，请重试', 'error')
   }
 }
 async function onCoverFile(e: Event) {
@@ -332,27 +202,23 @@ async function onCoverFile(e: Event) {
     coverPreview.value = (body && (body.fileUri || body.url)) || URL.createObjectURL(file)
     toast.push('封面已上传', 'success')
   } catch (err) {
-    coverPreview.value = URL.createObjectURL(file)
-    toast.push('上传失败（本地预览）', 'info')
+    toast.push('封面上传失败，请重试', 'error')
   }
 }
 
-// ===== 保存（真实社区走 PUT /api/circles/{guid}；示例社区本地更新） =====
+// ===== 保存（真实社区走 PUT /api/circles/{guid}） =====
 async function save() {
   if (!props.current || !name.value.trim()) return
   saving.value = true
   try {
-    if (!props.current.isSample) {
-      const payload = {
-        name: name.value.trim(),
-        description: desc.value.trim(),
-        ...(avatarPreview.value ? { avatarUrl: avatarPreview.value } : {}),
-        ...(coverPreview.value ? { coverUrl: coverPreview.value } : {})
-      }
-      try {
-        await updateCircle(props.current.circleGuid, payload)
-      } catch (e) { /* 后端未就绪时本地生效 */ }
+    if (!props.current.circleGuid) return
+    const payload = {
+      name: name.value.trim(),
+      description: desc.value.trim(),
+      ...(avatarPreview.value ? { avatarUrl: avatarPreview.value } : {}),
+      ...(coverPreview.value ? { coverUrl: coverPreview.value } : {})
     }
+    await updateCircle(props.current.circleGuid, payload)
     toast.push('社区信息已保存', 'success')
     emit('saved', {
       name: name.value.trim(),
@@ -360,6 +226,8 @@ async function save() {
       avatarUrl: avatarPreview.value || props.current.avatarUrl || '',
       coverUrl: coverPreview.value || props.current.coverUrl || ''
     })
+  } catch (e) {
+    toast.push('保存失败：' + (e.message || '请重试'), 'error')
   } finally {
     saving.value = false
   }

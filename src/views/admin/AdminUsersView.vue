@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">用户管理</h1>
-        <p class="text-sm text-zinc-400 mt-1">用户列表与管控（封禁/删除后端缺口，当前为演示数据）</p>
+        <p class="text-sm text-zinc-400 mt-1">用户列表与管控（列表/封禁/删除已接入；批量封禁/删除后端未实现）</p>
       </div>
       <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all" @click="showAdd = true">＋ 添加用户</button>
     </div>

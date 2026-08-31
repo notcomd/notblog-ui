@@ -71,7 +71,7 @@ import { useToastStore } from '@/stores/toast'
 import { createGroup, createGroupSession, searchGroups } from '@/api/chat'
 import { uploadImage } from '@/api/publish'
 import { getMyUserInfo } from '@/api/userinfo'
-import { validateImageFile, compressImage, blobToDataUri } from '@/utils/image'
+import { validateImageFile, compressImage } from '@/utils/image'
 
 defineProps<{
   mode?: string
@@ -99,10 +99,6 @@ const groupResults = ref<any[]>([])
 const groupSearching = ref(false)
 const groupSearched = ref(false)
 
-function groupAvatarKey(groupId: string): string {
-  return 'notblog-group-avatar-' + groupId
-}
-
 async function onGroupAvatarChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files && input.files[0]
@@ -114,21 +110,15 @@ async function onGroupAvatarChange(e: Event) {
   try {
     const { blob } = await compressImage(file)
     const upFile = new File([blob], 'group-avatar.webp', { type: 'image/webp' })
-    try {
-      const res = await uploadImage(upFile, 'group-avatar')
-      const d = res && res.data ? res.data : res
-      const uri = d && (d.fileUri || d.url)
-      if (!uri) throw new Error('no fileUri')
-      groupAvatarPreview.value = uri
-      groupAvatarValue.value = uri
-    } catch (err) {
-      const uri = await blobToDataUri(blob)
-      groupAvatarPreview.value = uri
-      groupAvatarValue.value = uri
-      toast.push('头像已本地保存（后端未就绪）', 'info')
-    }
+    const res = await uploadImage(upFile, 'group-avatar')
+    const d = res && res.data ? res.data : res
+    const uri = d && (d.fileUri || d.url)
+    if (!uri) throw new Error('no fileUri')
+    // 群头像仅作创建时的视觉预览：后端 Group 无头像字段，不自制本地持久化
+    groupAvatarPreview.value = uri
+    groupAvatarValue.value = uri
   } catch (err) {
-    toast.push('头像处理失败，请重试', 'error')
+    toast.push('头像上传失败，请重试', 'error')
   } finally {
     groupAvatarUpdating.value = false
   }
@@ -148,9 +138,6 @@ async function doCreateGroup() {
     const d = res && res.data ? res.data : res
     const groupId = typeof d === 'string' ? d : (d && (d.groupId || d.id)) || ''
     if (!groupId) throw new Error('no groupId')
-    if (groupAvatarValue.value) {
-      try { localStorage.setItem(groupAvatarKey(groupId), groupAvatarValue.value) } catch (err) { /* 忽略 */ }
-    }
     toast.push('群聊创建成功', 'success')
     groupName.value = ''
     groupDesc.value = ''

@@ -29,6 +29,8 @@
     "@babel/eslint-parser": "^7.12.16",
     "@babel/preset-env": "^7.28.3",
     "@babel/preset-typescript": "^7.29.7",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-plugin-typescript": "~5.0.0",
@@ -45,20 +47,6 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "vue-tsc": "^2.2.12"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
-    },
-    "extends": [
-      "plugin:vue/vue3-essential",
-      "eslint:recommended"
-    ],
-    "parserOptions": {
-      "parser": "@babel/eslint-parser"
-    },
-    "rules": {}
   },
   "browserslist": [
     "> 1%",

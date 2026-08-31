@@ -61,7 +61,7 @@
               </div>
             </div>
             <!-- 会话 -->
-            <div v-else class="py-10 text-center text-sm text-zinc-400">该社区下的会话列表（后端缺口，演示数据）</div>
+            <div v-else class="py-10 text-center text-sm text-zinc-400">该社区下的会话列表（后端未实现该端点）</div>
           </div>
         </div>
         <div v-else class="py-24 flex flex-col items-center gap-4 text-zinc-400">

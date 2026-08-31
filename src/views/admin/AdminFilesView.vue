@@ -2,7 +2,7 @@
   <div class="max-w-[1400px] mx-auto space-y-5">
     <div>
       <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">文件管理</h1>
-      <p class="text-sm text-zinc-400 mt-1">文件资源库（后端缺口：管理列表/删除端点，当前为演示数据）</p>
+      <p class="text-sm text-zinc-400 mt-1">文件资源库（管理列表/删除已接入后端）</p>
     </div>
 
     <!-- 存储统计 -->

@@ -1,6 +1,5 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import type { HubConnection } from '@microsoft/signalr';
 import {
   getSessions,
   getMessages,

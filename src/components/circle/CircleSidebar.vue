@@ -25,7 +25,6 @@
           <span class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ c.name }}</span>
           <span class="block text-xs text-zinc-400">{{ c.memberCount || 0 }} 成员</span>
         </span>
-        <span v-if="c.isSample" class="shrink-0 text-[10px] leading-none px-1 py-0.5 rounded-[5%] bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400">示例</span>
       </button>
     </div>
 
@@ -44,13 +43,12 @@
 </template>
 
 <script setup lang="ts">
-// 社区侧边栏：我的社区列表（含示例数据徽标）+ 创建/加入入口（固定展开态）
+// 社区侧边栏：我的社区列表 + 创建/加入入口（固定展开态）
 interface CircleItem {
   circleGuid?: string
   name?: string
   avatarUrl?: string
   memberCount?: number
-  isSample?: boolean
 }
 
 defineProps<{

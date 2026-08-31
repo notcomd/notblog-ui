@@ -205,14 +205,14 @@ async function onCoverPick(e: Event) {
   try {
     const res = await uploadImage(file)
     const data = unwrap(res) || {}
-    coverUrl.value = data.fileUri || data.file_url || URL.createObjectURL(file)
-    coverFileId.value = data.fileId || data.file_id || ''
-    if (!coverUrl.value) coverUrl.value = URL.createObjectURL(file)
+    if (!data.fileId && !data.file_id) throw new Error('上传响应缺少 fileId')
+    coverUrl.value = data.fileUri || data.file_url || ''
+    coverFileId.value = data.fileId || data.file_id
+    if (!coverUrl.value) throw new Error('上传响应缺少 fileUri')
     toast.push('封面上传成功', 'success')
   } catch (err) {
-    coverUrl.value = URL.createObjectURL(file)
     coverFileId.value = ''
-    toast.push('上传失败（mock 模式已本地预览）', 'info')
+    toast.push('封面上传失败，请重试', 'error')
   } finally {
     coverUploading.value = false
   }
@@ -267,8 +267,8 @@ async function publish() {
     const newId = (data && typeof data === 'object' && (data.data || data.tweetGuid)) || data
     toast.push(circleGuid.value ? '已发布到社区' : '视频发布成功', 'success')
     if (draftId.value) { removeDraft(draftId.value); draftId.value = '' }
-    if (newId && String(newId).startsWith('mock')) router.push('/home')
-    else router.push(`/posts/${newId}`)
+    if (newId) router.push(`/posts/${newId}`)
+    else router.push('/home')
   } catch (e) {
     toast.push('发布失败，请稍后重试', 'error')
   } finally {

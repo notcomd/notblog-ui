@@ -26,7 +26,6 @@ import AdminAnnouncementsView from '@/views/admin/AdminAnnouncementsView.vue';
 
 // 旧版页面（保留但退出主导航）
 import LoginPage from '@/views/LoginPage.vue';
-import VerificationCodePage from '@/views/VerificationCodePage.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -94,11 +93,6 @@ const routes: RouteRecordRaw[] = [
     path: '/login',
     name: 'LoginPage',
     component: LoginPage
-  },
-  {
-    path: '/verify-code',
-    name: 'VerificationCodePage',
-    component: VerificationCodePage
   }
   // ===== 旧版页面（保留路由，不进主导航） =====
 ];

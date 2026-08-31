@@ -189,8 +189,8 @@ async function publish() {
     const newId = (data && typeof data === 'object' && (data.data || data.markDownGuid)) || data
     toast.push('文章发布成功', 'success')
     if (draftId.value) { removeDraft(draftId.value); draftId.value = '' }
-    if (newId && String(newId).startsWith('mock')) router.push('/home')
-    else router.push(`/markdown/${newId}`)
+    if (newId) router.push(`/markdown/${newId}`)
+    else router.push('/home')
   } catch (e) {
     toast.push('发布失败，请稍后重试', 'error')
   } finally {

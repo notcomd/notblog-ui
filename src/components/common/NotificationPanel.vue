@@ -43,7 +43,6 @@
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-1.5">
               <span class="text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate">{{ meta(n).name }}</span>
-              <span v-if="n.isSample" class="shrink-0 text-[10px] leading-none px-1 py-0.5 rounded-[5%] bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300">示例</span>
               <span v-if="!n.isRead" class="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400"></span>
             </div>
             <!-- 正文（超两行折叠，可展开/收起） -->
@@ -64,7 +63,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from '@/api/notification'
-import { notificationMeta, SAMPLE_NOTIFICATIONS, type NotificationMeta } from '@/utils/notifications'
+import { notificationMeta, type NotificationMeta } from '@/utils/notifications'
 import { relativeTime } from '@/utils/format'
 
 interface NotificationItem {
@@ -74,7 +73,6 @@ interface NotificationItem {
   content: string
   isRead: boolean
   createTime: number | string
-  isSample?: boolean
 }
 
 const emit = defineEmits<{
@@ -84,7 +82,6 @@ const emit = defineEmits<{
 
 const list = ref<NotificationItem[]>([])
 const loading = ref(false)
-const sampleMode = ref(false) // 后端离线/空列表 → 示例数据展示
 const expanded = ref<boolean[]>([])
 const truncatable = ref<boolean[]>([])
 const itemEls: (HTMLElement | null)[] = []
@@ -120,17 +117,9 @@ async function load() {
   try {
     const res = await getNotifications({ pageSize: 20 })
     const items = (res && res.data && (res.data.items || res.data.list)) || []
-    if (items.length) {
-      list.value = items
-      sampleMode.value = false
-    } else {
-      list.value = SAMPLE_NOTIFICATIONS as NotificationItem[]
-      sampleMode.value = true
-    }
+    list.value = items
   } catch (e) {
-    // 后端离线/未鉴权 → 示例数据兜底（仅用于展示）
-    list.value = SAMPLE_NOTIFICATIONS as NotificationItem[]
-    sampleMode.value = true
+    list.value = []
   } finally {
     loading.value = false
     measure()
@@ -138,11 +127,6 @@ async function load() {
 }
 
 async function onReadAll() {
-  if (sampleMode.value) {
-    list.value.forEach(n => { n.isRead = true })
-    emit('read-all')
-    return
-  }
   try {
     await markAllNotificationsRead()
     list.value.forEach(n => { n.isRead = true })
@@ -156,9 +140,7 @@ async function onItemClick(n: NotificationItem, i: number) {
   if (!n.isRead) {
     n.isRead = true
     emit('unread-changed', -1)
-    if (!n.isSample) {
-      try { await markNotificationRead(n.notifyGuid) } catch (e) { /* 失败忽略 */ }
-    }
+    try { await markNotificationRead(n.notifyGuid) } catch (e) { /* 失败忽略 */ }
   }
   if (!expanded.value[i]) toggleExpand(i)
 }

@@ -22,6 +22,7 @@
         :speed="danmakuSpeed"
         :is-playing="!paused"
         :controls-visible="controlsVisible"
+        :current-time="currentTime"
         @count="barrageCount = $event"
         @blocked="onBlocked"
       />
@@ -178,7 +179,7 @@ async function loadBarrages() {
       userGuid: b.userGuid as string,
       userName: (b.userName as string) || '匿名',
       body: (b.body as string) || (b.videoBarrageBody as string) || '',
-      timeOffset: (b.timeOffset as number) || 0,
+      timeOffset: ((b.timeAt as any) ?? (b.timeOffset as any) ?? 0) / 1000,
       likeCount: (b.likeCount as number) || 0
     }))
   } catch (e) {
@@ -232,7 +233,7 @@ async function sendDanmaku() {
 
   danmakuDraft.value = ''
   try {
-    await sendBarrage(props.videoGuid, text)
+    await sendBarrage(props.videoGuid, text, Math.round(currentTime.value * 1000))
   } catch (e) {
     toast.push('弹幕发送失败，请稍后重试', 'error')
   }

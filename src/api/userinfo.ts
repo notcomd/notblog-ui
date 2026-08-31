@@ -10,6 +10,17 @@ export function getMyUserInfo() {
   return service.get('/api/user-info/me');
 }
 
+// 更新个人签名：PUT /api/user-info/me/bio { bio }（空串 = 清除）
+export function updateUserBio(bio: string) {
+  return service.put('/api/user-info/me/bio', { bio });
+}
+
+// 用户公开信息（个人主页）：GET /api/users/{userGuid}（需 JWT）
+// UserProfileDto { userGuid, nickName, bio, avatarUrl, followingCount, followerCount, postCount, likeTotal, isFollowing }
+export function getUserProfile(userGuid: string) {
+  return service.get(`/api/users/${userGuid}`);
+}
+
 // 更新背景封面：PUT /api/user-info/me/background { backgroundCoverUrl }（空串 = 清除）
 export function updateBackgroundCover(url: string) {
   return service.put('/api/user-info/me/background', { backgroundCoverUrl: url });

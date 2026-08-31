@@ -128,7 +128,7 @@
       <!-- 收藏（仅自己，私密内容） -->
       <div v-else-if="activeTab === 'favorites' && isSelf">
         <div class="flex items-center justify-between mb-4">
-          <span class="text-sm text-zinc-400">收藏的内容（后端缺口：待补 GET /api/tweets/favorites/my，当前为演示数据）</span>
+          <span class="text-sm text-zinc-400">收藏的内容</span>
         </div>
         <PostGrid :loader="favoritesLoader" :key="'fav'" empty-text="还没有收藏任何内容" />
       </div>
@@ -139,7 +139,7 @@
           <div class="flex flex-wrap gap-2">
             <button v-for="t in fileTypes" :key="t.key" class="px-3 py-1.5 rounded-[5%] text-xs font-medium transition-all" :class="fileType === t.key ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="fileType = t.key">{{ t.label }}</button>
           </div>
-          <span class="text-xs text-zinc-400">{{ isSelf ? '我的仓库端点后端缺口，当前为演示数据' : '公开文件端点后端缺口，当前为空' }}</span>
+          <span class="text-xs text-zinc-400">{{ isSelf ? '我的仓库文件' : '公开文件' }}</span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div v-for="f in filteredFiles" :key="f.fileId" class="glass-card overflow-hidden card-lift group">
@@ -300,8 +300,8 @@ import UserCard from '@/components/user/UserCard.vue'
 import { getUserPosts } from '@/api/tweet'
 import { getUserFavorites, getUserFiles, getLinkedAccounts, unlinkAccount, changePassword, getUserSafety, updateUserSafety } from '@/api/space'
 import { sendEmailCode } from '@/api/auth'
-import { getFollowing, follow, unfollow } from '@/api/follow'
-import { getMyUserInfo } from '@/api/userinfo'
+import { follow, unfollow } from '@/api/follow'
+import { getMyUserInfo, getUserProfile, updateUserBio } from '@/api/userinfo'
 import { createSession } from '@/api/chat'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
@@ -388,9 +388,10 @@ async function loadOverview(): Promise<void> {
     return
   }
   try {
-    const res = await getUserFavorites()
+    const res = await getUserFavorites({ page: 1, pageSize: 4 })
     const d: any = res && res.data ? res.data : res
-    recentFavorites.value = (d.items || d.list || []).slice(0, 4)
+    const paged: any = d && d.data ? d.data : d
+    recentFavorites.value = (paged.items || paged.list || []).slice(0, 4)
   } catch (e) {
     recentFavorites.value = []
   }
@@ -403,70 +404,67 @@ const pwdSaving = ref(false)
 
 const filteredFiles = computed(() => fileType.value === 'all' ? files.value : files.value.filter(f => f.type === fileType.value))
 
-function worksLoader(params: any): Promise<any> {
-  return getUserPosts(userId.value, params)
+async function worksLoader(params: any): Promise<any> {
+  const res = await getUserPosts(userId.value, params)
+  const d: any = res && res.data ? res.data : res
+  return (d && d.data) || d || { items: [], total: 0 }
 }
 
-function favoritesLoader() {
-  return getUserFavorites()
+async function favoritesLoader(): Promise<any> {
+  const res = await getUserFavorites({ page: 1, pageSize: 12 })
+  const d: any = res && res.data ? res.data : res
+  return (d && d.data) || d || { items: [], total: 0 }
 }
 
 async function loadUser(): Promise<void> {
-  // 真实用户信息：自己的从 JWT + /api/user-info/me；他人信息后端缺 /api/users/{guid} 端点（缺口清单），先展示 mock + JWT 混合
+  // 用户信息：自己与他人均走 Message GET /api/users/{guid}（昵称/头像/bio/关注/粉丝/作品/获赞/是否已关注）
   following.value = false
   userInfo.value = null
-  if (isSelf.value) {
-    // 签名：优先取本地保存值（后端缺口：无 bio 字段/端点，本地持久化）
-    let savedBio = ''
-    try {
-      savedBio = localStorage.getItem(bioStorageKey()) || ''
-    } catch (e) { /* 忽略 */ }
-    user.value = {
-      nickname: auth.user.name,
-      bio: savedBio || '我的个人空间',
-      avatar: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#fbbf24"/><text x="50" y="62" font-size="40" text-anchor="middle" fill="white">芒</text></svg>'),
-      followingCount: 6,
-      followerCount: 12,
-      likeTotal: 128
+  try {
+    const res = await getUserProfile(userId.value)
+    const d: any = res && res.data ? res.data : res
+    const p = d && d.userGuid ? d : null
+    if (p) {
+      user.value = {
+        nickname: (p.nickName || (isSelf.value ? auth.user?.name : '')) || '未命名用户',
+        bio: p.bio || '',
+        avatar: p.avatarUrl || '',
+        followingCount: p.followingCount || 0,
+        followerCount: p.followerCount || 0,
+        likeTotal: p.likeTotal || 0,
+        postCount: p.postCount || 0
+      }
+      following.value = !!p.isFollowing
+    } else {
+      throw new Error('empty profile')
     }
-    // 背景封面 + 等级/经验/硬币（Message：/api/user-info/me，失败保持默认渐变与默认等级）
+  } catch (e) {
+    // 端点不可用/用户资料未初始化：仅自己保底 JWT 信息，他人保持空态
+    if (isSelf.value) {
+      user.value = {
+        nickname: auth.user?.name || '用户',
+        bio: '我的个人空间',
+        avatar: '',
+        followingCount: 0,
+        followerCount: 0,
+        likeTotal: 0,
+        postCount: 0
+      }
+    }
+  }
+  if (isSelf.value) {
+    // 等级/经验/硬币/背景封面（/api/user-info/me，未创建资料返回默认值）
     try {
       const info = await getMyUserInfo()
       const d = info && info.data ? info.data : info
       if (d) {
         userInfo.value = d
         if (d.backgroundCoverUrl) user.value.coverUrl = d.backgroundCoverUrl
+        if (d.avatarUrl) user.value.avatar = d.avatarUrl
+        if (d.nickName) user.value.nickname = d.nickName
+        if (typeof d.bio === 'string') user.value.bio = d.bio
       }
-    } catch (e) { /* 忽略 */ }
-    // 关注数接真实值（/api/follows/following 的 total）
-    try {
-      const f = await getFollowing({ page: 1, pageSize: 1 })
-      const d = f && f.data ? f.data : f
-      if (d && d.total != null) user.value.followingCount = d.total
-    } catch (e) { /* 忽略 */ }
-  } else {
-    user.value = {
-      nickname: '用户 ' + String(userId.value).slice(0, 8),
-      bio: '这个人很懒，什么都没有写',
-      avatar: 'https://api.dicebear.com/9.x/thumbs/svg?seed=' + userId.value,
-      followingCount: 42,
-      followerCount: 128,
-      likeTotal: 356
-    }
-    await checkFollowing()
-  }
-}
-
-// 关注状态：拉取「我关注的人」列表比对（后端暂无 is-following 端点，与详情页同法）
-async function checkFollowing(): Promise<void> {
-  if (isSelf.value || !auth.isLoggedIn()) return
-  try {
-    const res = await getFollowing({ page: 1, pageSize: 200 })
-    const data: any = res && res.data ? res.data : res
-    const list: any[] = data.items || data.list || []
-    following.value = list.some(u => String(u.userGuid || u.userId) === String(userId.value))
-  } catch (e) {
-    following.value = false
+    } catch (err) { /* 忽略 */ }
   }
 }
 
@@ -507,15 +505,16 @@ async function onChat(): Promise<void> {
   }
 }
 
-// 签名本地持久化 key（后端暂无 bio 字段/端点；补齐后改为服务端存取）
-const bioStorageKey = (): string => `notblog-bio-${userId.value}`
-
-function onBioChanged(bio: string): void {
+// 签名保存：PUT /api/user-info/me/bio（服务端持久化）
+async function onBioChanged(bio: string): Promise<void> {
   if (!user.value) return
-  user.value.bio = bio
   try {
-    localStorage.setItem(bioStorageKey(), bio)
-  } catch (e) { /* 忽略 */ }
+    await updateUserBio(bio || '')
+    user.value.bio = bio || ''
+    toast.push('签名已保存', 'success')
+  } catch (e) {
+    toast.push('签名保存失败，请稍后重试', 'error')
+  }
 }
 
 // 用户卡片事件：头像/封面更新（上传逻辑在 UserCard 组件内）

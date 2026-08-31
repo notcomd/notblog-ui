@@ -27,7 +27,6 @@
     :joining="joining"
     @close="joinOpen = false"
     @join-submit="doJoin"
-    @apply-join="doApplyJoin"
     @accept="onAcceptInvite"
       @reject="onRejectInvite"
     />
@@ -39,9 +38,8 @@ export default { name: 'CirclePage' }
 </script>
 
 <script setup lang="ts">
-// 社区页容器：负责社区数据加载、选择、加入/退出、直邀接收与示例数据兜底
+// 社区页容器：负责社区数据加载、选择、加入/退出与直邀接收
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { charAvatar as demoAvatar } from '@/utils/avatar'
 import CircleSidebar from '@/components/circle/CircleSidebar.vue'
 import CircleWorkspace from '@/components/circle/CircleWorkspace.vue'
 import CircleJoinDialog from '@/components/circle/CircleJoinDialog.vue'
@@ -65,25 +63,14 @@ const inviteBusy = ref<string>('')
 
 const myRole = computed(() => (current.value ? (current.value.myRole || 'Member') : 'Member'))
 
-// ===== 示例社区数据（后端离线/未加入社区时展示；isSample 标记「示例」徽标） =====
-const DEMO_CIRCLES: any[] = [
-  { circleGuid: 'demo-circle-photo', name: '轻芒摄影部落', description: '用镜头记录生活，分享光影之美', avatarUrl: demoAvatar('摄', '#6366f1'), coverUrl: '', memberCount: 128, myRole: 'Owner', unread: 3, isSample: true },
-  { circleGuid: 'demo-circle-outdoor', name: '周末户外俱乐部', description: '徒步 · 露营 · 骑行，周末一起出发', avatarUrl: demoAvatar('户', '#10b981'), coverUrl: '', memberCount: 86, myRole: 'Admin', unread: 0, isSample: true },
-  { circleGuid: 'demo-circle-coffee', name: '咖啡研究所', description: '手冲、拉花、烘焙，重度咖啡爱好者聚集地', avatarUrl: demoAvatar('咖', '#f59e0b'), coverUrl: '', memberCount: 210, myRole: 'Member', unread: 1, isSample: true },
-  { circleGuid: 'demo-circle-frontend', name: '前端开发圈', description: 'Vue / React / 工程化，一起卷技术', avatarUrl: demoAvatar('前', '#ec4899'), coverUrl: '', memberCount: 342, myRole: 'Member', unread: 0, isSample: true }
-]
-
-// ===== 示例数据兜底（后端离线/未加入社区时展示；isSample 标记「示例」徽标） =====
-
 async function loadCircles(): Promise<void> {
   loading.value = true
   try {
     const res = await getMyCircles()
     const data: any = res && res.data ? res.data : res
     circles.value = data.items || data.list || data || []
-    if (!circles.value.length) circles.value = DEMO_CIRCLES
   } catch (e) {
-    circles.value = DEMO_CIRCLES
+    circles.value = []
   } finally {
     loading.value = false
   }
@@ -91,14 +78,14 @@ async function loadCircles(): Promise<void> {
 }
 
 async function select(c: any): Promise<void> {
-  // 切圈子：退订旧圈 → 订阅新圈（示例社区/离线状态跳过）
+  // 切圈子：退订旧圈 → 订阅新圈
   const prev = current.value
-  if (prev && !prev.isSample && String(prev.circleGuid) !== String(c.circleGuid)) {
+  if (prev && String(prev.circleGuid) !== String(c.circleGuid)) {
     unsubscribeCircle(prev.circleGuid)
   }
   current.value = c
   gridKey.value++
-  if (!c.isSample) subscribeCircle(c.circleGuid)
+  subscribeCircle(c.circleGuid)
   try {
     const res = await getCircle(c.circleGuid)
     const d: any = res && res.data ? res.data : res
@@ -117,12 +104,6 @@ async function onCreated(guid: string): Promise<void> {
 
 async function doLeave(): Promise<void> {
   if (!current.value) return
-  if (current.value.isSample) {
-    circles.value = circles.value.filter(c => String(c.circleGuid) !== String(current.value.circleGuid))
-    current.value = circles.value[0] || null
-    toast.push('已退出示例社区（本地）', 'info')
-    return
-  }
   try {
     await leaveCircle(current.value.circleGuid, auth.user ? auth.user.id : '')
     unsubscribeCircle(current.value.circleGuid)
@@ -150,30 +131,6 @@ async function doJoin(input: string): Promise<void> {
     toast.push(m || d || '加入失败，请检查邀请码', 'error')
   } finally {
     joining.value = false
-  }
-}
-
-// 审核制社区申请加入（示例社区本地入队；真实社区后端暂无审核端点）
-function doApplyJoin(input: string): void {
-  const name = (input || '').trim()
-  if (!name) return
-  const target = DEMO_CIRCLES.find(c => c.name === name && c.joinMode === 'review')
-  if (!target) {
-    toast.push('未找到可申请的审核制社区', 'error')
-    return
-  }
-  try {
-    const key = 'notblog-circle-joinreq-' + target.circleGuid
-    const list = JSON.parse(localStorage.getItem(key) || '[]')
-    if (list.some(r => r.userName === '我')) {
-      toast.push('已提交过申请，请等待审核', 'info')
-      return
-    }
-    list.push({ userGuid: 'me', userName: '我', time: Date.now() })
-    localStorage.setItem(key, JSON.stringify(list))
-    toast.push('已提交加入申请，等待社区审核', 'success')
-  } catch (e) {
-    toast.push('申请提交失败', 'error')
   }
 }
 
@@ -218,21 +175,19 @@ let realtimeReady = false
 
 function handleCommunityEvent(event: string, ...args: any[]): void {
   const c = current.value
-  if (c && c.isSample) return
+  if (!c) return
   switch (event) {
     case 'PostPublished': {
       const post: any = args[0]
-      if (c && post && String(post.circleGuid) === String(c.circleGuid)) {
+      if (post && String(post.circleGuid) === String(c.circleGuid)) {
         toast.push('社区有新帖子', 'info')
         gridKey.value++
       }
       break
     }
     case 'CommentAdded': {
-      if (c) {
-        toast.push('有新评论', 'info')
-        gridKey.value++
-      }
+      toast.push('有新评论', 'info')
+      gridKey.value++
       break
     }
     case 'PostLiked':
@@ -271,7 +226,7 @@ async function initRealtime(): Promise<void> {
   realtimeReady = true
   onCommunityEvent(handleCommunityEvent)
   // 订阅当前选中的圈子
-  if (current.value && !current.value.isSample) subscribeCircle(current.value.circleGuid)
+  if (current.value) subscribeCircle(current.value.circleGuid)
 }
 
 onMounted(async () => {
@@ -282,6 +237,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   offCommunityEvent(handleCommunityEvent)
-  if (current.value && !current.value.isSample) unsubscribeCircle(current.value.circleGuid)
+  if (current.value) unsubscribeCircle(current.value.circleGuid)
 })
 </script>

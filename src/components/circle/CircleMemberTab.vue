@@ -151,24 +151,11 @@ async function load() {
       ...m,
       isMe: me && String(m.userGuid) === me
     }))
-    if (!members.value.length) members.value = buildDemoMembers()
   } catch (e) {
-    members.value = buildDemoMembers()
+    members.value = []
   } finally {
     loading.value = false
   }
-}
-
-// 示例成员兜底（后端离线/无数据时展示，含「我」+ 三角色）
-function buildDemoMembers(): CircleMember[] {
-  const me = String(auth.user?.id || '')
-  return [
-    { userGuid: me, nickname: auth.user?.name || '我', role: props.myRole, isMe: true, joinTime: Date.now() },
-    { userGuid: 'demo-owner', nickname: '户外队长', role: 'Owner', joinTime: Date.now() - 86400000 * 30 },
-    { userGuid: 'demo-admin', nickname: '营地管家', role: 'Admin', joinTime: Date.now() - 86400000 * 20 },
-    { userGuid: 'demo-m1', nickname: '晨跑达人', role: 'Member', joinTime: Date.now() - 86400000 * 10 },
-    { userGuid: 'demo-m2', nickname: '摄影爱好者', role: 'Member', joinTime: Date.now() - 86400000 * 5 }
-  ]
 }
 
 // 主题渐变头像（amber→orange，全局 rounded-[5%] 风格）

@@ -43,6 +43,8 @@ interface Props {
   speed?: string
   isPlaying?: boolean
   controlsVisible?: boolean
+  /** 当前播放进度（秒）；弹幕仅在到达其 timeOffset 时上屏 */
+  currentTime?: number
 }
 const props = withDefaults(defineProps<Props>(), {
   barrages: () => [],
@@ -144,11 +146,15 @@ function spawn(d: Barrage) {
   active.value.push(item)
 }
 
-// 调度器：每 300ms 尝试从队列补弹幕（暂停时弹幕仍流动，与主流弹幕播放器一致）
+// 调度器：每 300ms 从队列补弹幕，仅当其播放时间点已到（timeOffset <= currentTime）
 function tick() {
   if (!props.enabled) return
+  const now = props.currentTime || 0
   while (active.value.length < MAX_ACTIVE && queue.value.length > 0) {
-    const next = queue.value.shift()
+    const next = queue.value[0]
+    // 按时间轴有序队列：最前面一条未到时，后面（timeOffset 更大）也不会到
+    if ((next.timeOffset || 0) > now) break
+    queue.value.shift()
     if (next) spawn(next)
     if (active.value.length >= MAX_ACTIVE) break
   }

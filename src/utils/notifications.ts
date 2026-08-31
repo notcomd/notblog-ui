@@ -1,6 +1,6 @@
 // 通知类型 → 展示元数据（头像位图标 + 底色 + 来源名称）
 // 后端 NotificationDto 无通知者头像/名称字段：系统类显示「轻芒系统」，
-// 用户互动类显示「互动通知」，示例数据用模拟昵称展示效果
+// 用户互动类显示「互动通知」
 
 export interface NotificationMeta {
   name: string;
@@ -116,54 +116,3 @@ const FALLBACK_META: NotificationMeta = {
 export function notificationMeta(type: string): NotificationMeta {
   return TYPE_META[type] || FALLBACK_META;
 }
-
-interface SampleNotification {
-  notifyGuid: string;
-  type: string;
-  title: string;
-  content: string;
-  isRead: boolean;
-  createTime: number;
-  isSample: boolean;
-}
-
-// 示例通知（⚠️ 后端离线/列表为空时用于展示；isSample 标记，UI 显示「示例」徽标）
-export const SAMPLE_NOTIFICATIONS: SampleNotification[] = [
-  {
-    notifyGuid: 'sample-1',
-    type: 'TweetApproved',
-    title: '内容审核通过',
-    content: '你的作品《夏日轻芒》已通过审核，现已公开发布，快去看看吧！',
-    isRead: false,
-    createTime: Date.now() - 3 * 60 * 1000,
-    isSample: true
-  },
-  {
-    notifyGuid: 'sample-2',
-    type: 'TweetLiked',
-    title: '小明点赞了你的推文',
-    content:
-      '《一个人的周末露营指南——从装备清单到星空拍摄的完整攻略》：包含帐篷搭建步骤、生火技巧、星空延时摄影参数、夜间安全注意事项与应急药品清单，全文共 8000 余字，收藏这篇超长干货，下次露营直接照着做。',
-    isRead: false,
-    createTime: Date.now() - 1 * 60 * 60 * 1000,
-    isSample: true
-  },
-  {
-    notifyGuid: 'sample-3',
-    type: 'CommentReplied',
-    title: '小红回复了你的评论',
-    content: '写得真好！下次我也试试这个方法，期待更多分享～',
-    isRead: false,
-    createTime: Date.now() - 3 * 60 * 60 * 1000,
-    isSample: true
-  },
-  {
-    notifyGuid: 'sample-4',
-    type: 'NewFollower',
-    title: '林小满关注了你',
-    content: '快去她的主页看看吧，说不定有你们共同感兴趣的话题。',
-    isRead: true,
-    createTime: Date.now() - 26 * 60 * 60 * 1000,
-    isSample: true
-  }
-];

@@ -154,7 +154,7 @@ import {
   getUnreadMessages, markRead
 } from '@/api/chat'
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '@/api/notification'
-import { notificationMeta, SAMPLE_NOTIFICATIONS } from '@/utils/notifications'
+import { notificationMeta } from '@/utils/notifications'
 
 interface SessionItem {
   sessionId?: string
@@ -163,7 +163,6 @@ interface SessionItem {
   isPinned?: boolean
   isMuted?: boolean
   isRead?: boolean
-  isSample?: boolean
   unreadCount?: number
   lastMessageContent?: string
   lastMessageTime?: any
@@ -315,9 +314,7 @@ async function openChat(s: SessionItem) {
 async function markNotifyRead(n: SessionItem) {
   if (n.isRead) return
   n.isRead = true
-  if (!n.isSample) {
-    try { await markNotificationRead(n.notifyGuid || '') } catch (e) { /* 忽略 */ }
-  }
+  try { await markNotificationRead(n.notifyGuid || '') } catch (e) { /* 忽略 */ }
 }
 
 function openRowContextMenu(s: SessionItem, e: MouseEvent) {
@@ -338,9 +335,7 @@ async function markOneRead(s: SessionItem) {
   if (isNotify(s)) {
     if (!s.isRead) {
       s.isRead = true
-      if (!s.isSample) {
-        try { await markNotificationRead(s.notifyGuid || '') } catch (e) { /* 忽略 */ }
-      }
+      try { await markNotificationRead(s.notifyGuid || '') } catch (e) { /* 忽略 */ }
     }
     chat.loadUnread()
     return
@@ -510,9 +505,9 @@ async function loadNotifications() {
   try {
     const res = await getNotifications({ pageSize: 20 })
     const items = (res && res.data && (res.data.items || res.data.list)) || []
-    notifItems.value = items.length ? items : SAMPLE_NOTIFICATIONS
+    notifItems.value = items
   } catch (e) {
-    notifItems.value = SAMPLE_NOTIFICATIONS
+    notifItems.value = []
   }
 }
 

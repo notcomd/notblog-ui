@@ -7,14 +7,14 @@ interface ChangePasswordData {
   newPassword: string;
 }
 
-export function getUserFavorites() {
-  // ⚠️ 后端缺口：无 GET /api/tweets/favorites/my，返回空态
-  return Promise.resolve({ data: { items: [], total: 0, page: 1, pageSize: 9 } });
+// 我的收藏列表：GET /api/tweets/favorites/my -> ApiResponse<PagedResult<CommunityPostDto>>
+export function getUserFavorites(params?: { page?: number; pageSize?: number }) {
+  return service.get('/api/tweets/favorites/my', { params });
 }
 
-export function getUserFiles() {
-  // ⚠️ 后端缺口：无「我的文件」列表端点，返回空态
-  return Promise.resolve({ data: { items: [], total: 0, page: 1, pageSize: 50 } });
+// 我的文件列表：GET /api/filestorage/files/my -> { ok, items, total, page, pageSize }
+export function getUserFiles(params?: { page?: number; pageSize?: number }) {
+  return service.get('/api/filestorage/files/my', { params });
 }
 
 // ===== OAuth 绑定（Identity：/api/identity/auth/oauth/*） =====

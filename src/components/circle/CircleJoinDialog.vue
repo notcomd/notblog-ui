@@ -1,5 +1,5 @@
 <template>
-  <!-- 加入社区弹窗：邀请码/链接 + 审核制申请加入 + 收到的直邀（真实端点 accept/reject） -->
+  <!-- 加入社区弹窗：邀请码/链接加入 + 收到的直邀（真实端点 accept/reject） -->
   <div class="fixed inset-0 z-[70] flex items-center justify-center bg-black/30" @click.self="$emit('close')">
     <div class="glass-card p-6 w-96 max-h-[85vh] overflow-y-auto">
       <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-4">加入社区</h3>
@@ -15,19 +15,6 @@
         <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:brightness-110 active:scale-95 transition-all" :disabled="joining" @click="$emit('join-submit', joinInput)">
           {{ joining ? '加入中...' : '加入社区' }}
         </button>
-      </div>
-
-      <div class="mt-4 pt-4 border-t border-zinc-200/60 dark:border-zinc-700/60">
-        <p class="text-xs text-zinc-400 mb-2">审核制社区可直接申请加入</p>
-        <div class="flex gap-2">
-          <input
-            v-model="applyInput"
-            class="flex-1 min-w-0 h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
-            placeholder="输入社区名称申请加入"
-            @keyup.enter="$emit('apply-join', applyInput)"
-          />
-          <button class="px-4 h-11 rounded-[5%] text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors shrink-0" @click="$emit('apply-join', applyInput)">申请</button>
-        </div>
       </div>
 
       <!-- 收到的直邀（真实端点：GET /invitations/my + accept/reject） -->
@@ -54,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-// 加入社区弹窗：邀请码/链接加入 + 审核制申请加入 + 收到的直邀（接受/拒绝真实端点）
+// 加入社区弹窗：邀请码/链接加入 + 收到的直邀（接受/拒绝真实端点）
 import { ref } from 'vue'
 
 interface CircleInvite {
@@ -71,13 +58,11 @@ defineProps<{
 defineEmits<{
   close: []
   'join-submit': [code: string]
-  'apply-join': [name: string]
   accept: [inv: CircleInvite]
   reject: [inv: CircleInvite]
 }>()
 
 const joinInput = ref('')
-const applyInput = ref('')
 
 const INVITE_STATUS_TEXT: Record<string, string> = { Pending: '待处理', Accepted: '已接受', Revoked: '已撤销', Expired: '已过期' }
 function statusText(inv: CircleInvite): string {

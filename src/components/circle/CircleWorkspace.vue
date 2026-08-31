@@ -14,7 +14,6 @@
           :current="current"
           :circle-tab="circleTab"
           :my-role="myRole"
-          :join-mode="circleJoinMode"
           @manage="manageMode = true"
           @leave="$emit('leave')"
           @switch-tab="switchCircleTab"
@@ -88,16 +87,6 @@ const circleTab = ref('home')
 
 const canManageUsers = computed(() => props.myRole === 'Owner' || props.myRole === 'Admin')
 
-// 社区加入方式（localStorage 本地持久化，后端暂无字段）
-const circleJoinMode = computed(() => {
-  if (!props.current) return 'invite'
-  try {
-    return localStorage.getItem('notblog-circle-joinmode-' + props.current.circleGuid) || 'invite'
-  } catch (e) {
-    return 'invite'
-  }
-})
-
 function switchCircleTab(t: string) {
   circleTab.value = t
 }
@@ -121,13 +110,11 @@ function onManaged(patch: any) {
   toast.push('社区信息已更新', 'success')
 }
 
-// 成员角色/移除（真实端点；示例社区本地处理）
+// 成员角色/移除（真实端点）
 async function onSetRole(m: any, role: string) {
   if (!props.current) return
   try {
-    if (!props.current.isSample) {
-      await setCircleMemberRole(props.current.circleGuid, m.userGuid, role)
-    }
+    await setCircleMemberRole(props.current.circleGuid, m.userGuid, role)
     m.role = role
     toast.push(role === 'Admin' ? '已设为管理员' : '已取消管理员', 'success')
   } catch (e) {
@@ -138,9 +125,7 @@ async function onSetRole(m: any, role: string) {
 async function onRemoveMember(m: any) {
   if (!props.current) return
   try {
-    if (!props.current.isSample) {
-      await leaveCircle(props.current.circleGuid, m.userGuid)
-    }
+    await leaveCircle(props.current.circleGuid, m.userGuid)
     toast.push('已移除成员 ' + (m.nickname || m.userName || ''), 'success')
   } catch (e) {
     toast.push('操作失败：' + (e.message || '请重试'), 'error')

@@ -164,8 +164,9 @@ async function onPickImage(e: Event) {
   try {
     const res = await uploadImage(file)
     const data = unwrap(res) || {}
-    const fileId = data.fileId || data.file_id || 'mock-' + Date.now()
+    const fileId = data.fileId || data.file_id || ''
     const url = data.fileUri || data.file_url || ''
+    if (!fileId) throw new Error('上传响应缺少 fileId')
     uploadedImages.value.push({ fileId, url })
     emit('images-changed', [...uploadedImages.value])
     const md = url ? `![${file.name.replace(/\.[^.]+$/, '')}](${url})` : `![${file.name}](${fileId})`
