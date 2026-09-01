@@ -2,13 +2,13 @@
   <div class="max-w-[1400px] mx-auto space-y-5">
     <div>
       <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">社区管理</h1>
-      <p class="text-sm text-zinc-400 mt-1">全平台社区管控（全量列表后端缺口，操作用真实端点：解散/转让/成员）</p>
+      <p class="text-sm text-zinc-400 mt-1">全平台社区管控（操作用真实端点：解散/转让/成员）</p>
     </div>
 
     <div class="flex gap-5">
       <!-- 左：社区列表 -->
       <div class="w-72 shrink-0 glass-card p-3 flex flex-col h-[calc(100vh-10rem)]">
-        <input v-model="keyword" class="h-10 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all mb-3" placeholder="按社区名称检索..." @input="filterCircles" />
+        <input v-model="keyword" name="keyword" aria-label="按社区名称检索" class="h-10 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all mb-3" placeholder="按社区名称检索…" @input="filterCircles" />
         <div class="flex-1 overflow-y-auto space-y-1 min-h-0">
           <button v-for="c in filtered" :key="c.circleGuid" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-[5%] transition-all text-left"
             :class="current && current.circleGuid === c.circleGuid ? 'bg-gradient-to-r from-amber-400/15 to-orange-500/10 ' : 'hover:bg-white/60 dark:hover:bg-zinc-800/60'"
@@ -35,14 +35,14 @@
                 <div class="text-xs text-white/85 mt-0.5">{{ current.description }}</div>
                 <div class="text-[11px] text-white/70 mt-1">创建者：{{ current.ownerName }} · {{ current.memberCount }} 成员 · {{ current.postCount }} 帖子</div>
               </div>
-              <span v-if="current.status === 'Banned'" class="ml-3 text-xs px-2.5 py-1 rounded-full bg-red-500/90 text-white inline-flex items-center gap-1"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>已封禁</span>
+              <span v-if="current.status === 'Banned'" class="ml-3 text-xs px-2.5 py-1 rounded-full bg-red-500/90 text-white inline-flex items-center gap-1"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>已封禁</span>
             </div>
           </div>
           <!-- 操作按钮 -->
           <div class="px-5 py-3 flex flex-wrap gap-2 border-t border-zinc-200/60 dark:border-zinc-700/60">
-            <button v-if="current.status !== 'Banned'" class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-400/15 text-amber-600 dark:text-amber-400 hover:bg-amber-400/25 active:scale-95 transition-all inline-flex items-center gap-1" @click="banCircleOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> 封禁社区</button>
-            <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 active:scale-95 transition-all inline-flex items-center gap-1" @click="dissolveOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 解散社区</button>
-            <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-500/10 text-amber-600 hover:bg-amber-1000/20 active:scale-95 transition-all inline-flex items-center gap-1" @click="transferOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 转让社区</button>
+            <button v-if="current.status !== 'Banned'" class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-400/15 text-amber-600 dark:text-amber-400 hover:bg-amber-400/25 active:scale-95 transition-all inline-flex items-center gap-1" @click="banCircleOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> 封禁社区</button>
+            <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 active:scale-95 transition-all inline-flex items-center gap-1" @click="dissolveOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 解散社区</button>
+            <button class="px-3.5 h-9 rounded-[5%] text-xs font-medium bg-amber-500/10 text-amber-600 hover:bg-amber-1000/20 active:scale-95 transition-all inline-flex items-center gap-1" @click="transferOpen = true"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 转让社区</button>
           </div>
           <!-- Tab：成员 / 会话 -->
           <div class="px-5 pb-4">
@@ -57,15 +57,15 @@
                 <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 flex-1 min-w-0 truncate">{{ m.userName }}</span>
                 <span class="text-xs px-2 py-0.5 rounded-full shrink-0" :class="roleClass(m.role)">{{ roleText(m.role) }}</span>
                 <span class="text-xs text-zinc-400 shrink-0">{{ relativeTime(m.joinTime) }}加入</span>
-                <button v-if="m.role !== 'Owner'" class="px-2.5 h-7 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10 transition-colors shrink-0" @click="removeMember(m)">移除</button>
+                <button v-if="m.role !== 'Owner'" class="px-2.5 h-7 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10 transition-colors shrink-0" @click="removeTarget = m">移除</button>
               </div>
             </div>
             <!-- 会话 -->
-            <div v-else class="py-10 text-center text-sm text-zinc-400">该社区下的会话列表（后端缺口，演示数据）</div>
+            <div v-else class="py-10 text-center text-sm text-zinc-400">该社区下暂无可查看的会话列表</div>
           </div>
         </div>
         <div v-else class="py-24 flex flex-col items-center gap-4 text-zinc-400">
-          <div class="text-6xl"><svg class="w-14 h-14 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <div class="text-6xl"><svg class="w-14 h-14 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
           <p>从左侧选择一个社区</p>
         </div>
       </div>
@@ -74,7 +74,7 @@
     <!-- 封禁社区 -->
     <AdminModal v-if="banCircleOpen" title="封禁社区" @close="banCircleOpen = false">
       <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3">封禁后「{{ current.name }}」全站不可见，所有成员将收到系统通知。确定封禁？</p>
-      <input v-model="banReason" placeholder="封禁原因（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+      <input v-model="banReason" name="banReason" aria-label="封禁原因（必填）" placeholder="封禁原因（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
       <template #footer>
         <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all dark:text-zinc-400" @click="banCircleOpen = false">取消</button>
         <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-50" :disabled="!banReason.trim()" @click="doBanCircle">确认封禁</button>
@@ -97,7 +97,7 @@
     <!-- 转让社区 -->
     <AdminModal v-if="transferOpen" title="转让社区" @close="transferOpen = false">
       <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3">将「{{ current ? current.name : '' }}」转让给新创建者（仅限现有成员）：</p>
-      <select v-model="newOwner" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none">
+      <select v-model="newOwner" name="newOwner" aria-label="选择新创建者" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none">
         <option value="">选择新创建者...</option>
         <option v-for="m in members" :key="m.userGuid" :value="m.userGuid">{{ m.userName }}（{{ roleText(m.role) }}）</option>
       </select>
@@ -106,6 +106,16 @@
         <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-50" :disabled="!newOwner" @click="doTransfer">确认转让</button>
       </template>
     </AdminModal>
+
+    <!-- 移除成员确认 -->
+    <ConfirmDialog
+      v-if="removeTarget"
+      title="移除成员"
+      :message="'确定将 ' + removeTarget.userName + ' 移出「' + (current ? current.name : '') + '」吗？'"
+      confirm-text="移除"
+      @close="removeTarget = null"
+      @confirm="() => removeMember(removeTarget)"
+    />
   </div>
 </template>
 
@@ -135,6 +145,7 @@ const banReason = ref('')
 const dissolveOpen = ref(false)
 const transferOpen = ref(false)
 const newOwner = ref('')
+const removeTarget = ref<any>(null)
 
 function roleClass(r: string): string {
   return { Owner: 'bg-amber-400/15 text-amber-600 dark:text-amber-400', Admin: 'bg-blue-400/15 text-amber-600', Member: 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400' }[r] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'

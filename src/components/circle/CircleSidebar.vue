@@ -7,10 +7,10 @@
     </div>
 
     <!-- 列表区 -->
-    <div class="flex-1 overflow-y-auto space-y-1 min-h-0">
-      <div v-if="loading" class="py-10 text-center text-xs text-zinc-400">加载中...</div>
+    <div class="flex-1 overflow-y-auto overscroll-contain space-y-1 min-h-0">
+      <div v-if="loading" class="py-10 text-center text-xs text-zinc-400">加载中…</div>
       <div v-else-if="circles.length === 0" class="py-10 flex flex-col items-center gap-2 text-zinc-400">
-        <span class="text-4xl"><svg class="w-14 h-14 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 21l8.5-17 8.5 17"/><path d="M7 21l5-10 5 10"/><line x1="2" y1="21" x2="22" y2="21"/></svg></span>
+        <span class="text-4xl"><svg aria-hidden="true" class="w-14 h-14 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 21l8.5-17 8.5 17"/><path d="M7 21l5-10 5 10"/><line x1="2" y1="21" x2="22" y2="21"/></svg></span>
         <p class="text-xs">还没有加入任何社区</p>
       </div>
       <button
@@ -25,7 +25,6 @@
           <span class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ c.name }}</span>
           <span class="block text-xs text-zinc-400">{{ c.memberCount || 0 }} 成员</span>
         </span>
-        <span v-if="c.isSample" class="shrink-0 text-[10px] leading-none px-1 py-0.5 rounded-[5%] bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400">示例</span>
       </button>
     </div>
 
@@ -44,13 +43,12 @@
 </template>
 
 <script setup lang="ts">
-// 社区侧边栏：我的社区列表（含示例数据徽标）+ 创建/加入入口（固定展开态）
+// 社区侧边栏：我的社区列表 + 创建/加入入口（固定展开态）
 interface CircleItem {
   circleGuid?: string
   name?: string
   avatarUrl?: string
   memberCount?: number
-  isSample?: boolean
 }
 
 defineProps<{

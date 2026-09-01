@@ -21,22 +21,28 @@
             v-for="(img, idx) in images"
             :key="idx"
             :src="img"
+            alt=""
+            role="link"
+            tabindex="0"
+            aria-label="在新窗口打开图片"
             class="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
             @click="openImage(img)"
+            @keydown.enter.prevent="openImage(img)"
+            @keydown.space.prevent="openImage(img)"
             @error="hideImg"
           />
         </div>
 
         <!-- 操作行 -->
         <div class="flex items-center gap-2 sm:gap-4 mt-1.5">
-          <button v-if="cfg.like" class="flex items-center gap-1 text-xs text-zinc-400 hover:text-red-500 transition-colors" @click="onLike">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button v-if="cfg.like" type="button" class="flex items-center gap-1 text-xs text-zinc-400 hover:text-red-500 transition-colors" aria-label="点赞" @click="onLike">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z" />
             </svg>
             {{ likeCount }}
           </button>
-          <button v-if="canReply" class="text-xs text-zinc-400 hover:text-amber-500 transition-colors" @click="onReply">回复</button>
-          <button v-if="isMine" class="text-xs text-zinc-400 hover:text-red-500 transition-colors" @click="onRemove">删除</button>
+          <button v-if="canReply" type="button" class="text-xs text-zinc-400 hover:text-amber-500 transition-colors" @click="onReply">回复</button>
+          <button v-if="isMine" type="button" class="text-xs text-zinc-400 hover:text-red-500 transition-colors" @click="onRemove">删除</button>
         </div>
 
         <!-- 子评论（懒加载，最多 3 条展开） -->
@@ -51,12 +57,12 @@
             @reply="$emit('reply', $event)"
             @remove="$emit('remove', $event)"
           />
-          <button v-if="replyCount > visibleChildren.length" class="text-xs text-amber-500 hover:text-amber-600" @click="loadChildren">
+          <button v-if="replyCount > visibleChildren.length" type="button" class="text-xs text-amber-500 hover:text-amber-600" @click="loadChildren">
             查看全部 {{ replyCount }} 条回复
           </button>
         </div>
         <div v-else-if="replyCount > 0 && !childrenLoaded" class="mt-2">
-          <button class="text-xs text-amber-500 hover:text-amber-600" @click="loadChildren">查看 {{ replyCount }} 条回复</button>
+          <button type="button" class="text-xs text-amber-500 hover:text-amber-600" @click="loadChildren">查看 {{ replyCount }} 条回复</button>
         </div>
       </div>
     </div>

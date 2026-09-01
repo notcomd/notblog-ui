@@ -4,18 +4,18 @@
     <div class="flex items-center justify-between px-1 pb-3 border-b border-zinc-200/60 dark:border-zinc-700/60">
       <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">全部评论 ({{ total }})</span>
       <div v-if="cfg.sortable" class="flex gap-1 text-xs">
-        <button class="px-2 py-1 rounded-[5%] transition-colors" :class="sort === 'new' ? 'bg-amber-400/15 text-amber-600 dark:text-amber-400' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 dark:text-zinc-300'" @click="setSort('new')">最新</button>
-        <button class="px-2 py-1 rounded-[5%] transition-colors" :class="sort === 'hot' ? 'bg-amber-400/15 text-amber-600 dark:text-amber-400' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 dark:text-zinc-300'" @click="setSort('hot')">热门</button>
+        <button type="button" :aria-pressed="sort === 'new'" class="px-2 py-1 rounded-[5%] transition-colors" :class="sort === 'new' ? 'bg-amber-400/15 text-amber-600 dark:text-amber-400' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 dark:text-zinc-300'" @click="setSort('new')">最新</button>
+        <button type="button" :aria-pressed="sort === 'hot'" class="px-2 py-1 rounded-[5%] transition-colors" :class="sort === 'hot' ? 'bg-amber-400/15 text-amber-600 dark:text-amber-400' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 dark:text-zinc-300'" @click="setSort('hot')">热门</button>
       </div>
     </div>
 
     <!-- 评论列表（独立滚动） -->
-    <div class="flex-1 overflow-y-auto py-2 px-1 space-y-1 min-h-0">
+    <div class="flex-1 overflow-y-auto overscroll-contain py-2 px-1 space-y-1 min-h-0">
       <div v-if="!loading && items.length === 0" class="py-16 flex flex-col items-center gap-3">
         <div class="text-5xl"><svg class="w-12 h-12 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
         <p class="text-sm text-zinc-400">还没有评论，快来抢沙发吧～</p>
       </div>
-      <div v-else-if="loading" class="space-y-4 py-4">
+      <div v-else-if="loading" class="space-y-4 py-4" role="status">
         <div v-for="i in 4" :key="i" class="flex gap-3 animate-pulse">
           <div class="w-9 h-9 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70"></div>
           <div class="flex-1 space-y-2">
@@ -40,15 +40,17 @@
     <div class="pt-3 border-t border-zinc-200/60 dark:border-zinc-700/60">
       <div v-if="replyingTo" class="flex items-center justify-between mb-1.5 px-1">
         <span class="text-xs text-amber-600 dark:text-amber-400">回复 @{{ replyName }}</span>
-        <button class="text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-300" @click="replyingTo = null">取消</button>
+        <button class="text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-300" type="button" @click="replyingTo = null">取消</button>
       </div>
       <div class="flex items-end gap-2">
         <div class="relative flex-1">
           <textarea
             v-model="draft"
             rows="2"
+            name="commentDraft"
+            aria-label="评论内容"
             class="w-full resize-none rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
-            :placeholder="replyingTo ? '回复 ' + replyName + '...' : '说点什么... (支持 Enter 发送)'"
+            :placeholder="replyingTo ? '回复 ' + replyName + '…' : '说点什么… (支持 Enter 发送)'"
             @keydown.enter.exact.prevent="submit"
           ></textarea>
           <!-- Emoji 面板 -->
@@ -58,12 +60,12 @@
             </div>
           </div>
         </div>
-        <button class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="表情" @click="emojiOpen = !emojiOpen">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" type="button" title="表情" aria-label="选择表情" :aria-expanded="emojiOpen" @click="emojiOpen = !emojiOpen">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" />
           </svg>
         </button>
-        <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover: active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100" :disabled="!draft.trim() || sending" @click="submit">
+        <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100" type="button" :disabled="!draft.trim() || sending" @click="submit">
           发送
         </button>
       </div>
@@ -74,24 +76,35 @@
           :disabled="images.length >= 9 || uploading"
           @click="pickImages"
         >
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          {{ uploading ? '上传中...' : '图片（最多 9 张）' }}
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          {{ uploading ? '上传中…' : '图片（最多 9 张）' }}
         </button>
         <input ref="imageInput" type="file" accept="image/*" multiple class="hidden" @change="onImagesPick" />
         <div v-if="images.length" class="flex flex-wrap gap-1.5">
           <div v-for="(img, idx) in images" :key="idx" class="relative">
-            <img :src="img" class="w-14 h-14 object-cover rounded-lg" @error="hideImg" />
-            <button class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center" @click="images.splice(idx, 1)">✕</button>
+            <img :src="img" alt="" class="w-14 h-14 object-cover rounded-lg" @error="hideImg" />
+            <button class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center" type="button" aria-label="移除图片" @click="images.splice(idx, 1)">✕</button>
           </div>
         </div>
       </div>
     </div>
+  <!-- 删除评论确认 -->
+    <ConfirmDialog
+      v-if="deleteTarget"
+      danger
+      title="删除评论"
+      :message="'确定删除这条评论吗？删除后不可恢复。'"
+      confirm-text="删除"
+      @close="deleteTarget = null"
+      @confirm="doRemove"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import CommentItem from './CommentItem.vue'
+import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 import { useToastStore } from '@/stores/toast'
 import { uploadImage } from '@/api/publish'
 import { unwrap } from '@/utils/response'
@@ -158,6 +171,7 @@ const likedMap = reactive<Record<string, boolean>>({})   // commentId -> bool（
 // replyingTo = { root, target }：回复目标（fold 模式 root=顶层评论）
 const replyingTo = ref<ReplyTarget | null>(null)
 const sentinel = ref<HTMLElement | null>(null)
+const deleteTarget = ref<any>(null) // 待删除评论（确认弹窗）
 let observer: IntersectionObserver | null = null
 
 const sortedItems = computed<any[]>(() => {
@@ -247,7 +261,13 @@ async function submit() {
   }
 }
 
-async function removeComment(payload) {
+function removeComment(payload) {
+  deleteTarget.value = payload
+}
+
+async function doRemove(): Promise<void> {
+  const payload = deleteTarget.value
+  deleteTarget.value = null
   try {
     const comment = payload ? payload.target : null
     if (!comment) return

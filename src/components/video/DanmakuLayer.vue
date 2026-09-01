@@ -7,15 +7,19 @@
       class="danmaku-item absolute whitespace-nowrap cursor-pointer pointer-events-auto"
       :class="{ 'hot-danmaku': isHot(d), 'own-danmaku': d.isOwn, 'dimmed': controlsVisible }"
       :style="itemStyle(d)"
+      role="button"
+      tabindex="-1"
       @click.stop="likeDanmaku(d)"
+      @keydown.enter.stop.prevent="likeDanmaku(d)"
+      @keydown.space.stop.prevent="likeDanmaku(d)"
       @contextmenu.prevent.stop="openMenu($event, d)"
       @touchstart.passive="touchStart($event, d)"
       @touchend="touchEnd($event, d)"
     >{{ d.body }}</div>
     <!-- 右键/长按菜单 -->
     <div v-if="menu" class="danmaku-menu pointer-events-auto" :style="{ left: menu.x + 'px', top: menu.y + 'px' }">
-      <button @click="blockUser(menu.d)" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>屏蔽该用户弹幕</button>
-      <button @click="report(menu.d)" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>举报</button>
+      <button type="button" @click="blockUser(menu.d)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>屏蔽该用户弹幕</button>
+      <button type="button" @click="report(menu.d)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>举报</button>
     </div>
   </div>
 </template>

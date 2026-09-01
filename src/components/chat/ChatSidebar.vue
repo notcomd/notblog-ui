@@ -11,7 +11,7 @@
           :class="msgUnread > 0 ? 'bg-amber-400/15 text-amber-600 dark:text-amber-300 hover:bg-amber-400/25' : 'text-zinc-400 cursor-default'"
           :disabled="msgUnread === 0 || allReadBusy"
           @click="markAllRead"
-        ><span v-if="!allReadBusy" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>一键已读</span><span v-else>处理中...</span></button>
+        ><span v-if="!allReadBusy" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>一键已读</span><span v-else>处理中…</span></button>
       </div>
       <div v-else class="flex items-center gap-1 shrink-0">
         <button
@@ -19,9 +19,10 @@
           :key="a.key"
           class="w-7 h-7 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors shrink-0"
           :title="a.label"
+          :aria-label="a.label"
           @click="onListMoreAction(a)"
         >
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="a.icon"></svg>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="a.icon" aria-hidden="true"></svg>
         </button>
       </div>
     </div>
@@ -44,7 +45,7 @@
         <div class="relative shrink-0">
           <img v-if="!isNotify(s)" :src="sessionAvatar(s)" alt="" class="w-11 h-11 rounded-[5%] object-cover border border-white/60 dark:border-white/10" @error="hideImg" />
           <div v-else class="w-11 h-11 rounded-[5%] flex items-center justify-center" :class="notificationMeta(s.type).bg">
-            <svg class="w-5 h-5" :class="notificationMeta(s.type).fg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="notificationMeta(s.type).icon"></svg>
+            <svg class="w-5 h-5" :class="notificationMeta(s.type).fg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="notificationMeta(s.type).icon" aria-hidden="true"></svg>
           </div>
           <span v-if="!isNotify(s) && !s.groupId" class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-zinc-800" :class="isRowOnline(s) ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600'"></span>
         </div>
@@ -65,8 +66,8 @@
         </span>
 
         <span v-if="!isNotify(s)" class="relative shrink-0" @click.stop>
-          <button class="w-6 h-6 rounded-[5%] flex items-center justify-center text-zinc-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60" @click="sessionMenuTarget = sessionMenuTarget === s.sessionId ? null : s.sessionId">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+          <button class="w-6 h-6 rounded-[5%] flex items-center justify-center text-zinc-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60" aria-label="会话操作" @click="sessionMenuTarget = sessionMenuTarget === s.sessionId ? null : s.sessionId">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
           </button>
           <div v-if="sessionMenuTarget === s.sessionId" class="absolute right-0 top-full mt-1 w-36 glass-card p-1.5 z-50">
             <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="togglePin(s)"><span v-if="!s.isPinned" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg>置顶</span><span v-else>取消置顶</span></button>
@@ -89,7 +90,7 @@
     </div>
 
     <!-- 右键菜单 -->
-    <div v-if="ctxMenu" class="fixed inset-0 z-40" @click="ctxMenu = null" @contextmenu.prevent="ctxMenu = null"></div>
+    <div v-if="ctxMenu" class="fixed inset-0 z-40" @click="ctxMenu = null" @contextmenu.prevent="ctxMenu = null" @keydown.enter.prevent="ctxMenu = null" @keydown.space.prevent="ctxMenu = null" tabindex="0"></div>
     <div v-if="ctxMenu" class="fixed z-50 w-40 glass-card p-1.5" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }">
       <button v-if="!isNotify(ctxMenu.s) && rowUnread(ctxMenu.s) > 0" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="markOneRead(ctxMenu.s)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 设为已读</button>
       <button v-if="isNotify(ctxMenu.s) && !ctxMenu.s.isRead" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" @click="markOneRead(ctxMenu.s)"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 设为已读</button>
@@ -103,11 +104,11 @@
         <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-1">添加好友</h3>
         <p class="text-xs text-zinc-400 mb-4">输入对方邮箱查找用户并发起好友请求</p>
         <div class="flex gap-2">
-          <input v-model="addEmail" type="email" class="flex-1 min-w-0 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="对方邮箱" @keydown.enter.exact.prevent="onLookupEnter" />
+          <input v-model="addEmail" type="email" name="addEmail" aria-label="对方邮箱" class="flex-1 min-w-0 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="对方邮箱" @keydown.enter.exact.prevent="onLookupEnter" />
           <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium" :disabled="addLoading || !addEmail.trim()" @click="lookupUser">查找</button>
         </div>
         <div class="mt-4">
-          <div v-if="addLoading" class="py-8 text-center text-xs text-zinc-400">查找中...</div>
+          <div v-if="addLoading" class="py-8 text-center text-xs text-zinc-400">查找中…</div>
           <div v-else-if="addNotFound" class="py-8 text-center text-xs text-zinc-400">未找到该用户，请确认邮箱是否正确</div>
           <div v-else-if="addUser" class="flex items-center gap-3 p-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60">
             <img :src="addUser.imageCover || demoAvatar((addUser.userName || '友').charAt(0), '#a1a1aa')" alt="" class="w-12 h-12 rounded-[5%] object-cover" @error="hideImg" />
@@ -125,11 +126,11 @@
       <div class="glass-card p-6 w-[min(26rem,92vw)] max-h-[85vh] flex flex-col">
         <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-3">搜索好友</h3>
         <div class="flex gap-2">
-          <input v-model="friendKeyword" class="flex-1 min-w-0 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="按备注搜索好友" @keydown.enter.exact.prevent="onFriendSearchEnter" />
+          <input v-model="friendKeyword" name="friendKeyword" aria-label="按备注搜索好友" class="flex-1 min-w-0 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="按备注搜索好友" @keydown.enter.exact.prevent="onFriendSearchEnter" />
           <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium" :disabled="friendSearching || !friendKeyword.trim()" @click="doFriendSearch">搜索</button>
         </div>
-        <div class="mt-4 flex-1 min-h-0 overflow-y-auto space-y-1">
-          <div v-if="friendSearching" class="py-8 text-center text-xs text-zinc-400">搜索中...</div>
+        <div class="mt-4 flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-1">
+          <div v-if="friendSearching" class="py-8 text-center text-xs text-zinc-400">搜索中…</div>
           <div v-else-if="friendSearched && friendResults.length === 0" class="py-8 text-center text-xs text-zinc-400">未找到匹配的好友</div>
           <button v-for="f in friendResults" :key="f.friendshipId || f.friendId" class="w-full flex items-center gap-3 px-3 py-2 rounded-[5%] transition-all text-left hover:bg-white/60 dark:hover:bg-zinc-800/60" @click="openFriendChat(f)">
             <img :src="f.friendAvatar || demoAvatar('友', '#a1a1aa')" alt="" class="w-10 h-10 rounded-[5%] object-cover" @error="hideImg" />
@@ -154,7 +155,7 @@ import {
   getUnreadMessages, markRead
 } from '@/api/chat'
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '@/api/notification'
-import { notificationMeta, SAMPLE_NOTIFICATIONS } from '@/utils/notifications'
+import { notificationMeta } from '@/utils/notifications'
 
 interface SessionItem {
   sessionId?: string
@@ -163,7 +164,6 @@ interface SessionItem {
   isPinned?: boolean
   isMuted?: boolean
   isRead?: boolean
-  isSample?: boolean
   unreadCount?: number
   lastMessageContent?: string
   lastMessageTime?: any
@@ -315,8 +315,8 @@ async function openChat(s: SessionItem) {
 async function markNotifyRead(n: SessionItem) {
   if (n.isRead) return
   n.isRead = true
-  if (!n.isSample) {
-    try { await markNotificationRead(n.notifyGuid || '') } catch (e) { /* 忽略 */ }
+  if (n.notifyGuid) {
+    try { await markNotificationRead(n.notifyGuid) } catch (e) { /* 忽略 */ }
   }
 }
 
@@ -338,8 +338,8 @@ async function markOneRead(s: SessionItem) {
   if (isNotify(s)) {
     if (!s.isRead) {
       s.isRead = true
-      if (!s.isSample) {
-        try { await markNotificationRead(s.notifyGuid || '') } catch (e) { /* 忽略 */ }
+      if (s.notifyGuid) {
+        try { await markNotificationRead(s.notifyGuid) } catch (e) { /* 忽略 */ }
       }
     }
     chat.loadUnread()
@@ -510,9 +510,10 @@ async function loadNotifications() {
   try {
     const res = await getNotifications({ pageSize: 20 })
     const items = (res && res.data && (res.data.items || res.data.list)) || []
-    notifItems.value = items.length ? items : SAMPLE_NOTIFICATIONS
+    // 诚实空态：无数据时展示「暂无通知」，不填充示例通知
+    notifItems.value = items
   } catch (e) {
-    notifItems.value = SAMPLE_NOTIFICATIONS
+    notifItems.value = []
   }
 }
 

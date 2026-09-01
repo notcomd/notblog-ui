@@ -72,16 +72,22 @@ html[data-theme="dark"] {
   --qm-paper: #18181b;
 }
 
-/* 品牌展示字体：标题/品牌处使用衬线宋体，营造「纸本 + 轻芒」的文艺温度；正文仍用系统无衬线 */
+/* 品牌展示字体：标题/品牌处使用软衬线（Fraunces + 中文宋体栈），营造「纸本 + 轻芒」的烘焙暖感；正文仍用系统无衬线 */
 .font-display {
-  font-family: 'Songti SC', 'Noto Serif SC', 'STSong', 'SimSun', serif;
+  font-family: 'Fraunces Variable', 'Songti SC', 'Noto Serif SC', 'STSong', 'SimSun', serif;
   letter-spacing: 0.01em;
+}
+
+/* 数字/英文数据字：Outfit 可变几何（宽高比稳定，适合点赞/浏览量/评分等数据列） */
+.font-numeric {
+  font-family: 'Outfit Variable', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 应用背景：奶白纸张 + 暖橘/薄荷微光（纯 CSS 渐变，无图片开销、安全叠加在纯色卡片下） */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: 'Outfit Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   color: var(--qm-ink);
   background:
     radial-gradient(1100px 620px at 12% -10%, rgba(245, 158, 11, 0.14), transparent 60%),
@@ -97,6 +103,23 @@ html[data-theme="dark"] body {
     radial-gradient(900px 560px at 100% 8%, rgba(16, 185, 129, 0.08), transparent 55%),
     linear-gradient(135deg, #18181b 0%, #1c1917 40%, #101f1b 100%);
   background-attachment: fixed;
+}
+
+/* ===== 纸张噪点纹理：极淡 film grain 覆盖层，增强「纸本」质感（pointer-events 穿透，不拦截交互） ===== */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+  mix-blend-mode: multiply;
+}
+
+html[data-theme="dark"] body::after {
+  mix-blend-mode: screen;
 }
 
 * {
@@ -131,7 +154,7 @@ html[data-theme="dark"] body {
 
 /* 卡片 hover 上浮 + 点击轻触反馈 + 柔和阴影 */
 .card-lift {
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease;
 }
 
 .card-lift:hover {
@@ -141,6 +164,58 @@ html[data-theme="dark"] body {
 
 .card-lift:active {
   transform: scale(0.98);
+}
+
+/* ===== 动效系统（2026-09 设计精修） ===== */
+
+/* 列表条目 staggered 入场：作用于容器，条目配合行内 animation-delay */
+.qm-stagger > * {
+  animation: qm-item-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes qm-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 渐变主按钮扫光（边框高光流过）：登录/发送/发布等主 CTA 使用 */
+.btn-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.btn-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.btn-sheen:hover::after {
+  transform: translateX(120%);
+}
+
+/* 品牌描边辉光：hover 时琥珀描边浮现（PostCard 等可交互卡片） */
+.qm-glow {
+  transition: box-shadow 0.3s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.qm-glow:hover {
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.4), 0 20px 40px -20px rgba(245, 158, 11, 0.35);
+}
+
+/* 数字生长：hover 轻微上浮提示可交互 */
+.qm-nudge:hover {
+  transform: translateY(-1px);
+}
+.qm-nudge {
+  transition: transform 0.2s ease;
 }
 
 /* 页面入场：主容器上浮淡入（视图根元素加 .page-enter 即可，配合动画补间） */
@@ -156,6 +231,30 @@ html[data-theme="dark"] body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* 减弱动态偏好：禁用全部装饰动画与上浮位移，仅保留不透明度过渡 */
+@media (prefers-reduced-motion: reduce) {
+  .card-lift,
+  .qm-glow,
+  .qm-nudge {
+    transition: none;
+  }
+  .card-lift:hover,
+  .qm-glow:hover,
+  .qm-nudge:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .qm-stagger > *,
+  .page-enter,
+  .animate-fade-in,
+  .transition-forment {
+    animation: none !important;
+  }
+  .btn-sheen::after {
+    display: none;
   }
 }
 

@@ -8,12 +8,12 @@ interface ChangePasswordData {
 }
 
 export function getUserFavorites() {
-  // ⚠️ 后端缺口：无 GET /api/tweets/favorites/my，返回空态
+  // 收藏列表暂未接入真实端点，诚实返回空态（不伪造成功数据）
   return Promise.resolve({ data: { items: [], total: 0, page: 1, pageSize: 9 } });
 }
 
 export function getUserFiles() {
-  // ⚠️ 后端缺口：无「我的文件」列表端点，返回空态
+  // 「我的文件」列表暂未接入真实端点，诚实返回空态（不伪造成功数据）
   return Promise.resolve({ data: { items: [], total: 0, page: 1, pageSize: 50 } });
 }
 

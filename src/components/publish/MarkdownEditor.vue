@@ -2,12 +2,12 @@
   <div class="glass-card overflow-hidden">
     <!-- 工具栏 -->
     <div class="flex items-center gap-1 px-3 py-2 border-b border-zinc-200/60 dark:border-zinc-700/60 overflow-x-auto">
-      <button v-for="btn in toolButtons" :key="btn.label" class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm text-zinc-600 dark:text-zinc-300 hover:bg-amber-400/15 hover:text-amber-500 transition-colors" :title="btn.tip" @click="insert(btn.syntax)">
+      <button v-for="btn in toolButtons" :key="btn.label" class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm text-zinc-600 dark:text-zinc-300 hover:bg-amber-400/15 hover:text-amber-500 transition-colors" :title="btn.tip" :aria-label="btn.tip" @click="insert(btn.syntax)">
         <span v-if="btn.svg" v-html="btn.svg"></span><span v-else>{{ btn.icon }}</span>
       </button>
       <div class="shrink-0 w-px h-5 bg-zinc-200 dark:bg-zinc-700 mx-1"></div>
       <button class="shrink-0 whitespace-nowrap h-8 px-2.5 rounded-lg text-xs text-zinc-600 dark:text-zinc-300 hover:bg-amber-400/15 hover:text-amber-500 transition-colors" title="上传图片（≤10MB，自动插入 Markdown）" :disabled="uploading" @click="pickImage">
-        <span v-if="!uploading" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>上传图片</span><span v-else>上传中...</span>
+        <span v-if="!uploading" class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>上传图片</span><span v-else>上传中…</span>
       </button>
       <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onPickImage" />
       <div class="flex-1 shrink-0 min-w-3"></div>
@@ -23,6 +23,8 @@
         v-if="view !== 'preview'"
         ref="taRef"
         :value="modelValue"
+        name="markdownContent"
+        aria-label="Markdown 编辑器"
         rows="16"
         class="resize-none outline-none p-4 text-sm leading-relaxed bg-white/40 dark:bg-zinc-900/40 font-mono text-zinc-700 dark:text-zinc-200 transition-all w-full"
         :class="view === 'split' ? 'lg:w-1/2 lg:border-r lg:border-zinc-200/60 dark:lg:border-zinc-700/60' : ''"
@@ -77,7 +79,7 @@ const uploadedImages = ref<Array<{ fileId: string; url: string }>>([])
 
 const rendered = computed(() => renderMarkdown(props.modelValue))
 
-const placeholderText = `# 开始书写你的 Markdown 故事...
+const placeholderText = `# 开始书写你的 Markdown 故事…
 
 支持：**加粗** *斜体* ~~删除线~~ \`代码\`
 > 引用
@@ -164,8 +166,9 @@ async function onPickImage(e: Event) {
   try {
     const res = await uploadImage(file)
     const data = unwrap(res) || {}
-    const fileId = data.fileId || data.file_id || 'mock-' + Date.now()
+    const fileId = data.fileId || data.file_id
     const url = data.fileUri || data.file_url || ''
+    if (!fileId) throw new Error('上传未返回 fileId')
     uploadedImages.value.push({ fileId, url })
     emit('images-changed', [...uploadedImages.value])
     const md = url ? `![${file.name.replace(/\.[^.]+$/, '')}](${url})` : `![${file.name}](${fileId})`

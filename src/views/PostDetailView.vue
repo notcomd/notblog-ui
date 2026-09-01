@@ -2,31 +2,31 @@
   <div class="max-w-[1200px] mx-auto">
     <!-- 顶部导航条（详情页专用） -->
     <div class="flex items-center justify-between mb-5">
-      <button class="flex items-center gap-1.5 px-3.5 py-2 rounded-[5%] glass-card text-sm font-medium text-zinc-700 dark:text-zinc-200 hover: active:scale-95 transition-all" @click="goBack">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+      <button class="flex items-center gap-1.5 px-3.5 py-2 rounded-[5%] glass-card text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:opacity-90 active:scale-95 transition-all" type="button" @click="goBack">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
         返回
       </button>
       <div class="flex items-center gap-2">
         <span class="px-3 py-1.5 rounded-full text-xs font-medium bg-gradient-to-r from-amber-400/15 to-orange-400/10 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-500/20">
           {{ isVideo ? '# 视频' : '# 图文博客' }}
         </span>
-        <button class="w-9 h-9 rounded-[5%] glass-card flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover: active:scale-95 transition-all" title="更多操作" @click="onMore">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        <button class="w-9 h-9 rounded-[5%] glass-card flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:opacity-90 active:scale-95 transition-all" type="button" title="更多操作" aria-label="更多操作" @click="onMore">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
         </button>
       </div>
     </div>
 
     <!-- 举报弹窗 -->
     <div v-if="reportOpen" class="fixed inset-0 z-[85] flex items-center justify-center bg-black/40" @click.self="reportOpen = false">
-      <div class="glass-card p-4 sm:p-6 w-[min(440px,92vw)] max-h-[90vh] overflow-y-auto">
+      <div class="glass-card p-4 sm:p-6 w-[min(440px,92vw)] max-h-[90vh] overflow-y-auto overscroll-contain">
         <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 mb-1">举报内容</h3>
         <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">请选择举报类型，我们会尽快核实处理</p>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-          <button v-for="(c, i) in REPORT_CATEGORIES" :key="i" class="py-2.5 rounded-xl text-sm font-medium transition-all"
+          <button v-for="(c, i) in REPORT_CATEGORIES" :key="i" type="button" :aria-pressed="reportCategory === i" class="py-2.5 rounded-xl text-sm font-medium transition-all"
             :class="reportCategory === i ? 'bg-gradient-to-r from-red-400 to-rose-500 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
             @click="reportCategory = i">{{ c }}</button>
         </div>
-        <textarea v-model="reportReason" rows="2" class="w-full resize-none rounded-xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-red-400/50 transition-all" placeholder="补充说明（选填）"></textarea>
+        <textarea v-model="reportReason" rows="2" name="reportReason" aria-label="举报补充说明" class="w-full resize-none rounded-xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-red-400/50 transition-all" placeholder="补充说明（选填）"></textarea>
         <div class="flex justify-end gap-2 mt-4">
           <button class="px-4 h-10 rounded-xl text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all" @click="reportOpen = false">取消</button>
           <button class="px-4 h-10 rounded-xl text-sm font-medium bg-gradient-to-r from-red-400 to-rose-500 text-white active:scale-95 transition-all" @click="submitReportReport">提交举报</button>
@@ -35,7 +35,7 @@
     </div>
 
     <!-- 加载骨架 -->
-    <div v-if="loading" class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <div v-if="loading" class="grid grid-cols-1 lg:grid-cols-5 gap-6" role="status">
       <div class="lg:col-span-3 space-y-4 animate-pulse">
         <div class="aspect-[4/3] rounded-[5%] bg-zinc-200/70 dark:bg-zinc-800/70"></div>
         <div class="h-6 w-3/4 rounded bg-zinc-200/70 dark:bg-zinc-800/70"></div>
@@ -69,15 +69,15 @@
                 <img :key="activeMedia" :src="mediaUrls[activeMedia]" alt="" class="w-full h-full object-contain" @error="onMediaError" />
               </transition>
               <!-- 左右切换箭头（多图） -->
-              <button v-if="mediaUrls.length > 1" class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/50 transition-colors" @click="prevMedia">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6" /></svg>
+              <button v-if="mediaUrls.length > 1" type="button" aria-label="上一张" class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/50 transition-colors" @click="prevMedia">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
               </button>
-              <button v-if="mediaUrls.length > 1" class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/50 transition-colors" @click="nextMedia">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 6l6 6-6 6" /></svg>
+              <button v-if="mediaUrls.length > 1" type="button" aria-label="下一张" class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/50 transition-colors" @click="nextMedia">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
               </button>
               <!-- 缩略图指示点 -->
               <div v-if="mediaUrls.length > 1" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                <button v-for="(m, i) in mediaUrls" :key="i" class="h-1.5 rounded-full transition-all duration-300" :class="i === activeMedia ? 'w-5 bg-amber-400' : 'w-1.5 bg-white/70'" @click="activeMedia = i"></button>
+                <button v-for="(m, i) in mediaUrls" :key="i" type="button" :aria-label="'查看第 ' + (i + 1) + ' 张'" :aria-current="i === activeMedia ? 'true' : undefined" class="h-1.5 rounded-full transition-all duration-300" :class="i === activeMedia ? 'w-5 bg-amber-400' : 'w-1.5 bg-white/70'" @click="activeMedia = i"></button>
               </div>
             </div>
           </div>
@@ -92,7 +92,7 @@
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
                 {{ relativeTime(tweet.publishTime || tweet.createTime) }}
               </span>
-              <span v-if="tweet.circleName" class="flex items-center gap-1 cursor-pointer hover:text-amber-500 transition-colors" @click="goCircle">
+              <span v-if="tweet.circleName" class="flex items-center gap-1 cursor-pointer hover:text-amber-500 transition-colors" role="link" tabindex="0" @click="goCircle" @keydown.enter.prevent="goCircle" @keydown.space.prevent="goCircle">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21v-4m0 0V5a2 2 0 0 1 2-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 0 0-2 2z" /></svg>
                 {{ tweet.circleName }}
               </span>
@@ -111,7 +111,7 @@
                 </blockquote>
                 <p v-else class="whitespace-pre-wrap">
                   <template v-for="(seg, j) in highlightMentions(block.text)" :key="j">
-                    <span v-if="seg.type === 'mention'" class="text-amber-600 dark:text-amber-400 font-medium cursor-pointer hover:underline" @click="goUser(seg.name)">@{{ seg.name }}</span>
+                    <span v-if="seg.type === 'mention'" class="text-amber-600 dark:text-amber-400 font-medium cursor-pointer hover:underline" role="link" tabindex="0" @click="goUser(seg.name)" @keydown.enter.prevent="goUser(seg.name)" @keydown.space.prevent="goUser(seg.name)">@{{ seg.name }}</span>
                     <span v-else>{{ seg.text }}</span>
                   </template>
                 </p>
@@ -126,9 +126,9 @@
         <!-- 发布者信息卡片 -->
         <div class="glass-card p-5">
           <div class="flex items-center gap-3">
-            <img :src="authorAvatar" alt="" class="w-12 h-12 rounded-full object-cover border-2 border-white/60 dark:border-white/10 cursor-pointer hover:scale-105 transition-transform" @error="hideAvatar" @click="goAuthor" />
+            <img :src="authorAvatar" alt="" class="w-12 h-12 rounded-full object-cover border-2 border-white/60 dark:border-white/10 cursor-pointer hover:scale-105 transition-transform" role="link" tabindex="0" aria-label="查看作者主页" @error="hideAvatar" @click="goAuthor" @keydown.enter.prevent="goAuthor" @keydown.space.prevent="goAuthor" />
             <div class="flex-1 min-w-0">
-              <div class="font-semibold text-zinc-800 dark:text-zinc-100 cursor-pointer hover:text-amber-500 transition-colors truncate" @click="goAuthor">{{ authorName }}</div>
+              <div class="font-semibold text-zinc-800 dark:text-zinc-100 cursor-pointer hover:text-amber-500 transition-colors truncate" role="link" tabindex="0" @click="goAuthor" @keydown.enter.prevent="goAuthor" @keydown.space.prevent="goAuthor">{{ authorName }}</div>
               <div class="text-xs text-zinc-400 truncate">{{ authorBio }}</div>
             </div>
             <!-- 作者视角：编辑内容；否则关注按钮 -->
@@ -138,8 +138,9 @@
                 编辑内容
               </span>
             </button>
-            <button v-else class="h-9 px-4 rounded-[5%] text-sm font-medium transition-all active:scale-95"
-              :class="isFollowing ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 border border-zinc-200 dark:border-zinc-700' : 'bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:'"
+            <button v-else class="h-9 px-4 rounded-[5%] text-sm font-medium transition-all active:scale-95" type="button"
+              :class="isFollowing ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 border border-zinc-200 dark:border-zinc-700' : 'bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90'"
+              :aria-label="isFollowing ? '取消关注' : '关注作者'"
               @click="toggleFollow"
             >
               {{ isFollowing ? '已关注' : '关注' }}
@@ -164,24 +165,24 @@
 
         <!-- 核心互动栏 -->
         <div class="glass-card px-5 py-4 flex items-center justify-around">
-          <button class="flex flex-col items-center gap-1 text-sm transition-all active:scale-90" :class="detail.isLiked ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-red-500'" @click="onLike">
-            <svg class="w-6 h-6" :class="detail.isLiked ? 'fill-current' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button class="flex flex-col items-center gap-1 text-sm transition-all active:scale-90" type="button" :class="detail.isLiked ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-red-500'" :aria-label="detail.isLiked ? '取消点赞' : '点赞'" @click="onLike">
+            <svg class="w-6 h-6" :class="detail.isLiked ? 'fill-current' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z" />
             </svg>
             <span>{{ compactNumber(tweet.likeCount) }}</span>
           </button>
-          <button class="flex flex-col items-center gap-1 text-sm transition-all active:scale-90" :class="detail.isFavorited ? 'text-amber-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-amber-500'" @click="onFavorite">
-            <svg class="w-6 h-6" :class="detail.isFavorited ? 'fill-current' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+          <button class="flex flex-col items-center gap-1 text-sm transition-all active:scale-90" type="button" :class="detail.isFavorited ? 'text-amber-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-amber-500'" :aria-label="detail.isFavorited ? '取消收藏' : '收藏'" @click="onFavorite">
+            <svg class="w-6 h-6" :class="detail.isFavorited ? 'fill-current' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
               <path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" />
             </svg>
             <span>{{ compactNumber(tweet.favoriteCount) }}</span>
           </button>
-          <button class="flex flex-col items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400 hover:text-amber-500 transition-all active:scale-90" @click="scrollToComments">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+          <button class="flex flex-col items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400 hover:text-amber-500 transition-all active:scale-90" type="button" aria-label="查看评论" @click="scrollToComments">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
             <span>{{ compactNumber(tweet.commentCount) }}</span>
           </button>
-          <button class="flex flex-col items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400 hover:text-emerald-500 transition-all active:scale-90" @click="onShare">
-            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" /></svg>
+          <button class="flex flex-col items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400 hover:text-emerald-500 transition-all active:scale-90" type="button" aria-label="分享" @click="onShare">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" /></svg>
             <span>分享</span>
           </button>
         </div>
@@ -197,7 +198,7 @@
     <div v-else class="py-24 flex flex-col items-center gap-4">
       <div class="text-6xl"><svg class="w-14 h-14 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
       <p class="text-zinc-500 dark:text-zinc-400">内容不存在或已被删除</p>
-      <button class="px-4 py-2 rounded-[5%] glass-card text-sm text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="goBack">返回</button>
+      <button class="px-4 py-2 rounded-[5%] glass-card text-sm text-zinc-600 dark:text-zinc-300 hover:opacity-90 transition-all" type="button" @click="goBack">返回</button>
     </div>
   </div>
 </template>

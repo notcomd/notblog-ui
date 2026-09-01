@@ -1,6 +1,6 @@
 <template>
   <!-- 移动端底部 Tab 导航（<lg 显示，桌面端 md: 隐藏）。固定底部，含 Home 指示条安全区 -->
-  <nav class="fixed bottom-0 left-0 right-0 z-50 lg:hidden glass border-t border-zinc-200/70 dark:border-zinc-700/60 mb-safe">
+  <nav class="fixed bottom-0 left-0 right-0 z-50 lg:hidden glass border-t border-zinc-200/70 dark:border-zinc-700/60 mb-safe" aria-label="底部主导航">
     <div class="flex items-stretch h-14 max-w-lg mx-auto">
       <router-link
         v-for="item in tabItems"
@@ -8,9 +8,10 @@
         :to="item.path"
         class="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors"
         :class="isActive(item.path) ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-500 dark:text-zinc-300'"
+        :aria-current="isActive(item.path) ? 'page' : undefined"
       >
         <div class="relative">
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path :d="item.icon" />
           </svg>
           <!-- 消息角标：未读数（登录态加载） -->

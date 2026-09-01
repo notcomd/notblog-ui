@@ -12,11 +12,11 @@
         <!-- 底层：模糊主题底色（blur ≈ 封面高度 20%：176px × 20% ≈ 35px），边缘经渐变融入 -->
         <div class="absolute inset-0 blur-[35px] scale-[1.3]">
           <img v-if="!coverIsVideo" :src="user.coverUrl" alt="" class="w-full h-full object-cover" @error="coverFailed = true" />
-          <video v-else :src="user.coverUrl" autoplay muted loop playsinline class="w-full h-full object-cover"></video>
+          <video v-else :src="user.coverUrl" :autoplay="!reduceMotion" muted loop playsinline class="w-full h-full object-cover"></video>
         </div>
         <!-- 前景：清晰层（中心清晰，动态图/视频自动播放） -->
         <img v-if="!coverIsVideo" :src="user.coverUrl" alt="" class="absolute inset-0 w-full h-full object-cover" @error="coverFailed = true" />
-        <video v-else :src="user.coverUrl" autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+        <video v-else :src="user.coverUrl" :autoplay="!reduceMotion" muted loop playsinline class="absolute inset-0 w-full h-full object-cover"></video>
         <!-- 边缘→中心 主题色渐变遮罩（canvas 采样主色，失败回退琥珀） -->
         <div class="absolute inset-0" :style="coverOverlayStyle"></div>
       </template>
@@ -25,12 +25,13 @@
       <button
         v-if="isSelf"
         class="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 h-8 rounded-[5%] bg-black/45 hover:bg-black/60 text-white text-xs font-medium transition-colors active:scale-95 disabled:opacity-60"
+        type="button"
         :disabled="coverUploading"
         title="上传封面（图片/动态图/视频，≤20MB）"
         @click="coverInput && coverInput.click()"
       >
-        <svg v-if="!coverUploading" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
-        <svg v-else class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56" /></svg>
+        <svg v-if="!coverUploading" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+        <svg v-else class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.56" /></svg>
         {{ coverUploading ? `上传中 ${coverProgress}%` : (user.coverUrl ? '更换封面' : '添加封面') }}
       </button>
       <input ref="coverInput" type="file" accept="image/*,video/*" class="hidden" @change="onCoverPick" />
@@ -45,7 +46,7 @@
             <img v-if="!avatarFailed && user.avatar" :src="user.avatar" alt="" class="w-full h-full object-cover" @error="avatarFailed = true" />
             <span v-else class="text-2xl sm:text-3xl font-bold text-white">{{ avatarChar }}</span>
           </div>
-          <button v-if="isSelf" class="absolute inset-0 rounded-2xl bg-black/45 text-white text-[10px] font-medium flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="更换头像" @click="avatarInput && avatarInput.click()">更换头像</button>
+          <button v-if="isSelf" type="button" class="absolute inset-0 rounded-2xl bg-black/45 text-white text-[10px] font-medium flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="更换头像" @click="avatarInput && avatarInput.click()">更换头像</button>
           <input ref="avatarInput" type="file" accept="image/*" class="hidden" @change="onAvatarChange" />
         </div>
 
@@ -64,24 +65,28 @@
                 ref="bioInput"
                 v-model="bioDraft"
                 type="text"
+                name="bio"
+                aria-label="个人签名"
                 maxlength="60"
-                placeholder="写点什么介绍一下自己..."
+                placeholder="写点什么介绍一下自己…"
                 class="flex-1 min-w-0 h-8 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
                 @keyup.enter="saveBio"
                 @keyup.esc="cancelBio"
               />
-              <button class="shrink-0 px-2.5 h-8 rounded-[5%] text-xs font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all" @click="saveBio">保存</button>
-              <button class="shrink-0 px-2.5 h-8 rounded-[5%] text-xs text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors" @click="cancelBio">取消</button>
+              <button type="button" class="shrink-0 px-2.5 h-8 rounded-[5%] text-xs font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all" @click="saveBio">保存</button>
+              <button type="button" class="shrink-0 px-2.5 h-8 rounded-[5%] text-xs text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors" @click="cancelBio">取消</button>
             </template>
             <template v-else>
               <p class="text-sm text-zinc-400 truncate flex-1 min-w-0">{{ bioDisplay }}</p>
               <button
                 v-if="isSelf"
+                type="button"
                 class="shrink-0 w-7 h-7 rounded-[5%] flex items-center justify-center text-zinc-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-zinc-800 transition-colors"
                 title="编辑签名"
+                aria-label="编辑签名"
                 @click="startEditBio"
               >
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
               </button>
             </template>
           </div>
@@ -91,18 +96,21 @@
         <div class="shrink-0 flex items-center gap-2">
           <template v-if="!isSelf">
             <button
+              type="button"
               class="px-4 h-9 rounded-[5%] text-sm font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 active:scale-95 transition-all"
               title="发起聊天"
               @click="emit('chat')"
             >
               <span class="flex items-center gap-1.5">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                 聊天
               </span>
             </button>
             <button
+              type="button"
               class="px-5 h-9 rounded-[5%] text-sm font-medium transition-all active:scale-95"
               :class="following ? 'bg-white border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500' : 'bg-gradient-to-r from-amber-400 to-orange-500 text-white'"
+              :aria-label="following ? '取消关注' : '关注'"
               @click="emit('toggle-follow')"
             >{{ following ? '已关注' : '关注' }}</button>
           </template>
@@ -120,8 +128,8 @@
             <img ref="avatarCropImg" :src="avatarCropSrc" alt="" class="max-h-[320px] w-full object-contain" />
           </div>
           <div class="flex justify-end gap-2 mt-4">
-            <button class="px-4 h-9 rounded-[5%] text-sm text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors" :disabled="avatarUploading" @click="closeAvatarCrop">取消</button>
-            <button class="px-5 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-60" :disabled="avatarUploading" @click="confirmAvatarCrop">{{ avatarUploading ? '上传中...' : '裁剪并上传' }}</button>
+            <button type="button" class="px-4 h-9 rounded-[5%] text-sm text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors" :disabled="avatarUploading" @click="closeAvatarCrop">取消</button>
+            <button type="button" class="px-5 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-60" :disabled="avatarUploading" @click="confirmAvatarCrop">{{ avatarUploading ? '上传中…' : '裁剪并上传' }}</button>
           </div>
         </div>
       </div>
@@ -130,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
 import { uploadAvatar } from '@/api/auth'
@@ -163,6 +171,21 @@ const emit = defineEmits<{
 }>()
 
 const toast = useToastStore()
+
+// ===== 减弱动态效果（prefers-reduced-motion）：封面视频停止自动播放 =====
+const reduceMotion = ref(false)
+let motionQuery: MediaQueryList | null = null
+function onMotionChange(mq: MediaQueryList | MediaQueryListEvent): void {
+  reduceMotion.value = mq.matches
+}
+onMounted(() => {
+  motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  onMotionChange(motionQuery)
+  motionQuery.addEventListener('change', onMotionChange)
+})
+onUnmounted(() => {
+  if (motionQuery) motionQuery.removeEventListener('change', onMotionChange)
+})
 
 // ===== 头像（选择后先裁剪 1:1，再上传裁剪结果） =====
 const avatarInput = ref<HTMLInputElement | null>(null)

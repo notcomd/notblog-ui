@@ -32,9 +32,11 @@
       v-if="showTopBtn"
       class="fixed bottom-24 right-4 sm:right-6 z-50 w-11 h-11 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200/70 dark:border-zinc-700/60 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 active:scale-95 transition-all lg:bottom-6"
       title="回到顶部"
+      aria-label="回到顶部"
+      type="button"
       @click="scrollToTop"
     >
-      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5" /><polyline points="5 12 12 5 19 12" /></svg>
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5" /><polyline points="5 12 12 5 19 12" /></svg>
     </button>
 
     <!-- 语音/视频通话面板（全局，来电/通话覆盖任意页面） -->

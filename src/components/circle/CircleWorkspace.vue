@@ -9,7 +9,7 @@
 
     <!-- 社区详情 -->
     <template v-else-if="current">
-      <div ref="scrollBox" data-scroll-container class="flex-1 min-h-0 overflow-y-auto">
+      <div ref="scrollBox" data-scroll-container class="flex-1 min-h-0 overflow-y-auto overscroll-contain">
         <CircleBanner
           :current="current"
           :circle-tab="circleTab"
@@ -45,7 +45,7 @@
     <!-- 未选择社区 -->
     <div v-else class="flex-1 min-h-0 flex items-center justify-center text-zinc-400">
       <div class="text-center">
-        <div class="mb-3 flex justify-center"><svg class="w-16 h-16 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 21l8.5-17 8.5 17"/><path d="M7 21l5-10 5 10"/><line x1="2" y1="21" x2="22" y2="21"/></svg></div>
+        <div class="mb-3 flex justify-center"><svg aria-hidden="true" class="w-16 h-16 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 21l8.5-17 8.5 17"/><path d="M7 21l5-10 5 10"/><line x1="2" y1="21" x2="22" y2="21"/></svg></div>
         <p>选择一个社区，或创建一个新社区</p>
       </div>
     </div>
@@ -121,13 +121,11 @@ function onManaged(patch: any) {
   toast.push('社区信息已更新', 'success')
 }
 
-// 成员角色/移除（真实端点；示例社区本地处理）
+// 成员角色/移除（真实端点）
 async function onSetRole(m: any, role: string) {
   if (!props.current) return
   try {
-    if (!props.current.isSample) {
-      await setCircleMemberRole(props.current.circleGuid, m.userGuid, { role })
-    }
+    await setCircleMemberRole(props.current.circleGuid, m.userGuid, { role })
     m.role = role
     toast.push(role === 'Admin' ? '已设为管理员' : '已取消管理员', 'success')
   } catch (e) {
@@ -138,9 +136,7 @@ async function onSetRole(m: any, role: string) {
 async function onRemoveMember(m: any) {
   if (!props.current) return
   try {
-    if (!props.current.isSample) {
-      await leaveCircle(props.current.circleGuid, m.userGuid)
-    }
+    await leaveCircle(props.current.circleGuid, m.userGuid)
     toast.push('已移除成员 ' + (m.nickname || m.userName || ''), 'success')
   } catch (e) {
     toast.push('操作失败：' + (e.message || '请重试'), 'error')

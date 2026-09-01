@@ -128,7 +128,7 @@
       <!-- 收藏（仅自己，私密内容） -->
       <div v-else-if="activeTab === 'favorites' && isSelf">
         <div class="flex items-center justify-between mb-4">
-          <span class="text-sm text-zinc-400">收藏的内容（后端缺口：待补 GET /api/tweets/favorites/my，当前为演示数据）</span>
+          <span class="text-sm text-zinc-400">收藏的内容</span>
         </div>
         <PostGrid :loader="favoritesLoader" :key="'fav'" empty-text="还没有收藏任何内容" />
       </div>
@@ -139,7 +139,7 @@
           <div class="flex flex-wrap gap-2">
             <button v-for="t in fileTypes" :key="t.key" class="px-3 py-1.5 rounded-[5%] text-xs font-medium transition-all" :class="fileType === t.key ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="fileType = t.key">{{ t.label }}</button>
           </div>
-          <span class="text-xs text-zinc-400">{{ isSelf ? '我的仓库端点后端缺口，当前为演示数据' : '公开文件端点后端缺口，当前为空' }}</span>
+          <span class="text-xs text-zinc-400">{{ isSelf ? '暂无文件' : '暂无公开文件' }}</span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div v-for="f in filteredFiles" :key="f.fileId" class="glass-card overflow-hidden card-lift group">
@@ -172,12 +172,12 @@
             修改密码
           </h3>
           <form @submit.prevent="submitPassword" class="space-y-3">
-            <input v-model="pwd.oldPassword" type="password" placeholder="旧密码" class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
-            <input v-model="pwd.newPassword" type="password" placeholder="新密码（至少 8 位）" class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
-            <input v-model="pwd.confirmPassword" type="password" placeholder="确认新密码" class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+            <input v-model="pwd.oldPassword" name="oldPassword" aria-label="旧密码" type="password" placeholder="旧密码" autocomplete="current-password" class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+            <input v-model="pwd.newPassword" name="newPassword" aria-label="新密码" type="password" placeholder="新密码（至少 8 位）" autocomplete="new-password" class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+            <input v-model="pwd.confirmPassword" name="confirmPassword" aria-label="确认新密码" type="password" placeholder="确认新密码" autocomplete="new-password" class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
             <p v-if="pwdError" class="text-xs text-red-500">{{ pwdError }}</p>
-            <button class="w-full h-11 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="pwdSaving" @click="submitPassword">
-              {{ pwdSaving ? '提交中...' : '修改密码' }}
+            <button class="w-full h-11 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50" type="submit" :disabled="pwdSaving">
+              {{ pwdSaving ? '提交中…' : '修改密码' }}
             </button>
           </form>
         </div>
@@ -217,6 +217,7 @@
                 type="button"
                 class="flex-1 h-9 rounded-[5%] text-xs font-medium transition-colors"
                 :class="secConfirmMethod === 'password' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'bg-white/70 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-200 border border-white/60 dark:border-white/10'"
+                :aria-pressed="secConfirmMethod === 'password'"
                 @click="secConfirmMethod = 'password'"
               >
                 使用密码确认
@@ -225,6 +226,7 @@
                 type="button"
                 class="flex-1 h-9 rounded-[5%] text-xs font-medium transition-colors"
                 :class="secConfirmMethod === 'code' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'bg-white/70 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-200 border border-white/60 dark:border-white/10'"
+                :aria-pressed="secConfirmMethod === 'code'"
                 @click="secConfirmMethod = 'code'"
               >
                 使用验证码确认
@@ -233,12 +235,12 @@
 
             <!-- 密码确认 -->
             <div v-if="secConfirmMethod === 'password'">
-              <input v-model="confirmPassword" type="password" placeholder="请输入密码确认" class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" autocomplete="current-password" />
+              <input v-model="confirmPassword" name="confirmPassword" aria-label="请输入密码确认" type="password" placeholder="请输入密码确认" autocomplete="current-password" class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
             </div>
 
             <!-- 验证码确认 -->
             <div v-else class="flex gap-2">
-              <input v-model="confirmCode" type="text" maxlength="9" placeholder="9 位验证码" class="flex-1 h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" @input="confirmCode = confirmCode.replace(/[^A-Za-z0-9]/g, '').slice(0, 9)" />
+              <input v-model="confirmCode" name="confirmCode" aria-label="邮箱验证码" type="text" maxlength="9" placeholder="9 位验证码" class="flex-1 h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" @input="confirmCode = confirmCode.replace(/[^A-Za-z0-9]/g, '').slice(0, 9)" />
               <button
                 type="button"
                 class="px-3 h-11 rounded-[5%] text-xs font-medium whitespace-nowrap transition-colors"
@@ -258,7 +260,7 @@
               :disabled="toggleBusy"
               @click="handleConfirmDisable"
             >
-              {{ toggleBusy ? '提交中...' : '确认关闭二次验证' }}
+              {{ toggleBusy ? '提交中…' : '确认关闭二次验证' }}
             </button>
           </div>
         </div>
@@ -278,13 +280,24 @@
                   <div class="text-[10px] text-zinc-400">{{ relativeTime(a.linkedAt) }} 绑定</div>
                 </div>
               </div>
-              <button class="px-2.5 h-8 rounded-[5%] text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" @click="unlink(a)">解绑</button>
+              <button class="px-2.5 h-8 rounded-[5%] text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors" type="button" @click="unlinkTarget = a">解绑</button>
             </div>
             <div v-if="linkedAccounts.length === 0" class="py-8 text-center text-sm text-zinc-400">还没有绑定第三方账号</div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 解绑第三方账号确认 -->
+    <ConfirmDialog
+      v-if="unlinkTarget"
+      danger
+      title="解绑第三方账号"
+      :message="'确定解绑 ' + (unlinkTarget ? unlinkTarget.displayName : '') + ' 吗？解绑后将无法使用该账号登录。'"
+      confirm-text="解绑"
+      @close="unlinkTarget = null"
+      @confirm="unlink(unlinkTarget)"
+    />
   </div>
 </template>
 
@@ -295,6 +308,7 @@ export default { name: 'UserSpaceView' }
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 import PostGrid from '@/components/post/PostGrid.vue'
 import UserCard from '@/components/user/UserCard.vue'
 import { getUserPosts } from '@/api/tweet'
@@ -333,6 +347,7 @@ const fileTypes = [
 const user = ref<Record<string, any>>({})
 const files = ref<any[]>([])
 const linkedAccounts = ref<any[]>([])
+const unlinkTarget = ref<any>(null) // 待解绑的第三方账号（确认弹窗）
 
 // ===== 主页概览 =====
 const overview = ref<{ posts: number }>({ posts: 0 }) // 作品总数（真实 total）
@@ -409,30 +424,27 @@ function favoritesLoader(params: any) {
 }
 
 async function loadUser(): Promise<void> {
-  // 真实用户信息：自己的从 JWT + /api/user-info/me；他人信息后端缺 /api/users/{guid} 端点（缺口清单），先展示 mock + JWT 混合
+  // 真实用户信息：自己的从 JWT + /api/user-info/me；他人信息后端缺 /api/users/{guid} 端点（缺口清单），读取真实端点，JWT 兜底
   following.value = false
   userInfo.value = null
   if (isSelf.value) {
-    // 签名：优先取本地保存值（后端缺口：无 bio 字段/端点，本地持久化）
-    let savedBio = ''
-    try {
-      savedBio = localStorage.getItem(bioStorageKey()) || ''
-    } catch (e) { /* 忽略 */ }
+    // 真实用户信息：昵称来自 JWT；签名/背景封面来自 Message /api/user-info/me
     user.value = {
       nickname: auth.user.name,
-      bio: savedBio || '我的个人空间',
+      bio: '',
       avatar: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#fbbf24"/><text x="50" y="62" font-size="40" text-anchor="middle" fill="white">芒</text></svg>'),
       followingCount: 6,
       followerCount: 12,
       likeTotal: 128
     }
-    // 背景封面 + 等级/经验/硬币（Message：/api/user-info/me，失败保持默认渐变与默认等级）
+    // 背景封面 + 等级/经验/硬币 + 签名（Message：/api/user-info/me，失败保持默认渐变与默认等级）
     try {
       const info = await getMyUserInfo()
       const d = info && info.data ? info.data : info
       if (d) {
         userInfo.value = d
         if (d.backgroundCoverUrl) user.value.coverUrl = d.backgroundCoverUrl
+        if (d.bio) user.value.bio = d.bio
       }
     } catch (e) { /* 忽略 */ }
     // 关注数接真实值（/api/follows/following 的 total）
@@ -504,15 +516,15 @@ async function onChat(): Promise<void> {
   }
 }
 
-// 签名本地持久化 key（后端暂无 bio 字段/端点；补齐后改为服务端存取）
-const bioStorageKey = (): string => `notblog-bio-${userId.value}`
-
-function onBioChanged(bio: string): void {
+// 签名持久化到后端（Message：PUT /api/user-info/me/bio，空白表示清除）
+async function onBioChanged(bio: string): Promise<void> {
   if (!user.value) return
   user.value.bio = bio
   try {
-    localStorage.setItem(bioStorageKey(), bio)
-  } catch (e) { /* 忽略 */ }
+    await updateBio(bio)
+  } catch (e) {
+    // 持久化失败：保持当前展示，不回落本地存储
+  }
 }
 
 // 用户卡片事件：头像/封面更新（上传逻辑在 UserCard 组件内）
@@ -684,6 +696,7 @@ async function handleConfirmDisable(): Promise<void> {
 }
 
 async function unlink(a: any): Promise<void> {
+  unlinkTarget.value = null
   try {
     await unlinkAccount(a.provider, a.providerUserId)
     linkedAccounts.value = linkedAccounts.value.filter(x => x.provider !== a.provider || x.providerUserId !== a.providerUserId)

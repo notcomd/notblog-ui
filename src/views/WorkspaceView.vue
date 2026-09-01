@@ -5,14 +5,14 @@
         <h1 class="text-xl sm:text-2xl font-bold text-zinc-800 dark:text-zinc-100">发布工作台</h1>
         <p class="text-sm text-zinc-400 mt-1">选择内容类型开始创作，未发布的作品会保存在这里</p>
       </div>
-      <button class="px-4 h-10 shrink-0 rounded-2xl text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="toast.push('草稿保存在本机浏览器中', 'info')">
-        <svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>草稿自动保存到本机
+      <button class="px-4 h-10 shrink-0 rounded-2xl text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:opacity-90 transition-all" type="button" @click="toast.push('草稿保存在本机浏览器中', 'info')">
+        <svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>草稿自动保存到本机
       </button>
     </div>
 
     <!-- 四个方形类型选项 -->
     <div class="grid grid-cols-2 xl:grid-cols-3 gap-5">
-      <div v-for="t in types" :key="t.type" class="glass-card overflow-hidden group cursor-pointer transition-all hover:-translate-y-1 hover:" @click="createNew(t.type)">
+      <div v-for="t in types" :key="t.type" class="glass-card overflow-hidden group cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg" role="link" tabindex="0" @click="createNew(t.type)" @keydown.enter.prevent="createNew(t.type)" @keydown.space.prevent="createNew(t.type)">
         <!-- 方形选项头 -->
         <div class="aspect-square relative flex flex-col items-center justify-center gap-3 transition-all group-hover:scale-[1.02]"
           :class="t.gradient">
@@ -20,7 +20,7 @@
           <div class="text-xl font-bold text-white drop-shadow">{{ t.label }}</div>
           <div class="text-xs text-white/80">{{ t.desc }}</div>
           <div class="absolute top-3 right-3 w-8 h-8 rounded-xl bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
           </div>
         </div>
         <!-- 该类型未发布作品列表 -->
@@ -40,11 +40,11 @@
                 <div class="text-xs font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ d.title || d.content || '未命名草稿' }}</div>
                 <div class="text-[10px] text-zinc-400">{{ relativeTime(d.updatedAt) }}</div>
               </div>
-              <button class="w-6 h-6 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-amber-400/15 hover:text-amber-500 transition-colors opacity-0 group-hover/draft:opacity-100" title="编辑" @click.stop="editDraft(d)">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
+              <button class="w-6 h-6 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-amber-400/15 hover:text-amber-500 transition-colors opacity-0 group-hover/draft:opacity-100" type="button" title="编辑" aria-label="编辑草稿" @click.stop="editDraft(d)">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
               </button>
-              <button class="w-6 h-6 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-red-500/15 hover:text-red-500 transition-colors opacity-0 group-hover/draft:opacity-100" title="删除" @click.stop="confirmDelete(d)">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+              <button class="w-6 h-6 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-red-500/15 hover:text-red-500 transition-colors opacity-0 group-hover/draft:opacity-100" type="button" title="删除" aria-label="删除草稿" @click.stop="confirmDelete(d)">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
               </button>
             </div>
             <div v-if="draftsByType(t.type).length === 0" class="py-4 text-center text-[11px] text-zinc-400">暂无未发布作品</div>

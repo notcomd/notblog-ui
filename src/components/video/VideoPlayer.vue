@@ -7,6 +7,8 @@
         ref="videoEl"
         class="w-full h-full"
         :src="src"
+        tabindex="0"
+        aria-label="视频播放器"
         playsinline
         @timeupdate="onTimeUpdate"
         @loadedmetadata="onLoaded"
@@ -27,37 +29,37 @@
       />
 
       <!-- 中央播放按钮 -->
-      <button v-if="paused" class="absolute inset-0 m-auto w-16 h-16 rounded-full bg-white/95 flex items-center justify-center hover:scale-110 transition-transform" @click="togglePlay">
-        <svg class="w-7 h-7 text-zinc-800 ml-1 dark:text-zinc-100" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+      <button v-if="paused" type="button" aria-label="播放" class="absolute inset-0 m-auto w-16 h-16 rounded-full bg-white/95 flex items-center justify-center hover:scale-110 transition-transform" @click="togglePlay">
+        <svg class="w-7 h-7 text-zinc-800 ml-1 dark:text-zinc-100" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
       </button>
 
       <!-- 控制栏 -->
       <div class="absolute bottom-0 left-0 right-0 px-4 pb-3 pt-8 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300"
         :class="controlsVisible || paused ? 'opacity-100' : 'opacity-0'">
         <!-- 进度条 -->
-        <input type="range" min="0" :max="duration || 0" step="0.1" :value="currentTime" class="w-full h-1 accent-amber-400 cursor-pointer" @input="seek" />
+        <input type="range" min="0" :max="duration || 0" step="0.1" :value="currentTime" aria-label="播放进度" class="w-full h-1 accent-amber-400 cursor-pointer" @input="seek" />
         <div class="flex items-center gap-3 mt-1 text-white text-xs">
-          <button class="w-8 h-8 rounded-[5%] hover:bg-white/15 flex items-center justify-center transition-colors" @click="togglePlay">
-            <svg v-if="paused" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-            <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+          <button type="button" class="w-8 h-8 rounded-[5%] hover:bg-white/15 flex items-center justify-center transition-colors" :aria-label="paused ? '播放' : '暂停'" @click="togglePlay">
+            <svg v-if="paused" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+            <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
           </button>
           <span class="tabular-nums">{{ fmtTime(currentTime) }} / {{ fmtTime(duration) }}</span>
-          <span class="ml-2 hidden sm:inline text-zinc-300 inline-flex items-center gap-1"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>{{ barrageCount }} 条弹幕</span>
+          <span class="ml-2 hidden sm:inline text-zinc-300 inline-flex items-center gap-1"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>{{ barrageCount }} 条弹幕</span>
           <div class="flex-1"></div>
           <!-- 弹幕开关（记忆 per video） -->
-          <button class="w-8 h-8 rounded-[5%] hover:bg-white/15 flex items-center justify-center transition-colors" :class="danmakuOn ? 'text-amber-400' : 'text-zinc-400'" title="弹幕开关" @click="toggleDanmaku">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+          <button type="button" class="w-8 h-8 rounded-[5%] hover:bg-white/15 flex items-center justify-center transition-colors" :class="danmakuOn ? 'text-amber-400' : 'text-zinc-400'" title="弹幕开关" aria-label="弹幕开关" :aria-pressed="danmakuOn" @click="toggleDanmaku">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
           </button>
           <!-- 速率 -->
-          <button class="w-8 h-8 rounded-[5%] hover:bg-white/15 flex items-center justify-center text-[11px] transition-colors" title="弹幕速率" @click="cycleSpeed">{{ SPEED_LABEL[danmakuSpeed] }}</button>
+          <button type="button" class="w-8 h-8 rounded-[5%] hover:bg-white/15 flex items-center justify-center text-[11px] transition-colors" title="弹幕速率" aria-label="弹幕速率" @click="cycleSpeed">{{ SPEED_LABEL[danmakuSpeed] }}</button>
           <!-- 音量 -->
           <div class="flex items-center gap-1">
-            <svg class="w-4 h-4 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14" /></svg>
-            <input type="range" min="0" max="1" step="0.05" :value="volume" class="w-16 h-1 accent-amber-400" @input="setVolume" />
+            <svg class="w-4 h-4 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14" /></svg>
+            <input type="range" min="0" max="1" step="0.05" :value="volume" aria-label="音量" class="w-16 h-1 accent-amber-400" @input="setVolume" />
           </div>
           <!-- 全屏 -->
-          <button class="w-8 h-8 rounded-[5%] hover:bg-white/15 flex items-center justify-center transition-colors" @click="toggleFullscreen">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" /></svg>
+          <button type="button" class="w-8 h-8 rounded-[5%] hover:bg-white/15 flex items-center justify-center transition-colors" aria-label="全屏" @click="toggleFullscreen">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" /></svg>
           </button>
         </div>
       </div>
@@ -65,26 +67,29 @@
 
     <!-- 弹幕发送区（视频下方，与评论区输入框联动） -->
     <div class="flex items-center gap-2 mt-3">
-      <button class="shrink-0 h-10 px-3 rounded-[5%] text-sm font-medium transition-all"
+      <button type="button" class="shrink-0 h-10 px-3 rounded-[5%] text-sm font-medium transition-all"
         :class="danmakuInputMode ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white ' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 dark:text-zinc-400 hover:text-amber-500'"
+        :aria-pressed="danmakuInputMode"
         @click="danmakuInputMode = !danmakuInputMode">
         <span class="flex items-center gap-1.5">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><path d="M8 9h8M8 13h5" /></svg>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><path d="M8 9h8M8 13h5" /></svg>
           发弹幕
         </span>
       </button>
       <input
         v-model="danmakuDraft"
+        name="danmaku"
+        aria-label="输入弹幕"
         class="flex-1 h-10 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
-        :placeholder="danmakuInputMode ? '发一条有趣的弹幕吧...（≤30 字，间隔 3 秒）' : '说点什么...'"
+        :placeholder="danmakuInputMode ? '发一条有趣的弹幕吧…（≤30 字，间隔 3 秒）' : '说点什么…'"
         maxlength="30"
         @keyup.enter="sendDanmaku"
       />
-      <button class="shrink-0 h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover: active:scale-95 transition-all disabled:opacity-50" :disabled="!danmakuDraft.trim() || danmakuCooldown > 0" @click="sendDanmaku">
+      <button type="button" class="shrink-0 h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover:opacity-90 active:scale-95 transition-all disabled:opacity-50" :disabled="!danmakuDraft.trim() || danmakuCooldown > 0" @click="sendDanmaku">
         {{ danmakuCooldown > 0 ? danmakuCooldown + 's' : '发送' }}
       </button>
     </div>
-    <p v-if="danmakuError" class="text-xs text-red-500 mt-1.5">{{ danmakuError }}</p>
+    <p v-if="danmakuError" role="alert" class="text-xs text-red-500 mt-1.5">{{ danmakuError }}</p>
   </div>
 </template>
 

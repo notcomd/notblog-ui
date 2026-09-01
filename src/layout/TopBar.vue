@@ -28,8 +28,8 @@
       <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
         <!-- 消息铃铛（点击下拉通知面板） -->
         <div class="relative">
-          <button class="w-9 h-9 lg:w-10 lg:h-10 rounded-[5%] flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="消息" @click.stop="onBellClick">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button class="w-9 h-9 lg:w-10 lg:h-10 rounded-[5%] flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="消息" aria-label="消息" @click.stop="onBellClick">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.7 21a2 2 0 0 1-3.4 0" />
             </svg>
@@ -53,8 +53,8 @@
         </div>
 
         <!-- 皮肤设置：调色板图标 → 皮肤面板（颜色皮肤 + 背景设置） -->
-        <button class="w-9 h-9 lg:w-10 lg:h-10 rounded-[5%] flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="皮肤设置" @click="skinOpen = true">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="w-9 h-9 lg:w-10 lg:h-10 rounded-[5%] flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="皮肤设置" aria-label="皮肤设置" @click="skinOpen = true">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.12 0-.92.75-1.66 1.67-1.66h2c3.05 0 5.56-2.5 5.56-5.55C21.96 6.01 17.46 2 12 2z" />
             <circle cx="6.5" cy="12" r="0.7" fill="currentColor" stroke="none" />
             <circle cx="9.2" cy="7.6" r="0.7" fill="currentColor" stroke="none" />
@@ -64,7 +64,7 @@
 
         <!-- 未登录：登录按钮 -->
         <template v-if="!auth.isLoggedIn()">
-          <button class="px-3 h-8 lg:px-4 lg:h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all" @click="router.push('/login')">登录</button>
+          <button class="px-3 h-8 lg:px-4 lg:h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90 active:scale-95 transition-all" @click="router.push('/login')">登录</button>
         </template>
 
         <!-- 已登录：用户头像（点击展开下拉：用户数据 + 菜单） -->
@@ -72,6 +72,9 @@
           <button
             class="flex items-center pl-1 pr-1.5 py-1 rounded-[5%] hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors"
             title="用户菜单"
+            aria-label="用户菜单"
+            aria-haspopup="menu"
+            :aria-expanded="userMenuOpen"
             @click.stop="userMenuOpen = !userMenuOpen"
           >
             <img
@@ -129,7 +132,7 @@
                     class="h-7 px-2.5 rounded-[5%] text-[11px] font-medium bg-amber-400/15 text-amber-600 dark:text-amber-300 hover:bg-amber-400/25 transition-colors disabled:opacity-40"
                     :disabled="signingIn"
                     @click="onSignIn"
-                  >{{ signingIn ? '签到中...' : '每日签到 +250经验' }}</button>
+                  >{{ signingIn ? '签到中…' : '每日签到 +250经验' }}</button>
                   <span v-else-if="userInfo && userInfo.signedInToday" class="text-[11px] text-zinc-400">今日已签到 <svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 </div>
               </div>
@@ -172,7 +175,6 @@ import SkinPanel from '@/components/common/SkinPanel.vue'
 import NotificationPanel from '@/components/common/NotificationPanel.vue'
 import { getMyUserInfo, signIn } from '@/api/userinfo'
 import { getNotificationUnreadCount } from '@/api/notification'
-import { SAMPLE_NOTIFICATIONS } from '@/utils/notifications'
 import { MAIN_NAV_ITEMS, buildSpaceNavItems } from '@/layout/navItems'
 
 const auth = useAuthStore()
@@ -315,8 +317,8 @@ async function loadUnread(): Promise<void> {
     const res = await getNotificationUnreadCount()
     unread.value = (res && res.data) || 0
   } catch (e) {
-    // 后端离线 → 示例未读数（仅用于展示）
-    unread.value = SAMPLE_NOTIFICATIONS.filter(n => !n.isRead).length
+    // 后端不可用时诚实置零，不展示示例未读数
+    unread.value = 0
   }
 }
 

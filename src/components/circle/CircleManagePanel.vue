@@ -3,14 +3,14 @@
   <div class="glass-card flex flex-col min-h-0">
     <!-- 头部 -->
     <div class="flex items-center gap-3 px-5 py-4 border-b border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
-      <button class="w-8 h-8 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="返回" @click="$emit('close')">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+      <button aria-label="返回" class="w-8 h-8 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" title="返回" @click="$emit('close')">
+        <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
       </button>
       <span class="text-base font-semibold text-zinc-800 dark:text-zinc-100">社区管理</span>
       <span v-if="!isOwner" class="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">管理员（仅审核/邀请，不可改信息）</span>
     </div>
 
-    <div class="flex-1 overflow-y-auto px-5 py-4 space-y-6 min-h-0">
+    <div class="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-6 min-h-0">
       <!-- 基本信息（仅创建者可改） -->
       <div>
         <p class="text-xs font-medium text-zinc-400 mb-2">基本信息</p>
@@ -26,11 +26,11 @@
           </div>
           <div>
             <label class="text-xs text-zinc-400 block mb-1">社区名称</label>
-            <input v-model="name" maxlength="30" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+            <input v-model="name" maxlength="30" aria-label="社区名称" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
           </div>
           <div>
             <label class="text-xs text-zinc-400 block mb-1">社区简介</label>
-            <textarea v-model="desc" rows="2" maxlength="120" class="w-full rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all p-3 resize-none"></textarea>
+            <textarea v-model="desc" rows="2" maxlength="120" aria-label="社区简介" class="w-full rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all p-3 resize-none"></textarea>
           </div>
         </div>
       </div>
@@ -47,7 +47,7 @@
             :disabled="!isOwner"
             @click="setMode(m.key)"
           >
-            <span class="block text-xs font-medium text-zinc-700 dark:text-zinc-200 inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="m.icon"></svg>{{ m.label }}</span>
+            <span class="block text-xs font-medium text-zinc-700 dark:text-zinc-200 inline-flex items-center gap-1"><svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="m.icon"></svg>{{ m.label }}</span>
             <span class="block text-[10px] text-zinc-400 mt-0.5">{{ m.desc }}</span>
           </button>
         </div>
@@ -78,7 +78,7 @@
         <div class="flex items-center justify-between mb-2">
           <p class="text-xs font-medium text-zinc-400">邀请码</p>
           <button class="h-7 px-2.5 rounded-[5%] text-[11px] font-medium bg-amber-400/15 text-amber-600 dark:text-amber-300 hover:bg-amber-400/25 transition-colors" :disabled="generating" @click="genInvite">
-            {{ generating ? '生成中...' : '＋ 生成邀请码' }}
+            {{ generating ? '生成中…' : '＋ 生成邀请码' }}
           </button>
         </div>
         <p v-if="joinMode === 'private' && !isOwner" class="text-xs text-zinc-400 py-3 text-center bg-white/40 dark:bg-zinc-800/40 rounded-[5%]">私密社区仅创建者可邀请</p>
@@ -96,7 +96,7 @@
     <div class="px-5 py-3.5 border-t border-zinc-200/60 dark:border-zinc-700/60 flex justify-end gap-2 shrink-0">
       <button class="h-10 px-4 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" @click="$emit('close')">取消</button>
       <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover:brightness-110 active:scale-95 transition-all" :disabled="saving" @click="save">
-        {{ saving ? '保存中...' : '保存修改' }}
+        {{ saving ? '保存中…' : '保存修改' }}
       </button>
     </div>
   </div>
@@ -115,7 +115,6 @@ interface CircleData {
   description?: string
   avatarUrl?: string
   coverUrl?: string
-  isSample?: boolean
 }
 
 interface JoinMode {
@@ -226,34 +225,15 @@ function reject(r: JoinRequest) {
 }
 
 // ===== 邀请码 =====
-function invitesKey(guid: string): string {
-  return 'notblog-circle-invites-' + guid
-}
 async function loadInviteCodes(guid: string) {
-  const local = loadLocalInvites(guid)
   try {
     const res = await getCircleInvitations(guid)
     const data = res && res.data ? res.data : res
     const list = (data && (data.items || data.list)) || data || []
-    if (Array.isArray(list) && list.length) {
-      inviteCodes.value = list.map(x => ({ inviteGuid: x.inviteGuid, code: x.code }))
-      return
-    }
-  } catch (e) { /* 后端未就绪，用本地 */ }
-  inviteCodes.value = local
-}
-function loadLocalInvites(guid: string): InviteCode[] {
-  try {
-    return JSON.parse(localStorage.getItem(invitesKey(guid)) || '[]')
+    inviteCodes.value = (Array.isArray(list) ? list : []).map(x => ({ inviteGuid: x.inviteGuid, code: x.code }))
   } catch (e) {
-    return []
+    inviteCodes.value = []
   }
-}
-function saveLocalInvites() {
-  if (!props.current) return
-  try {
-    localStorage.setItem(invitesKey(props.current.circleGuid), JSON.stringify(inviteCodes.value))
-  } catch (e) { /* 忽略 */ }
 }
 async function genInvite() {
   if (!props.current) return
@@ -264,15 +244,10 @@ async function genInvite() {
     const body = data && data.data ? data.data : data
     const code = (body && (body.code || body.inviteGuid)) || ''
     if (!code) throw new Error('未返回邀请码')
-    inviteCodes.value.unshift({ inviteGuid: body.inviteGuid || 'local-' + Date.now(), code })
-    saveLocalInvites()
+    inviteCodes.value.unshift({ inviteGuid: body.inviteGuid || '', code })
     toast.push('邀请码已生成', 'success')
   } catch (e) {
-    // 后端未就绪：本地生成 8 位邀请码兜底
-    const code = Array.from({ length: 8 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('')
-    inviteCodes.value.unshift({ inviteGuid: 'local-' + Date.now(), code })
-    saveLocalInvites()
-    toast.push('邀请码已生成（本地）', 'success')
+    toast.push('邀请码生成失败：' + ((e && e.message) || '后端未就绪'), 'error')
   } finally {
     generating.value = false
   }
@@ -281,10 +256,11 @@ async function revoke(it: InviteCode) {
   if (!props.current) return
   try {
     await revokeCircleInvitation(props.current.circleGuid, it.inviteGuid!)
-  } catch (e) { /* 本地删除 */ }
-  inviteCodes.value = inviteCodes.value.filter(x => x.inviteGuid !== it.inviteGuid)
-  saveLocalInvites()
-  toast.push('邀请码已撤销', 'info')
+    inviteCodes.value = inviteCodes.value.filter(x => x.inviteGuid !== it.inviteGuid)
+    toast.push('邀请码已撤销', 'info')
+  } catch (e) {
+    toast.push('撤销失败：' + ((e && e.message) || '请重试'), 'error')
+  }
 }
 function copy(it: InviteCode) {
   try {
@@ -337,21 +313,22 @@ async function onCoverFile(e: Event) {
   }
 }
 
-// ===== 保存（真实社区走 PUT /api/circles/{guid}；示例社区本地更新） =====
+// ===== 保存（真实端点 PUT /api/circles/{guid}） =====
 async function save() {
   if (!props.current || !name.value.trim()) return
   saving.value = true
   try {
-    if (!props.current.isSample) {
-      const payload = {
-        name: name.value.trim(),
-        description: desc.value.trim(),
-        ...(avatarPreview.value ? { avatarUrl: avatarPreview.value } : {}),
-        ...(coverPreview.value ? { coverUrl: coverPreview.value } : {})
-      }
-      try {
-        await updateCircle(props.current.circleGuid, payload)
-      } catch (e) { /* 后端未就绪时本地生效 */ }
+    const payload = {
+      name: name.value.trim(),
+      description: desc.value.trim(),
+      ...(avatarPreview.value ? { avatarUrl: avatarPreview.value } : {}),
+      ...(coverPreview.value ? { coverUrl: coverPreview.value } : {})
+    }
+    try {
+      await updateCircle(props.current.circleGuid, payload)
+    } catch (e) {
+      toast.push('保存失败：' + ((e && e.message) || '请重试'), 'error')
+      return
     }
     toast.push('社区信息已保存', 'success')
     emit('saved', {

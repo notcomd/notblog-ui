@@ -15,6 +15,11 @@ export function updateBackgroundCover(url: string) {
   return service.put('/api/user-info/me/background', { backgroundCoverUrl: url });
 }
 
+// 更新个人签名：PUT /api/user-info/me/bio { bio }（空白 = 清除）
+export function updateBio(bio: string) {
+  return service.put('/api/user-info/me/bio', { bio });
+}
+
 // 每日签到：POST /api/user-info/sign-in（+250 经验，每日一次）-> ApiResponse<SignInResultDto>
 export function signIn() {
   return service.post('/api/user-info/sign-in');

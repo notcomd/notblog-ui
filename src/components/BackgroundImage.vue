@@ -1,6 +1,6 @@
 <template>
   <div class="bg-container">
-    <img v-if="imageUrl" :src="imageUrl" alt="Bing 每日壁纸" class="bg-image" @error="onImageError" />
+    <img v-if="imageUrl" :src="imageUrl" alt="" aria-hidden="true" class="bg-image" @error="onImageError" />
   </div>
 </template>
 

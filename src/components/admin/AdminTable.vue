@@ -10,7 +10,7 @@
         <thead>
           <tr class="text-left text-xs text-zinc-500 dark:text-zinc-400 border-b border-zinc-200/60 dark:border-zinc-700/60">
             <th v-if="selectable" class="px-4 py-3 w-10">
-              <input type="checkbox" class="accent-amber-500" :checked="allSelected" @change="toggleAll" />
+              <input type="checkbox" class="accent-amber-500" aria-label="全选" :checked="allSelected" @change="toggleAll" />
             </th>
             <th v-for="col in columns" :key="col.key" class="px-4 py-3 font-medium whitespace-nowrap" :class="col.className || ''">
               {{ col.label }}
@@ -21,7 +21,7 @@
         <tbody>
           <tr v-for="(row, ri) in rows" :key="rowKey(row, ri)" class="border-b border-zinc-100/80 dark:border-zinc-800/60 hover:bg-white/50 dark:hover:bg-zinc-800/40 transition-colors">
             <td v-if="selectable" class="px-4 py-3">
-              <input type="checkbox" class="accent-amber-500" :checked="isSelected(rowKey(row, ri))" @change="toggleRow(rowKey(row, ri))" />
+              <input type="checkbox" class="accent-amber-500" aria-label="选择该行" :checked="isSelected(rowKey(row, ri))" @change="toggleRow(rowKey(row, ri))" />
             </td>
             <td v-for="col in columns" :key="col.key" class="px-4 py-3 align-middle" :class="col.cellClass || ''">
               <slot :name="'cell-' + col.key" :row="row" :value="row[col.key]">{{ row[col.key] }}</slot>
@@ -35,7 +35,7 @@
               <div class="flex justify-center">
                 <div class="flex items-center gap-2 text-zinc-400 text-sm">
                   <span class="w-5 h-5 border-2 border-zinc-300 dark:border-zinc-600 border-t-amber-500 rounded-full animate-spin"></span>
-                  加载中...
+                  加载中…
                 </div>
               </div>
             </td>
@@ -52,9 +52,9 @@
     <div v-if="total > pageSize" class="px-4 py-3 border-t border-zinc-200/60 dark:border-zinc-700/60 flex items-center justify-between text-sm">
       <span class="text-xs text-zinc-400">共 {{ total }} 条</span>
       <div class="flex items-center gap-1">
-        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-30 dark:text-zinc-400" :disabled="page <= 1" @click="go(page - 1)">‹</button>
+        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-30 dark:text-zinc-400" :disabled="page <= 1" @click="go(page - 1)" aria-label="上一页">‹</button>
         <span class="px-2 text-xs text-zinc-500 dark:text-zinc-400">{{ page }} / {{ totalPages }}</span>
-        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-30 dark:text-zinc-400" :disabled="page >= totalPages" @click="go(page + 1)">›</button>
+        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-30 dark:text-zinc-400" :disabled="page >= totalPages" @click="go(page + 1)" aria-label="下一页">›</button>
       </div>
     </div>
   </div>
