@@ -59,7 +59,7 @@ const currentDraft = computed(() => (draftId.value ? getDraft(draftId.value) : n
 // 类型完全由路由决定（工作台选择入口），切换类型请返回工作台
 watch(() => route.query.type, (t) => {
   if (t === 'video') mode.value = 'video'
-  else if (t === 'workspace') mode.value = 'workspace'
+  else if (t === 'workspace' || t === 'markdown') mode.value = 'workspace'
   else mode.value = 'post'
 }, { immediate: true })
 
