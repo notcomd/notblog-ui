@@ -13,6 +13,7 @@ import PostDetailView from '@/views/PostDetailView.vue';
 import MarkdownDetailView from '@/views/MarkdownDetailView.vue';
 import PublishView from '@/views/PublishView.vue';
 import WorkspaceView from '@/views/WorkspaceView.vue';
+import SearchView from '@/views/SearchView.vue';
 
 // 管理后台
 import AdminLayout from '@/layout/AdminLayout.vue';
@@ -65,6 +66,12 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true }
       },
       { path: 'publish', name: 'Publish', component: PublishView, meta: { requiresAuth: true } },
+      {
+        path: 'search',
+        name: 'Search',
+        component: SearchView,
+        meta: { requiresAuth: true }
+      },
       {
         path: 'workspace',
         name: 'Workspace',

@@ -99,7 +99,6 @@
 import { computed, ref, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useToastStore } from '@/stores/toast'
 import { MAIN_NAV_ITEMS, buildSpaceNavItems } from '@/layout/navItems'
 
 withDefaults(defineProps<{ blurred?: boolean }>(), { blurred: false })
@@ -130,11 +129,11 @@ const collapsed = ref(false)
 // ==================== 搜索功能（展开态输入框 / 收缩态图标入口） ====================
 const keyword = ref('')
 const searchInput = ref<HTMLElement | null>(null)
-const toast = useToastStore()
 
 function onSearch(): void {
-  if (!keyword.value.trim()) return
-  toast.push(`搜索「${keyword.value.trim()}」功能开发中`, 'info')
+  const kw = keyword.value.trim()
+  if (!kw) return
+  router.push({ path: '/search', query: { q: kw } })
 }
 
 // 收缩态点击搜索图标：先展开功能栏，再聚焦输入框
