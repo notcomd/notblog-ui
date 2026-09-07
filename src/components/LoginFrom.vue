@@ -423,7 +423,13 @@ const startCodeCountdown = (): void => {
 const handleLoginSuccess = (res: any): void => {
   const data = res && res.data ? res.data : res
   saveLoginResult(data)
-  router.replace('/home')
+  // 会话过期后重新登录：回跳原页面（query.redirect 由 main.ts 会话失效装配写入）；无则回首页
+  const redirect = router.currentRoute.value.query.redirect
+  router.replace(
+    typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
+      ? redirect
+      : '/home'
+  )
 }
 
 // ==================== 密码登入提交 ====================
