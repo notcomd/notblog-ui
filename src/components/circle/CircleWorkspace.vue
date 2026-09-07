@@ -125,7 +125,7 @@ function onManaged(patch: any) {
 async function onSetRole(m: any, role: string) {
   if (!props.current) return
   try {
-    await setCircleMemberRole(props.current.circleGuid, m.userGuid, { role })
+    await setCircleMemberRole(props.current.circleGuid, m.userGuid, role)
     m.role = role
     toast.push(role === 'Admin' ? '已设为管理员' : '已取消管理员', 'success')
   } catch (e) {

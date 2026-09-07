@@ -135,7 +135,22 @@ import { useToastStore } from '@/stores/toast'
 
 interface Props {
   myCircles?: unknown[]
-  draft?: unknown
+  draft?: MarkdownDraft | null
+}
+
+interface MarkdownDraft {
+  id: string
+  title?: string
+  content?: string
+  images?: unknown[]
+  coverUrl?: string
+  cover?: string
+  visibility?: string
+}
+
+interface MarkdownImage {
+  fileId: string
+  url: string
 }
 const props = withDefaults(defineProps<Props>(), {
   myCircles: () => [],
@@ -151,7 +166,7 @@ const step = ref<'meta' | 'content'>('meta')
 const title = ref('')          // 文章标题（必填）
 const coverUrl = ref('')       // 可显示 URL（预览用）
 const content = ref('')
-const mdImages = ref<unknown[]>([])
+const mdImages = ref<MarkdownImage[]>([])
 const visibility = ref('Public')
 const coverInput = ref<HTMLInputElement | null>(null)
 const coverUploading = ref(false)
@@ -173,7 +188,13 @@ watch(() => props.draft, (d) => {
   draftId.value = d.id
   title.value = d.title || ''
   content.value = d.content || ''
-  mdImages.value = d.images || []
+  mdImages.value = Array.isArray(d.images)
+    ? d.images.filter((image): image is MarkdownImage => {
+        if (!image || typeof image !== 'object') return false
+        const value = image as Record<string, unknown>
+        return typeof value.fileId === 'string' && typeof value.url === 'string'
+      })
+    : []
   coverUrl.value = d.coverUrl || d.cover || ''
   visibility.value = d.visibility || 'Public'
   if (content.value.trim()) step.value = 'content'
@@ -217,11 +238,9 @@ function saveAsDraft() {
       type: 'markdown',
       title: title.value.trim(),
       content: content.value,
-      images: mdImages.value,
+      images: mdImages.value.map(image => image.url),
       cover: coverUrl.value,
-      coverUrl: coverUrl.value,
-      circleGuid: '',
-      visibility: visibility.value
+      circleGuid: ''
     })
     draftId.value = saved.id
     toast.push('草稿已保存', 'success')
@@ -242,6 +261,7 @@ async function publish() {
     const cover = coverUrl.value.startsWith('blob:') ? '' : coverUrl.value
     const payload = {
       name: title.value.trim(),
+      title: title.value.trim(),
       content: content.value.trim(),
       coverUrl: cover,
       auth: visibility.value === 'Private' ? 'private' : 'public'

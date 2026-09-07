@@ -31,6 +31,9 @@ module.exports = {
   },
   devServer: {
     historyApiFallback: true,
+    // 代理统一转发日志：每个经 devServer 转发到网关的请求打印一行，
+    // 用于核对"前端请求是否全部经网关"（浏览器 Network 面板只能看到 8080 入口，
+    // 实际转发目标在此日志确认；onProxyReq 首参数为 http-proxy 事件，ws=true 时不触发）
     proxy: {
       // YARP 网关实测监听 5000（Aspire 编排），仅 http（appsettings.json Urls: http://0.0.0.0:5000，无 HTTPS）；
       // 9091 是 dcp proxy 端口不可用（ECONNRESET）
@@ -38,12 +41,18 @@ module.exports = {
         target: 'http://localhost:5000',
         changeOrigin: true,
         ws: true,
-        pathRewrite: { '^/api': '/api' }
+        pathRewrite: { '^/api': '/api' },
+        onProxyReq: proxyReq => {
+          console.log(`[proxy→网关] ${proxyReq.method} ${proxyReq.path}`)
+        }
       },
       // 文件访问通道（/files/{userId}/{guid}.ext —— FileDev 下载端点，经网关转发）
       '/files': {
         target: 'http://localhost:5000',
-        changeOrigin: true
+        changeOrigin: true,
+        onProxyReq: proxyReq => {
+          console.log(`[proxy→网关] ${proxyReq.method} ${proxyReq.path}`)
+        }
       },
       // SignalR 实时通道（MessageHub + CallHub 语音/视频通话信令）
       '/MessageHub': {

@@ -3,7 +3,7 @@
     <!-- 3列等宽网格（<1200px 自适应 2 列） -->
     <!-- 瀑布流：columns 多列交错（视频 1:1 与图文 9:16 混排无空隙，视觉更自然） -->
     <div class="columns-1 sm:columns-2 xl:columns-3 gap-5 qm-stagger">
-      <div v-for="(post, i) in posts" :key="post.tweetGuid" class="break-inside-avoid mb-5" :style="{ animationDelay: (i * 60) + 'ms' }">
+      <div v-for="(post, i) in posts" :key="getTweetGuid(post)" class="break-inside-avoid mb-5" :style="{ animationDelay: (i * 60) + 'ms' }">
         <PostCard :post="post" />
       </div>
     </div>
@@ -69,6 +69,13 @@ const size = 9
 const hasMore = ref(true)
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
+
+function getTweetGuid(post: unknown): string {
+  if (typeof post === 'object' && post !== null && 'tweetGuid' in post) {
+    return String((post as { tweetGuid: unknown }).tweetGuid)
+  }
+  return ''
+}
 
 async function loadMore(reset = false) {
   if (loading.value) return
