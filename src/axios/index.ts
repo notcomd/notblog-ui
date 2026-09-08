@@ -7,9 +7,9 @@ import { emitSessionExpired } from '@/axios/session'
 // 统一 API 请求出口（axios 单实例）
 //
 // 网络拓扑（设计约定，勿直连服务端口）：
-//   开发环境  baseURL = '' → 相对路径 → vue.config.js devServer 代理
+//   开发环境  baseURL = '' → 相对路径 → vite.config.ts devServer 代理
 //             /api、/files、/MessageHub、/CallHub → http://localhost:5000（YARP 网关）→ 各服务
-//   生产环境  baseURL = process.env.VUE_APP_API_BASE_URL（网关公网地址）
+//   生产环境  baseURL = import.meta.env.VUE_APP_API_BASE_URL（网关公网地址）
 //
 // 拦截器职责：
 //   请求
@@ -51,13 +51,13 @@ interface RetriableConfig extends InternalAxiosRequestConfig {
 
 // 无拦截器裸实例：仅供「刷新 token」内部使用（避免与主实例拦截器递归）
 const raw = axios.create({
-  baseURL: process.env.VUE_APP_API_BASE_URL || '',
+  baseURL: import.meta.env.VUE_APP_API_BASE_URL || '',
   timeout: 15000
 })
 
 // ── 主实例 ──
 const service: AxiosInstance = axios.create({
-  baseURL: process.env.VUE_APP_API_BASE_URL || '',
+  baseURL: import.meta.env.VUE_APP_API_BASE_URL || '',
   timeout: 15000 // 默认 15s（列表/上传等场景），单请求可用 config.timeout 覆盖
 })
 
@@ -181,13 +181,9 @@ service.interceptors.response.use(
     }
 
     const { status } = error.response
-
-    // 会话失效：自动刷新 → 重放；失败广播登出
     if (status === 401) {
       return handleUnauthorized(config, error)
     }
-
-    // 其余状态码：归类记录后透传（业务页面在 catch 中自行提示）
     if (status === 403) console.warn('[api] 拒绝访问:', config?.url)
     else if (status === 404) console.warn('[api] 资源不存在:', config?.url)
     else if (status >= 500) console.warn(`[api] 服务器错误 ${status}:`, config?.url)

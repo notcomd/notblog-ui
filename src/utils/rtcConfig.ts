@@ -19,12 +19,12 @@ const STUN_SERVERS: RTCIceServer[] = [
 
 /** 从环境变量读取静态 TURN 服务器（含可选用户名/密码） */
 function staticTurnServer(): RTCIceServer | null {
-  const urls = process.env.VUE_APP_TURN_URL;
+  const urls = import.meta.env.VUE_APP_TURN_URL;
   if (!urls) return null;
 
   const server: RTCIceServer = { urls };
-  const username = process.env.VUE_APP_TURN_USERNAME;
-  const credential = process.env.VUE_APP_TURN_CREDENTIAL;
+  const username = import.meta.env.VUE_APP_TURN_USERNAME;
+  const credential = import.meta.env.VUE_APP_TURN_CREDENTIAL;
   if (username && credential) {
     server.username = username;
     server.credential = credential;
@@ -37,7 +37,7 @@ function staticTurnServer(): RTCIceServer | null {
  * 期望响应形如：{ urls: "turn:host:3478?transport=udp", username, credential }
  */
 async function fetchTurnCredentials(): Promise<RTCIceServer[]> {
-  const restUrl = process.env.VUE_APP_TURN_REST_URL;
+  const restUrl = import.meta.env.VUE_APP_TURN_REST_URL;
   if (!restUrl) return [];
 
   try {

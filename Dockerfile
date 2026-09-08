@@ -15,13 +15,13 @@ RUN npm ci --no-audit --no-fund
 # 2) 复制源码（node_modules 已在根 .dockerignore 中排除）
 COPY notblog-ui/ ./
 
-# 3) 构建（vue-cli-service build → dist/，ts-loader 已配置 transpileOnly）
+# 3) 构建（vite build → dist/）
 RUN npm run build
 
 # ── 运行时阶段：nginx 托管静态资源 + 反向代理到网关 ──
 FROM docker.m.daocloud.io/library/nginx:1.27-alpine AS final
 
-# 前端静态资源（Vue CLI 构建产物）
+# 前端静态资源（Vite 构建产物）
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # nginx 站点配置（模板：GATEWAY_UPSTREAM 由 nginx 官方 entrypoint 用 envsubst 渲染）

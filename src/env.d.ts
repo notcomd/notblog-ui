@@ -18,18 +18,6 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-// vue-cli 注入的构建期环境变量
-declare namespace NodeJS {
-  interface ProcessEnv {
-    NODE_ENV?: string;
-    VUE_APP_API_BASE_URL?: string;
-    VUE_APP_TURN_URL?: string;
-    VUE_APP_TURN_USERNAME?: string;
-    VUE_APP_TURN_CREDENTIAL?: string;
-    VUE_APP_TURN_REST_URL?: string;
-  }
-}
-
 // 静态资源导入
 declare module '*.png'
 declare module '*.jpg'
