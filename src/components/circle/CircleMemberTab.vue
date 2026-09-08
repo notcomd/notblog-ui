@@ -1,29 +1,31 @@
 <template>
-  <!-- 频道成员 tab：搜索框 + 按角色分组列表（创建者/管理者/普通成员），角色管理/移除 -->
+  <!-- 社区成员 tab：搜索框 + 按角色分组列表（创建者/管理者/普通成员），角色管理/移除 -->
   <div class="mt-4">
     <div class="glass-card p-5">
       <div class="flex items-center gap-3 mb-4">
-        <span class="flex-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200">👥 频道成员（{{ members.length }}）</span>
+        <span class="flex-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200 inline-flex items-center gap-1.5"><svg aria-hidden="true" class="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>社区成员（{{ members.length }}）</span>
         <!-- 成员搜索框（卡片右上方；搜索结果替换分组列表） -->
         <div class="relative w-52 shrink-0">
-          <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+          <svg aria-hidden="true" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
           <input
             v-model="memberSearch"
             class="w-full h-8 pl-7 pr-7 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-xs text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
             placeholder="搜索成员"
+            name="memberSearch"
+            aria-label="搜索成员"
             @focus="ensureLoaded"
           />
-          <button v-if="memberSearch" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200" @click="memberSearch = ''">
+          <button v-if="memberSearch" aria-label="清空搜索" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200" @click="memberSearch = ''">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
           </button>
         </div>
       </div>
 
-      <div v-if="loading && !memberSearch" class="py-12 text-center text-xs text-zinc-400">加载中...</div>
+      <div v-if="loading && !memberSearch" class="py-12 text-center text-xs text-zinc-400">加载中…</div>
       <!-- 搜索结果（搜索时替换分组列表） -->
       <div v-else-if="memberSearch" class="space-y-1">
         <div v-if="filteredMembers.length === 0" class="py-8 flex flex-col items-center gap-2 text-zinc-400">
-          <div class="text-3xl">🔍</div>
+          <div class="text-3xl"><svg aria-hidden="true" class="w-10 h-10 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
           <p class="text-xs">未找到相关成员</p>
         </div>
         <div v-for="m in filteredMembers" :key="m.userGuid" class="flex items-center gap-3 px-2 py-2 rounded-[5%] hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors">
@@ -40,6 +42,8 @@
           </span>
         </div>
       </div>
+      <!-- 空态（无成员） -->
+      <div v-else-if="members.length === 0" class="py-12 text-center text-xs text-zinc-400">暂无成员</div>
       <!-- 分组列表（无搜索时） -->
       <div v-else class="space-y-5">
         <div v-for="(group, gk) in memberGroups" :key="gk">
@@ -73,21 +77,37 @@
   </div>
 </template>
 
-<script setup>
-// 频道成员：加载/搜索/按角色分组展示 + 角色任命（Owner）/移除（Owner/Admin）
+<script setup lang="ts">
+// 社区成员：加载/搜索/按角色分组展示 + 角色任命（Owner）/移除（Owner/Admin）
 import { computed, ref, watch } from 'vue'
+import { themeAvatar } from '@/utils/avatar'
 import { getCircleMembers } from '@/api/circle'
 import { useAuthStore } from '@/stores/auth'
 
-const props = defineProps({
-  current: { type: Object, default: null },
-  myRole: { type: String, default: 'Member' }
-})
-defineEmits(['set-role', 'remove-member'])
+interface CircleData {
+  circleGuid?: string
+}
+
+interface CircleMember {
+  userGuid?: string
+  nickname?: string
+  role?: string
+  isMe?: boolean
+  joinTime?: any
+}
+
+const props = defineProps<{
+  current: CircleData | null
+  myRole?: string
+}>()
+defineEmits<{
+  'set-role': [m: CircleMember, role: string]
+  'remove-member': [m: CircleMember]
+}>()
 
 const auth = useAuthStore()
 
-const members = ref([])
+const members = ref<CircleMember[]>([])
 const loading = ref(false)
 const memberSearch = ref('')
 const confirmRemove = ref('')
@@ -102,8 +122,8 @@ const filteredMembers = computed(() => {
   return members.value.filter(m => (m.nickname || '').toLowerCase().includes(q))
 })
 
-const memberGroups = computed(() => {
-  const g = { 创建者: [], 管理者: [], 成员: [] }
+const memberGroups = computed<Record<string, CircleMember[]>>(() => {
+  const g: Record<string, CircleMember[]> = { 创建者: [], 管理者: [], 成员: [] }
   for (const m of members.value) {
     if (m.role === 'Owner') g.创建者.push(m)
     else if (m.role === 'Admin') g.管理者.push(m)
@@ -135,29 +155,10 @@ async function load() {
       ...m,
       isMe: me && String(m.userGuid) === me
     }))
-    if (!members.value.length) members.value = buildDemoMembers()
   } catch (e) {
-    members.value = buildDemoMembers()
+    members.value = []
   } finally {
     loading.value = false
   }
-}
-
-// 示例成员兜底（后端离线/无数据时展示，含「我」+ 三角色）
-function buildDemoMembers() {
-  const me = String(auth.user?.id || '')
-  return [
-    { userGuid: me, nickname: auth.user?.name || '我', role: props.myRole, isMe: true, joinTime: Date.now() },
-    { userGuid: 'demo-owner', nickname: '户外队长', role: 'Owner', joinTime: Date.now() - 86400000 * 30 },
-    { userGuid: 'demo-admin', nickname: '营地管家', role: 'Admin', joinTime: Date.now() - 86400000 * 20 },
-    { userGuid: 'demo-m1', nickname: '晨跑达人', role: 'Member', joinTime: Date.now() - 86400000 * 10 },
-    { userGuid: 'demo-m2', nickname: '摄影爱好者', role: 'Member', joinTime: Date.now() - 86400000 * 5 }
-  ]
-}
-
-// 主题渐变头像（amber→orange，全局 rounded-[5%] 风格）
-function themeAvatar(char) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#f97316"/></linearGradient></defs><rect width="72" height="72" rx="5" fill="url(#g)"/><text x="36" y="48" font-size="30" text-anchor="middle" fill="#fff" font-family="sans-serif">${char}</text></svg>`
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg)
 }
 </script>

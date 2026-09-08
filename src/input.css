@@ -1,8 +1,6 @@
 /* Tailwind CSS */
 @import "tailwindcss";
 
-@plugin "daisyui";
-
 /* ⚠️ dark: 变体必须跟随 data-theme 而非系统偏好（Tailwind 4 默认 media 策略，
    系统深色偏好会让浅色主题下的 dark:text-* 文字变白，与页面主题脱节——2026-08 用户实测发现） */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
@@ -10,14 +8,6 @@
 /* ===== 圆角统一策略：全局固定 10px（2026-08 调整：5% 自适应 → 20px 过大 → 10px） ===== */
 .rounded-\[5\%\] {
   border-radius: 10px !important;
-}
-
-/* daisyUI 组件（btn/input/card/modal/alert 等）圆角变量统一 10px */
-:root,
-[data-theme] {
-  --radius-selector: 10px;
-  --radius-field: 10px;
-  --radius-box: 10px;
 }
 
 /* 主题切换平滑过渡 */
@@ -33,7 +23,7 @@ html.theme-transition *::after {
    类名 glass / glass-card 不变（约 120 处引用不动），改这里即可全局生效 */
 @utility glass {
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: none; /* 覆盖 daisyUI 内置 .glass 的 blur(var(--glass-blur,40px))——类名重名冲突 */
+  backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
@@ -68,34 +58,204 @@ html[data-theme="dark"] .text-zinc-900 {
 }
 
 
-/* 应用柔和渐变背景（奶白 → 暖橘 → 薄荷绿 微光） */
+/* ===== 品牌色板（轻芒 · 兴趣部落）：暖琥珀 → 珊瑚 - 烘焙般的温暖、清透质感 ===== */
+:root {
+  --qm-brand: #f59e0b;        /* amber-500  品牌主色 */
+  --qm-brand-strong: #ea580c; /* orange-600 强调/渐变 */
+  --qm-accent: #10b981;       /* emerald-500 辅助清新 */
+  --qm-ink: #27272a;          /* zinc-800   正文主墨色 */
+  --qm-paper: #fdfaf3;        /* 奶白纸张 */
+}
+
+html[data-theme="dark"] {
+  --qm-ink: #f4f4f5;
+  --qm-paper: #18181b;
+}
+
+/* 品牌展示字体：标题/品牌处使用软衬线（Fraunces + 中文宋体栈），营造「纸本 + 轻芒」的烘焙暖感；正文仍用系统无衬线 */
+.font-display {
+  font-family: 'Fraunces Variable', 'Songti SC', 'Noto Serif SC', 'STSong', 'SimSun', serif;
+  letter-spacing: 0.01em;
+}
+
+/* 数字/英文数据字：Outfit 可变几何（宽高比稳定，适合点赞/浏览量/评分等数据列） */
+.font-numeric {
+  font-family: 'Outfit Variable', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 应用背景：奶白纸张 + 暖橘/薄荷微光（纯 CSS 渐变，无图片开销、安全叠加在纯色卡片下） */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  background: linear-gradient(135deg, #fdfaf3 0%, #fdf6ec 30%, #f0faf6 70%, #f7fbf7 100%);
+  font-family: 'Outfit Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  color: var(--qm-ink);
+  background:
+    radial-gradient(1100px 620px at 12% -10%, rgba(245, 158, 11, 0.14), transparent 60%),
+    radial-gradient(900px 560px at 100% 8%, rgba(16, 185, 129, 0.12), transparent 55%),
+    radial-gradient(720px 520px at 88% 108%, rgba(234, 88, 12, 0.10), transparent 60%),
+    linear-gradient(135deg, #fdfaf3 0%, #fdf6ec 30%, #f0faf6 70%, #f7fbf7 100%);
   background-attachment: fixed;
 }
 
 html[data-theme="dark"] body {
-  background: linear-gradient(135deg, #18181b 0%, #1c1917 40%, #101f1b 100%);
+  background:
+    radial-gradient(1100px 620px at 12% -10%, rgba(245, 158, 11, 0.10), transparent 60%),
+    radial-gradient(900px 560px at 100% 8%, rgba(16, 185, 129, 0.08), transparent 55%),
+    linear-gradient(135deg, #18181b 0%, #1c1917 40%, #101f1b 100%);
   background-attachment: fixed;
+}
+
+/* ===== 纸张噪点纹理：极淡 film grain 覆盖层，增强「纸本」质感（pointer-events 穿透，不拦截交互） ===== */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+  mix-blend-mode: multiply;
+}
+
+html[data-theme="dark"] body::after {
+  mix-blend-mode: screen;
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* 卡片 hover 上浮 + 点击轻触反馈 */
+/* 细腻滚动条与选区，呼应品牌暖色 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 113, 108, 0.28);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 113, 108, 0.45);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+::selection {
+  background: rgba(245, 158, 11, 0.28);
+}
+
+/* 键盘可达性：统一品牌色焦点光晕 */
+:focus-visible {
+  outline: 2px solid rgba(245, 158, 11, 0.7);
+  outline-offset: 2px;
+}
+
+/* 卡片 hover 上浮 + 点击轻触反馈 + 柔和阴影 */
 .card-lift {
-  transition: transform 0.25s ease;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease;
 }
 
 .card-lift:hover {
   transform: translateY(-4px);
+  box-shadow: 0 18px 34px -18px rgba(0, 0, 0, 0.24);
 }
 
 .card-lift:active {
   transform: scale(0.98);
+}
+
+/* ===== 动效系统（2026-09 设计精修） ===== */
+
+/* 列表条目 staggered 入场：作用于容器，条目配合行内 animation-delay */
+.qm-stagger > * {
+  animation: qm-item-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes qm-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 渐变主按钮扫光（边框高光流过）：登录/发送/发布等主 CTA 使用 */
+.btn-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.btn-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.btn-sheen:hover::after {
+  transform: translateX(120%);
+}
+
+/* 品牌描边辉光：hover 时琥珀描边浮现（PostCard 等可交互卡片） */
+.qm-glow {
+  transition: box-shadow 0.3s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.qm-glow:hover {
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.4), 0 20px 40px -20px rgba(245, 158, 11, 0.35);
+}
+
+/* 数字生长：hover 轻微上浮提示可交互 */
+.qm-nudge:hover {
+  transform: translateY(-1px);
+}
+.qm-nudge {
+  transition: transform 0.2s ease;
+}
+
+/* 页面入场：主容器上浮淡入（视图根元素加 .page-enter 即可，配合动画补间） */
+.page-enter {
+  animation: qm-page-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes qm-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 减弱动态偏好：禁用全部装饰动画与上浮位移，仅保留不透明度过渡 */
+@media (prefers-reduced-motion: reduce) {
+  .card-lift,
+  .qm-glow,
+  .qm-nudge {
+    transition: none;
+  }
+  .card-lift:hover,
+  .qm-glow:hover,
+  .qm-nudge:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .qm-stagger > *,
+  .page-enter,
+  .animate-fade-in,
+  .transition-forment {
+    animation: none !important;
+  }
+  .btn-sheen::after {
+    display: none;
+  }
 }
 
 /* 行数截断工具（配合 Tailwind line-clamp） */
@@ -104,4 +264,79 @@ html[data-theme="dark"] body {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ============================================================
+   移动端全局适配基础（2026-08 全项目响应式）
+   - 统一使用 lg(1024px) 作为桌面/移动分界：≥lg 显示侧边栏，<lg 走底部 Tab
+   - dynamic viewport：规避 iOS 地址栏导致的 100vh 溢出，改用 100dvh
+   ============================================================ */
+:root {
+  --app-top: 0px;      /* 顶部安全区（刘海屏 + 状态栏） */
+  --app-bottom: 0px;   /* 底部安全区（Home 指示条） */
+  --tab-h: 0px;        /* 移动端底部 Tab 高度（布局预留用） */
+}
+
+/* 动态视口高度：正文滚动容器用 min-h-svh 保证真机行为一致 */
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* iOS Safari 刘海屏安全区变量 */
+@supports (padding-top: env(safe-area-inset-top)) {
+  :root {
+    --app-top: env(safe-area-inset-top);
+    --app-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 移动端禁止横向滚动（保护类：阻止意外横向溢出） */
+html,
+body {
+  overflow-x: hidden;
+}
+
+/* 移动端点击高亮去除 + 文字缩放钳制（禁用 iOS 双击/聚焦缩放） */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+@media (max-width: 1023px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  /* 移动端隐藏桌面滚动条，保持内容区域可惯性滚动 */
+  body {
+    scrollbar-width: none;
+  }
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+/* 移动端卡片 hover 上浮在触屏上无意义，弱化为轻触反馈 */
+@media (hover: none) {
+  .card-lift:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .card-lift:active {
+    transform: scale(0.98);
+  }
+}
+
+/* 底部安全区垫层：给固定底栏（Tab/返回）预留 Home 指示条高度 */
+.mb-safe {
+  padding-bottom: var(--app-bottom);
+}
+.pt-safe {
+  padding-top: var(--app-top);
+}
+
+/* 平滑惯性滚动（移动端内容容器） */
+.scroll-native {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }

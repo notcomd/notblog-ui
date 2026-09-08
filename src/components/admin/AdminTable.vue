@@ -6,11 +6,11 @@
     </div>
     <!-- 表格 -->
     <div class="overflow-x-auto">
-      <table class="w-full text-sm">
+      <table class="w-full text-sm min-w-[640px]">
         <thead>
           <tr class="text-left text-xs text-zinc-500 dark:text-zinc-400 border-b border-zinc-200/60 dark:border-zinc-700/60">
             <th v-if="selectable" class="px-4 py-3 w-10">
-              <input type="checkbox" class="accent-amber-500" :checked="allSelected" @change="toggleAll" />
+              <input type="checkbox" class="accent-amber-500" aria-label="全选" :checked="allSelected" @change="toggleAll" />
             </th>
             <th v-for="col in columns" :key="col.key" class="px-4 py-3 font-medium whitespace-nowrap" :class="col.className || ''">
               {{ col.label }}
@@ -21,7 +21,7 @@
         <tbody>
           <tr v-for="(row, ri) in rows" :key="rowKey(row, ri)" class="border-b border-zinc-100/80 dark:border-zinc-800/60 hover:bg-white/50 dark:hover:bg-zinc-800/40 transition-colors">
             <td v-if="selectable" class="px-4 py-3">
-              <input type="checkbox" class="accent-amber-500" :checked="isSelected(rowKey(row, ri))" @change="toggleRow(rowKey(row, ri))" />
+              <input type="checkbox" class="accent-amber-500" aria-label="选择该行" :checked="isSelected(rowKey(row, ri))" @change="toggleRow(rowKey(row, ri))" />
             </td>
             <td v-for="col in columns" :key="col.key" class="px-4 py-3 align-middle" :class="col.cellClass || ''">
               <slot :name="'cell-' + col.key" :row="row" :value="row[col.key]">{{ row[col.key] }}</slot>
@@ -35,14 +35,14 @@
               <div class="flex justify-center">
                 <div class="flex items-center gap-2 text-zinc-400 text-sm">
                   <span class="w-5 h-5 border-2 border-zinc-300 dark:border-zinc-600 border-t-amber-500 rounded-full animate-spin"></span>
-                  加载中...
+                  加载中…
                 </div>
               </div>
             </td>
           </tr>
           <tr v-else-if="rows.length === 0">
             <td :colspan="colspan" class="px-4 py-14 text-center text-zinc-400 text-sm">
-              <div class="text-4xl mb-2">📭</div>{{ emptyText }}
+              <div class="text-4xl mb-2"><svg class="w-12 h-12 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>{{ emptyText }}
             </td>
           </tr>
         </tbody>
@@ -52,36 +52,57 @@
     <div v-if="total > pageSize" class="px-4 py-3 border-t border-zinc-200/60 dark:border-zinc-700/60 flex items-center justify-between text-sm">
       <span class="text-xs text-zinc-400">共 {{ total }} 条</span>
       <div class="flex items-center gap-1">
-        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-30 dark:text-zinc-400" :disabled="page <= 1" @click="go(page - 1)">‹</button>
+        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-30 dark:text-zinc-400" :disabled="page <= 1" @click="go(page - 1)" aria-label="上一页">‹</button>
         <span class="px-2 text-xs text-zinc-500 dark:text-zinc-400">{{ page }} / {{ totalPages }}</span>
-        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-30 dark:text-zinc-400" :disabled="page >= totalPages" @click="go(page + 1)">›</button>
+        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-30 dark:text-zinc-400" :disabled="page >= totalPages" @click="go(page + 1)" aria-label="下一页">›</button>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps({
-  columns: { type: Array, required: true },
-  rows: { type: Array, default: () => [] },
-  rowKeyField: { type: String, default: 'id' },
-  loading: { type: Boolean, default: false },
-  emptyText: { type: String, default: '暂无数据' },
-  selectable: { type: Boolean, default: false },
-  selected: { type: Array, default: () => [] },
-  page: { type: Number, default: 1 },
-  pageSize: { type: Number, default: 10 },
-  total: { type: Number, default: 0 }
+interface Col {
+  key: string
+  label: string
+  className?: string
+  cellClass?: string
+}
+
+interface Props {
+  columns: Col[]
+  rows?: Array<Record<string, unknown>>
+  rowKeyField?: string
+  loading?: boolean
+  emptyText?: string
+  selectable?: boolean
+  selected?: unknown[]
+  page?: number
+  pageSize?: number
+  total?: number
+}
+const props = withDefaults(defineProps<Props>(), {
+  rows: () => [],
+  rowKeyField: 'id',
+  loading: false,
+  emptyText: '暂无数据',
+  selectable: false,
+  selected: () => [] as unknown[],
+  page: 1,
+  pageSize: 10,
+  total: 0
 })
 
-const emit = defineEmits(['update:selected', 'page-change'])
+const emit = defineEmits<{
+  (e: 'update:selected', keys: unknown[]): void
+  (e: 'page-change', page: number): void
+}>()
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const colspan = computed(() => props.columns.length + (props.selectable ? 1 : 0) + 1)
 
-function rowKey(row, index) {
+function rowKey(row: Record<string, unknown>, index: number): unknown {
   return row[props.rowKeyField] !== undefined ? row[props.rowKeyField] : index
 }
 
@@ -93,18 +114,18 @@ function toggleAll() {
   emit('update:selected', next)
 }
 
-function isSelected(key) {
+function isSelected(key: unknown): boolean {
   return props.selected.includes(key)
 }
 
-function toggleRow(key) {
+function toggleRow(key: unknown) {
   const next = props.selected.includes(key)
     ? props.selected.filter(k => k !== key)
     : [...props.selected, key]
   emit('update:selected', next)
 }
 
-function go(p) {
+function go(p: number) {
   emit('page-change', p)
 }
 </script>

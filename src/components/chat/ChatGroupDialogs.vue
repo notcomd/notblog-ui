@@ -4,7 +4,7 @@
     <!-- 创建群聊 -->
     <template v-if="mode === 'create'">
       <div class="flex items-center gap-3 px-5 py-3 border-b border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
-        <button class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60" @click="$emit('close')">←</button>
+        <button class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60" aria-label="关闭" @click="$emit('close')"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
         <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">创建群聊</span>
       </div>
       <div class="flex-1 overflow-y-auto px-6 py-5 min-h-0 space-y-5">
@@ -14,12 +14,12 @@
             <span v-else class="w-full h-full flex items-center justify-center text-2xl font-bold text-white" style="background-color: #6366f1">{{ (groupName.trim() || '群').charAt(0) }}</span>
           </div>
           <label class="h-8 px-3 rounded-[5%] bg-amber-400/15 text-amber-600 dark:text-amber-300 text-xs font-medium inline-flex items-center cursor-pointer">
-            {{ groupAvatarUpdating ? '上传中...' : '上传头像' }}
+            {{ groupAvatarUpdating ? '上传中…' : '上传头像' }}
             <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" :disabled="groupAvatarUpdating" @change="onGroupAvatarChange" />
           </label>
         </div>
-        <input v-model="groupName" maxlength="30" class="w-full rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="群聊名称（必填）" />
-        <input v-model="groupDesc" maxlength="100" class="w-full rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="群聊简介（选填）" />
+        <input v-model="groupName" name="groupName" aria-label="群聊名称（必填）" maxlength="30" class="w-full rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="群聊名称（必填）" />
+        <input v-model="groupDesc" name="groupDesc" aria-label="群聊简介（选填）" maxlength="100" class="w-full rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="群聊简介（选填）" />
         <label class="flex items-center gap-2 cursor-pointer select-none">
           <input type="checkbox" v-model="groupPublic" class="accent-amber-500 shrink-0" />
           <span class="text-sm text-zinc-600 dark:text-zinc-300">公开群聊</span>
@@ -43,15 +43,15 @@
     <!-- 搜索群聊 -->
     <template v-else-if="mode === 'search'">
       <div class="flex items-center gap-3 px-5 py-3 border-b border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
-        <button class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60" @click="$emit('close')">←</button>
+        <button class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60" aria-label="关闭" @click="$emit('close')"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
         <span class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">搜索群聊</span>
       </div>
-      <div class="flex-1 overflow-y-auto px-6 py-5 min-h-0 space-y-3">
+      <div class="flex-1 overflow-y-auto overscroll-contain px-6 py-5 min-h-0 space-y-3">
         <div class="flex gap-2">
-          <input v-model="groupKeyword" class="flex-1 min-w-0 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="搜索公开群聊" @keydown.enter.exact.prevent="doGroupSearch" />
+          <input v-model="groupKeyword" name="groupKeyword" aria-label="搜索公开群聊" class="flex-1 min-w-0 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="搜索公开群聊" @keydown.enter.exact.prevent="doGroupSearch" />
           <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium" :disabled="groupSearching || !groupKeyword.trim()" @click="doGroupSearch">搜索</button>
         </div>
-        <div v-if="groupSearching" class="py-8 text-center text-sm text-zinc-400">搜索中...</div>
+        <div v-if="groupSearching" class="py-8 text-center text-sm text-zinc-400">搜索中…</div>
         <div v-else-if="groupSearched && groupResults.length === 0" class="py-8 text-center text-sm text-zinc-400">未找到匹配的公开群聊</div>
         <button v-for="g in groupResults" :key="g.groupId" class="w-full flex items-center gap-3 px-3 py-2 rounded-[5%] bg-white/60 dark:bg-zinc-800/60" @click="onGroupResultClick(g)">
           <span class="flex-1 min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ g.groupName }}</span>
@@ -62,7 +62,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // 群聊创建/搜索面板：处理群头像上传、建群、搜索公开群、打开已有群会话
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -73,10 +73,12 @@ import { uploadImage } from '@/api/publish'
 import { getMyUserInfo } from '@/api/userinfo'
 import { validateImageFile, compressImage, blobToDataUri } from '@/utils/image'
 
-defineProps({
-  mode: { type: String, default: '' }
-})
-defineEmits(['close'])
+defineProps<{
+  mode?: string
+}>()
+defineEmits<{
+  close: []
+}>()
 
 const chat = useChatStore()
 const toast = useToastStore()
@@ -85,7 +87,7 @@ const router = useRouter()
 const groupName = ref('')
 const groupDesc = ref('')
 const groupPublic = ref(false)
-const groupMembers = ref([])
+const groupMembers = ref<string[]>([])
 const groupSending = ref(false)
 const groupAvatarPreview = ref('')
 const groupAvatarValue = ref('')
@@ -93,17 +95,18 @@ const groupAvatarUpdating = ref(false)
 const myLevel = ref(1)
 
 const groupKeyword = ref('')
-const groupResults = ref([])
+const groupResults = ref<any[]>([])
 const groupSearching = ref(false)
 const groupSearched = ref(false)
 
-function groupAvatarKey(groupId) {
+function groupAvatarKey(groupId: string): string {
   return 'notblog-group-avatar-' + groupId
 }
 
-async function onGroupAvatarChange(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onGroupAvatarChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files && input.files[0]
+  input.value = ''
   if (!file || groupAvatarUpdating.value) return
   const v = validateImageFile(file)
   if (!v.ok) { toast.push(v.error, 'error'); return }
@@ -190,11 +193,11 @@ async function doGroupSearch() {
   }
 }
 
-function isJoinedGroup(g) {
+function isJoinedGroup(g: any): boolean {
   return chat.groups.some(x => String(x.groupId) === String(g.groupId))
 }
 
-function onGroupResultClick(g) {
+function onGroupResultClick(g: any) {
   if (!isJoinedGroup(g)) {
     toast.push('该群暂不支持直接加入', 'info')
     return

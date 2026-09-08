@@ -3,9 +3,9 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">用户管理</h1>
-        <p class="text-sm text-zinc-400 mt-1">用户列表与管控（封禁/删除后端缺口，当前为演示数据）</p>
+        <p class="text-sm text-zinc-400 mt-1">用户列表与管控</p>
       </div>
-      <button disabled title="后端缺口，暂不可用" class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white/60 cursor-not-allowed transition-all" @click="showAdd = true">＋ 添加用户</button>
+      <button disabled title="功能暂不可用" class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white/60 cursor-not-allowed transition-all" @click="showAdd = true">＋ 添加用户</button>
     </div>
 
     <AdminTable
@@ -23,8 +23,8 @@
       @page-change="load($event)"
     >
       <template #toolbar>
-        <input v-model="keyword" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="搜索用户名 / ID / 邮箱" @keyup.enter="load(1)" />
-        <select v-model="status" class="h-10 px-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none" @change="load(1)">
+        <input v-model="keyword" name="keyword" aria-label="搜索用户名、ID或邮箱" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="搜索用户名 / ID / 邮箱" @keyup.enter="load(1)" />
+        <select v-model="status" name="status" aria-label="按状态筛选用户" class="h-10 px-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none" @change="load(1)">
           <option value="all">全部状态</option>
           <option value="Normal">正常</option>
           <option value="Banned">已封禁</option>
@@ -33,8 +33,8 @@
         <button class="h-10 px-3 rounded-[5%] text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="load(1)">搜索</button>
         <div v-if="selected.length" class="flex items-center gap-2 ml-2">
           <span class="text-xs text-zinc-400">已选 {{ selected.length }} 项</span>
-          <button disabled title="后端缺口，暂不可用" class="h-8 px-3 rounded-[5%] text-xs bg-red-500/10 text-red-500/50 cursor-not-allowed transition-colors" @click="batchBan">批量封禁</button>
-          <button disabled title="后端缺口，暂不可用" class="h-8 px-3 rounded-[5%] text-xs bg-red-500/10 text-red-500/50 cursor-not-allowed transition-colors" @click="batchDelete">批量删除</button>
+          <button disabled title="功能暂不可用" class="h-8 px-3 rounded-[5%] text-xs bg-red-500/10 text-red-500/50 cursor-not-allowed transition-colors" @click="batchBan">批量封禁</button>
+          <button disabled title="功能暂不可用" class="h-8 px-3 rounded-[5%] text-xs bg-red-500/10 text-red-500/50 cursor-not-allowed transition-colors" @click="batchDelete">批量删除</button>
         </div>
       </template>
 
@@ -63,18 +63,18 @@
 
       <template #actions="{ row }">
         <button class="px-2.5 h-8 rounded-[5%] text-xs text-amber-600 hover:bg-amber-500/10 transition-colors" @click="viewUser(row)">查看</button>
-        <button v-if="row.status !== 'Banned'" disabled title="后端缺口，暂不可用" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500/50 cursor-not-allowed transition-colors" @click="banUser(row)">封禁</button>
-        <button disabled title="后端缺口，暂不可用" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500/50 cursor-not-allowed transition-colors" @click="deleteUser(row)">删除</button>
+        <button v-if="row.status !== 'Banned'" disabled title="功能暂不可用" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500/50 cursor-not-allowed transition-colors" @click="banUser(row)">封禁</button>
+        <button disabled title="功能暂不可用" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500/50 cursor-not-allowed transition-colors" @click="deleteUser(row)">删除</button>
       </template>
     </AdminTable>
 
     <!-- 添加用户 -->
     <AdminModal v-if="showAdd" title="添加用户" @close="showAdd = false">
       <div class="space-y-3">
-        <input v-model="addForm.userName" placeholder="用户名（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
-        <input v-model="addForm.userEmail" placeholder="邮箱（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
-        <input v-model="addForm.password" type="password" placeholder="初始密码（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
-        <select v-model="addForm.role" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none">
+        <input v-model="addForm.userName" name="username" autocomplete="username" aria-label="用户名（必填）" placeholder="用户名（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+        <input v-model="addForm.userEmail" name="email" autocomplete="email" aria-label="邮箱（必填）" placeholder="邮箱（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+        <input v-model="addForm.password" type="password" name="password" autocomplete="new-password" aria-label="初始密码（必填）" placeholder="初始密码（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+        <select v-model="addForm.role" name="role" aria-label="用户角色" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none">
           <option value="Member">普通用户</option>
           <option value="Admin">管理员</option>
         </select>
@@ -97,7 +97,7 @@
           </div>
           <span class="ml-auto text-xs px-2 py-1 rounded-full font-medium" :class="statusClass(viewing.status)">{{ statusText(viewing.status) }}</span>
         </div>
-        <div class="grid grid-cols-3 gap-3 text-center">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
           <div class="rounded-[5%] bg-white/60 dark:bg-zinc-800/60 py-3">
             <div class="text-lg font-bold text-zinc-800 dark:text-zinc-100">{{ viewing.postCount || 0 }}</div>
             <div class="text-[11px] text-zinc-400">发布内容</div>
@@ -112,7 +112,7 @@
           </div>
         </div>
         <div v-if="viewing.banReason" class="px-4 py-3 rounded-[5%] bg-red-500/10 text-sm text-red-500">
-          ⛔ 封禁原因：{{ viewing.banReason }}
+          <svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>封禁原因：{{ viewing.banReason }}
         </div>
       </div>
     </AdminModal>
@@ -121,12 +121,12 @@
     <AdminModal v-if="banTarget" title="封禁用户" @close="banTarget = null">
       <div class="space-y-3">
         <p class="text-sm text-zinc-500 dark:text-zinc-400">确定封禁 <b>{{ banTarget.userName }}</b> 吗？封禁后该用户无法登录，已发布内容全部隐藏。</p>
-        <select v-model="banDuration" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none">
+        <select v-model="banDuration" name="banDuration" aria-label="封禁时长" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none">
           <option value="7d">7 天</option>
           <option value="30d">30 天</option>
           <option value="forever">永久</option>
         </select>
-        <input v-model="banReason" placeholder="封禁原因（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-red-500/50 transition-all" />
+        <input v-model="banReason" name="banReason" aria-label="封禁原因（必填）" placeholder="封禁原因（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-red-500/50 transition-all" />
       </div>
       <template #footer>
         <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all dark:text-zinc-400" @click="banTarget = null">取消</button>
@@ -149,11 +149,11 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 export default { name: 'AdminUsersView' }
 </script>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import AdminTable from '@/components/admin/AdminTable.vue'
 import AdminModal from '@/components/admin/AdminModal.vue'
@@ -172,24 +172,24 @@ const columns = [
   { key: 'status', label: '状态' }
 ]
 
-const users = ref([])
+const users = ref<any[]>([])
 const loading = ref(false)
 const page = ref(1)
 const pageSize = 10
 const total = ref(0)
 const keyword = ref('')
 const status = ref('all')
-const selected = ref([])
+const selected = ref<any[]>([])
 
 const showAdd = ref(false)
 const addForm = ref({ userName: '', userEmail: '', password: '', role: 'Member' })
-const viewing = ref(null)
-const banTarget = ref(null)
+const viewing = ref<any>(null)
+const banTarget = ref<any>(null)
 const banDuration = ref('7d')
 const banReason = ref('')
-const deleteTarget = ref(null)
+const deleteTarget = ref<any>(null)
 
-function statusClass(s) {
+function statusClass(s: string): string {
   return {
     Normal: 'bg-emerald-400/15 text-emerald-500',
     Banned: 'bg-red-400/15 text-red-500',
@@ -197,16 +197,16 @@ function statusClass(s) {
   }[s] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
 }
 
-function statusText(s) {
-  return { Normal: '✅ 正常', Banned: '⛔ 已封禁', Online: '🟢 在线中' }[s] || s
+function statusText(s: string): string {
+  return { Normal: '正常', Banned: '已封禁', Online: '在线中' }[s] || s
 }
 
-async function load(p) {
+async function load(p?: number): Promise<void> {
   loading.value = true
   page.value = p || 1
   try {
     const res = await getAdminUsers({ page: page.value, pageSize, keyword: keyword.value, status: status.value })
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     users.value = data.items || data.list || []
     total.value = data.totalCount !== undefined ? data.totalCount : (data.total || users.value.length)
   } catch (e) {
@@ -216,31 +216,31 @@ async function load(p) {
   }
 }
 
-function viewUser(row) {
+function viewUser(row: any): void {
   viewing.value = row
 }
 
-function banUser(row) {
+function banUser(row: any): void {
   banTarget.value = row
   banReason.value = ''
 }
 
-async function submitBan(reason) {
+async function submitBan(reason: string): Promise<void> {
   try {
     await banAdminUser(banTarget.value.userGuid, { reason, duration: banDuration.value })
     toast.push(`已封禁 ${banTarget.value.userName}`, 'success')
     banTarget.value = null
     load(page.value)
   } catch (e) {
-    toast.push('封禁失败（后端缺口，演示数据）', 'error')
+    toast.push('封禁失败', 'error')
   }
 }
 
-function deleteUser(row) {
+function deleteUser(row: any): void {
   deleteTarget.value = row
 }
 
-async function submitDelete(reason) {
+async function submitDelete(reason: string): Promise<void> {
   try {
     await deleteAdminUser(deleteTarget.value.userGuid)
     toast.push(`已删除 ${deleteTarget.value.userName} 及其全部数据`, 'success')
@@ -251,7 +251,7 @@ async function submitDelete(reason) {
   }
 }
 
-async function submitAdd() {
+async function submitAdd(): Promise<void> {
   try {
     await addAdminUser(addForm.value)
     toast.push('用户创建成功', 'success')
@@ -263,20 +263,20 @@ async function submitAdd() {
   }
 }
 
-function batchBan() {
+function batchBan(): void {
   toast.push('批量封禁尚未接入后端，操作未执行', 'error')
   selected.value = []
   load(1)
 }
 
-function batchDelete() {
+function batchDelete(): void {
   toast.push('批量删除尚未接入后端，操作未执行', 'error')
   selected.value = []
   load(1)
 }
 
-function hideImg(e) {
-  e.target.style.visibility = 'hidden'
+function hideImg(e: Event) {
+  (e.target as HTMLElement).style.visibility = 'hidden'
 }
 
 onMounted(() => load(1))

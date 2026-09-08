@@ -1,13 +1,17 @@
 <template>
   <div
-    class="glass-card overflow-hidden card-lift cursor-pointer"
+    class="glass-card overflow-hidden card-lift qm-glow cursor-pointer"
+    role="link"
+    tabindex="0"
     @click="goDetail"
+    @keydown.enter.prevent="goDetail"
+    @keydown.space.prevent="goDetail"
   >
     <!-- 封面区：图文 9:16 竖图 / 视频 1:1 带播放按钮 -->
     <div class="relative w-full overflow-hidden" :class="isVideo ? 'aspect-square' : 'aspect-[9/16]'">
       <img
         :src="cover"
-        alt="cover"
+        alt=""
         class="w-full h-full object-cover"
         loading="lazy"
         @error="onCoverError"
@@ -28,9 +32,9 @@
         私密
       </span>
       <!-- 更多操作 -->
-      <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
-        <button class="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center" @click.stop="openMore">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+      <div class="absolute top-2 right-2 opacity-100 lg:opacity-0 lg:hover:opacity-100 transition-opacity">
+        <button class="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center" type="button" aria-label="更多操作" @click.stop="openMore">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
         </button>
       </div>
     </div>
@@ -46,14 +50,14 @@
       <p class="text-sm text-zinc-800 dark:text-zinc-100 text-2lines leading-relaxed">{{ post.content }}</p>
       <!-- 底部互动栏 -->
       <div class="flex items-center justify-between pt-1">
-        <button class="flex items-center gap-1.5 text-sm transition-all active:scale-90" :class="post.isLiked ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-red-500'" @click.stop="onLike">
-          <svg class="w-[18px] h-[18px] transition-transform" :class="post.isLiked ? 'fill-current scale-110' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="flex items-center gap-1.5 text-sm transition-all active:scale-90" :class="post.isLiked ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-red-500'" type="button" :aria-label="post.isLiked ? '取消点赞' : '点赞'" @click.stop="onLike">
+          <svg class="w-[18px] h-[18px] transition-transform" :class="post.isLiked ? 'fill-current scale-110' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z" />
           </svg>
           {{ compactNumber(post.likeCount) }}
         </button>
-        <button class="flex items-center gap-1.5 text-sm transition-all active:scale-90" :class="post.isFavorited ? 'text-amber-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-amber-500'" @click.stop="onFavorite">
-          <svg class="w-[18px] h-[18px]" :class="post.isFavorited ? 'fill-current' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+        <button class="flex items-center gap-1.5 text-sm transition-all active:scale-90" :class="post.isFavorited ? 'text-amber-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-amber-500'" type="button" :aria-label="post.isFavorited ? '取消收藏' : '收藏'" @click.stop="onFavorite">
+          <svg class="w-[18px] h-[18px]" :class="post.isFavorited ? 'fill-current' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" />
           </svg>
           {{ compactNumber(post.favoriteCount) }}
@@ -63,7 +67,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { compactNumber, relativeTime } from '@/utils/format'
@@ -71,9 +75,33 @@ import { toggleLike, toggleFavorite } from '@/api/tweet'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 
-const props = defineProps({
-  post: { type: Object, required: true }
-})
+interface PostAuthor {
+  userName?: string
+  name?: string
+  nickname?: string
+  avatar?: string
+}
+
+interface PostItem {
+  tweetGuid: string
+  content?: string
+  isVideo?: boolean
+  isLiked?: boolean
+  isFavorited?: boolean
+  likeCount?: number
+  favoriteCount?: number
+  mediaUrls?: string[]
+  publishTime?: string | number
+  createTime?: string | number
+  visibility?: string
+  author?: PostAuthor
+  [key: string]: unknown
+}
+
+interface Props {
+  post: PostItem
+}
+const props = defineProps<Props>()
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -81,7 +109,7 @@ const toast = useToastStore()
 const coverFailed = ref(false)
 
 // 互动操作需要登录：未登录时提示并跳转登录页
-function requireLogin() {
+function requireLogin(): boolean {
   if (auth.isLoggedIn()) return true
   toast.push('请先登录后再进行互动', 'info')
   router.push('/login')
@@ -108,8 +136,8 @@ function onCoverError() {
   coverFailed.value = true
 }
 
-function hideAvatar(e) {
-  e.target.style.visibility = 'hidden'
+function hideAvatar(e: Event) {
+  ;(e.target as HTMLElement).style.visibility = 'hidden'
 }
 
 async function onLike() {
@@ -117,7 +145,7 @@ async function onLike() {
   const liked = !props.post.isLiked
   const prev = props.post.likeCount
   props.post.isLiked = liked
-  props.post.likeCount = Math.max(0, prev + (liked ? 1 : -1))
+  props.post.likeCount = Math.max(0, (prev || 0) + (liked ? 1 : -1))
   try {
     await toggleLike(props.post.tweetGuid, liked)
   } catch (e) {
@@ -131,7 +159,7 @@ async function onFavorite() {
   const favorited = !props.post.isFavorited
   const prev = props.post.favoriteCount
   props.post.isFavorited = favorited
-  props.post.favoriteCount = Math.max(0, prev + (favorited ? 1 : -1))
+  props.post.favoriteCount = Math.max(0, (prev || 0) + (favorited ? 1 : -1))
   try {
     await toggleFavorite(props.post.tweetGuid, favorited)
   } catch (e) {

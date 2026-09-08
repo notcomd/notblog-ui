@@ -5,35 +5,38 @@
       <div class="flex items-center justify-between mb-1.5">
         <label class="text-xs text-zinc-400 block">图片（可选 · 第一张作为封面）</label>
         <button type="button" class="text-[11px] px-2.5 h-7 rounded-lg bg-amber-400/15 text-amber-600 dark:text-amber-400 hover:bg-amber-400/25 transition-colors flex items-center gap-1 disabled:opacity-50" :disabled="splitting" @click="pickSplitImage">
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M12 8v8M8 12h8" /></svg>
-          {{ splitting ? '切分中...' : '✂️ 切九宫格' }}
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M12 8v8M8 12h8" /></svg>
+          <span v-if="!splitting" class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>切九宫格</span><span v-else>切分中…</span>
         </button>
       </div>
       <!-- 无图：大虚线区点击上传 -->
       <div
         v-if="images.length === 0"
         class="max-w-[480px] rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-100/60 dark:bg-zinc-900/60 cursor-pointer group transition-colors hover:border-amber-400 dark:hover:border-amber-400 flex-1 min-h-[10rem] flex flex-col items-center justify-center gap-2 text-zinc-400"
+        tabindex="0"
         @click="pickImage"
+        @keydown.enter.prevent="pickImage"
+        @keydown.space.prevent="pickImage"
       >
-        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="4" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
-        <span class="text-xs">{{ uploading ? '上传中...' : '点击上传图片（最多 9 张）' }}</span>
+        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+        <span class="text-xs">{{ uploading ? '上传中…' : '点击上传图片（最多 9 张）' }}</span>
       </div>
       <!-- 九宫格网格 -->
       <div v-else class="grid grid-cols-3 gap-2 max-w-[480px]">
         <div v-for="(img, i) in images" :key="i" class="relative aspect-square rounded-xl overflow-hidden border border-white/60 dark:border-white/10 group">
           <img :src="img.preview" alt="" class="w-full h-full object-cover cursor-pointer" @click="openCrop(i)" />
           <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <button type="button" class="w-7 h-7 rounded-full bg-white/90 text-zinc-700 flex items-center justify-center hover:bg-white transition-colors" title="裁剪" @click.stop="openCrop(i)">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14" /><path d="M18 22V8a2 2 0 0 0-2-2H2" /></svg>
+            <button type="button" class="w-7 h-7 rounded-full bg-white/90 text-zinc-700 flex items-center justify-center hover:bg-white transition-colors" title="裁剪" aria-label="裁剪" @click.stop="openCrop(i)">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14" /><path d="M18 22V8a2 2 0 0 0-2-2H2" /></svg>
             </button>
-            <button type="button" class="w-7 h-7 rounded-full bg-white/90 text-red-500 flex items-center justify-center hover:bg-white transition-colors" title="删除" @click.stop="removeImage(i)">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+            <button type="button" class="w-7 h-7 rounded-full bg-white/90 text-red-500 flex items-center justify-center hover:bg-white transition-colors" title="删除" aria-label="删除" @click.stop="removeImage(i)">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
             </button>
           </div>
         </div>
-        <div v-if="images.length < 9" class="aspect-square rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:text-amber-500 transition-colors text-zinc-400" @click="pickImage">
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
-          <span class="text-[11px]">{{ uploading ? '上传中...' : '添加' }}</span>
+        <div v-if="images.length < 9" class="aspect-square rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:text-amber-500 transition-colors text-zinc-400" tabindex="0" @click="pickImage" @keydown.enter.prevent="pickImage" @keydown.space.prevent="pickImage">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          <span class="text-[11px]">{{ uploading ? '上传中…' : '添加' }}</span>
         </div>
       </div>
       <input ref="imageInput" type="file" accept="image/*" class="hidden" :disabled="uploading" @change="onPickImage" />
@@ -44,35 +47,37 @@
     <!-- 正文 -->
     <textarea
       v-model="content"
+      name="content"
+      aria-label="正文"
       rows="8"
       class="w-full resize-none rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
-      placeholder="分享你的想法、故事或见闻...（支持 @提及）"
+      placeholder="分享你的想法、故事或见闻…（支持 @提及）"
     ></textarea>
 
-    <!-- 发布到频道（可选） -->
+    <!-- 发布到社区（可选） -->
     <div class="mt-4">
-      <select v-model="circleGuid" class="w-full h-11 px-4 rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all">
-        <option value="">发布到主页（不选频道）</option>
-        <option v-for="c in myCircles" :key="c.circleGuid" :value="c.circleGuid">🏕️ {{ c.name }}</option>
+      <select v-model="circleGuid" name="circleGuid" aria-label="发布到社区" class="w-full h-11 px-4 rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all">
+        <option value="">发布到主页（不选社区）</option>
+        <option v-for="c in myCircles" :key="c.circleGuid" :value="c.circleGuid">{{ c.name }}</option>
       </select>
     </div>
 
     <!-- 可见范围：公开 / 私密 -->
     <div class="mt-4">
       <label class="text-xs text-zinc-400 block mb-1.5">谁可以看</label>
-      <div class="flex gap-2">
-        <button type="button" class="h-9 px-4 rounded-xl text-xs font-medium transition-all" :class="visibility === 'Public' ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-300'" @click="visibility = 'Public'">🌍 公开</button>
-        <button type="button" class="h-9 px-4 rounded-xl text-xs font-medium transition-all" :class="visibility === 'Private' ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-300'" @click="visibility = 'Private'">🔒 私密 · 仅自己可见</button>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="h-9 px-4 rounded-xl text-xs font-medium transition-all" :class="visibility === 'Public' ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-300'" @click="visibility = 'Public'"><svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>公开</button>
+        <button type="button" class="h-9 px-4 rounded-xl text-xs font-medium transition-all" :class="visibility === 'Private' ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-300'" @click="visibility = 'Private'"><svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>私密 · 仅自己可见</button>
       </div>
     </div>
 
     <!-- 底部按钮：右对齐，固定宽度 -->
-    <div class="mt-5 flex justify-end gap-3">
-      <button class="w-44 h-11 rounded-2xl bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="savingDraft" @click="saveAsDraft">
-        {{ savingDraft ? '保存中...' : '💾 存草稿' }}
+    <div class="mt-5 flex flex-col sm:flex-row justify-end gap-3">
+      <button class="w-full sm:w-44 h-11 rounded-2xl bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="savingDraft" @click="saveAsDraft">
+        <span v-if="!savingDraft" class="inline-flex items-center gap-1.5"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>存草稿</span><span v-else>保存中…</span>
       </button>
-      <button class="w-44 h-11 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="publishing || !content.trim()" @click="publish">
-        {{ publishing ? '发布中...' : '发布' }}
+      <button class="w-full sm:w-44 h-11 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="publishing || !content.trim()" @click="publish">
+        {{ publishing ? '发布中…' : '发布' }}
       </button>
     </div>
 
@@ -99,7 +104,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { nextTick, ref, watch } from 'vue'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
@@ -109,40 +114,49 @@ import { saveDraft, removeDraft } from '@/utils/drafts'
 import { unwrap } from '@/utils/response'
 import { useToastStore } from '@/stores/toast'
 
-const props = defineProps({
-  myCircles: { type: Array, default: () => [] },
-  draft: { type: Object, default: null }
+interface Props {
+  myCircles?: unknown[]
+  draft?: unknown
+}
+const props = withDefaults(defineProps<Props>(), {
+  myCircles: () => [],
+  draft: null
 })
 
 const router = useRouter()
 const toast = useToastStore()
 
+interface ImageItem {
+  fileId: string
+  preview: string
+}
+
 const content = ref('')
-const images = ref([])
+const images = ref<ImageItem[]>([])
 const circleGuid = ref('')
 const visibility = ref('Public')
 const uploading = ref(false)
 const publishing = ref(false)
 const savingDraft = ref(false)
 const draftId = ref('')
-const imageInput = ref(null)
-const splitInput = ref(null)
+const imageInput = ref<HTMLInputElement | null>(null)
+const splitInput = ref<HTMLInputElement | null>(null)
 const splitting = ref(false)
 
 // ---------- 裁剪 ----------
-const RATIO_KEYS = ['free', '1:1', '3:4', '9:16']
-const RATIOS = { free: NaN, '1:1': 1, '3:4': 3 / 4, '9:16': 9 / 16 }
+const RATIO_KEYS: string[] = ['free', '1:1', '3:4', '9:16']
+const RATIOS: Record<string, number> = { free: NaN, '1:1': 1, '3:4': 3 / 4, '9:16': 9 / 16 }
 
 const cropOpen = ref(false)
 const cropIndex = ref(-1)
 const cropSrc = ref('')
-const cropImg = ref(null)
-const cropper = ref(null)
+const cropImg = ref<HTMLImageElement | null>(null)
+const cropper = ref<Cropper | null>(null)
 const ratioKey = ref('free')
 
-async function openCrop(i) {
+async function openCrop(i: number) {
   cropIndex.value = i
-  cropSrc.value = images.value[i].preview
+  cropSrc.value = images.value[i]?.preview
   cropOpen.value = true
   ratioKey.value = 'free'
   await nextTick()
@@ -161,7 +175,7 @@ function closeCrop() {
   cropOpen.value = false
 }
 
-function setRatio(k) {
+function setRatio(k: string) {
   ratioKey.value = k
   if (cropper.value) cropper.value.setAspectRatio(RATIOS[k])
 }
@@ -196,7 +210,7 @@ function pickSplitImage() {
   if (!splitting.value && splitInput.value) splitInput.value.click()
 }
 
-function loadImage(file) {
+function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
     const img = new Image()
@@ -206,9 +220,10 @@ function loadImage(file) {
   })
 }
 
-async function onSplitPick(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onSplitPick(e: Event) {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = ''
   if (!file) return
   if (file.size > 10 * 1024 * 1024) { toast.push('图片不能超过 10MB', 'error'); return }
   splitting.value = true
@@ -241,7 +256,7 @@ async function onSplitPick(e) {
 }
 
 // 后台逐块上传换取真实 fileId（失败保留本地预览）
-async function uploadGridPart(item, blob) {
+async function uploadGridPart(item: ImageItem, blob: Blob) {
   try {
     const res = await uploadImage(new File([blob], 'grid-' + Date.now() + '.jpg', { type: 'image/jpeg' }))
     const data = unwrap(res) || {}
@@ -256,9 +271,10 @@ function pickImage() {
   if (!uploading.value && imageInput.value) imageInput.value.click()
 }
 
-async function onPickImage(e) {
-  const file = e.target.files && e.target.files[0]
-  e.target.value = ''
+async function onPickImage(e: Event) {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = ''
   if (!file) return
   if (images.value.length >= 9) { toast.push('最多上传 9 张图片', 'info'); return }
   if (file.size > 10 * 1024 * 1024) {
@@ -269,10 +285,11 @@ async function onPickImage(e) {
   try {
     const res = await uploadImage(file)
     const data = unwrap(res) || {}
-    images.value.push({ fileId: data.fileId || data.file_id || 'mock-' + Date.now(), preview: data.fileUri || URL.createObjectURL(file) })
+    const fileId = data.fileId || data.file_id
+    if (!fileId) throw new Error('上传未返回 fileId')
+    images.value.push({ fileId, preview: data.fileUri || data.file_url || URL.createObjectURL(file) })
   } catch (err) {
-    images.value.push({ fileId: 'mock-' + Date.now(), preview: URL.createObjectURL(file) })
-    toast.push('上传失败（mock 模式已本地预览）', 'info')
+    toast.push('图片上传失败，请稍后重试', 'error')
   } finally {
     uploading.value = false
   }
@@ -292,7 +309,7 @@ watch(() => props.draft, (d) => {
   visibility.value = d.visibility || 'Public'
 }, { immediate: true })
 
-function firstLine(s) {
+function firstLine(s?: string): string {
   const t = (s || '').trim()
   return t ? t.split('\n')[0].slice(0, 40) : ''
 }
@@ -326,10 +343,9 @@ async function publish() {
       : await createTweet(payload)
     const data = unwrap(res)
     const newId = (data && typeof data === 'object' && (data.data || data.tweetGuid)) || data
-    toast.push(circleGuid.value ? '已发布到频道' : '发布成功', 'success')
+    toast.push(circleGuid.value ? '已发布到社区' : '发布成功', 'success')
     if (draftId.value) { removeDraft(draftId.value); draftId.value = '' }
-    if (newId && String(newId).startsWith('mock')) router.push('/home')
-    else router.push(`/posts/${newId}`)
+    if (newId) router.push(`/posts/${newId}`)
   } catch (e) {
     toast.push('发布失败，请稍后重试', 'error')
   } finally {
