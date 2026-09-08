@@ -96,7 +96,7 @@ export function getAdminCircleMembers(circleGuid: string) {
   return service.get(`/api/circles/${circleGuid}/members`);
 }
 
-export function banCircle() {
+export function banCircle(circleGuid: any, value: string) {
   // 后端暂未提供该端点；严禁将此操作伪装为成功，避免误操作
   return Promise.reject(new Error('封禁社区功能尚未接入后端，操作未执行'));
 }

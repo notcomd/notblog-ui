@@ -31,6 +31,11 @@ module.exports = {
   },
   devServer: {
     historyApiFallback: true,
+    // 防浏览器启发式缓存旧版 app.js（dev 产物无 contenthash，无 Cache-Control 时
+    // Chrome 直接命中磁盘缓存导致页面长期跑旧代码——必须显式 no-cache）
+    headers: {
+      'Cache-Control': 'no-cache'
+    },
     // 代理统一转发日志：每个经 devServer 转发到网关的请求打印一行，
     // 用于核对"前端请求是否全部经网关"（浏览器 Network 面板只能看到 8080 入口，
     // 实际转发目标在此日志确认；onProxyReq 首参数为 http-proxy 事件，ws=true 时不触发）
