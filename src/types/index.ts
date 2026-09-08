@@ -1,11 +1,16 @@
 // 通用业务类型定义（供 api / stores / utils 复用）
 
-/** 后端统一响应包装 ApiResponse<T>：axios 拦截器已解包一层，业务数据在 res.data */
-export interface ApiResponse<T = unknown> {
-  success?: boolean;
-  code?: number;
-  message?: string;
-  data: T;
+/**
+ * 后端统一响应信封 ApiResponseResult<TResponse>。
+ * 说明：axios 拦截器已将 response.data 原地替换为 responseData（业务数据），
+ * 各 api 模块可直接从 res.data 取业务数据，仅在需要访问信封元数据时引用本类型。
+ */
+export interface ApiResponseResult<T = unknown> {
+  statusCode: number;
+  message: string | null;
+  responseData: T | null;
+  isSuccess: boolean;
+  responseDateTime: string;
 }
 
 /** 登录成功后返回的令牌信息 */

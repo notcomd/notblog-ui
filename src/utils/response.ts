@@ -1,17 +1,14 @@
 // 统一 API 响应解构
-// 兼容三种形态：
-//   - 单层：{ data: 业务数据 }
-//   - 真实 ApiResponse<T>：{ success, code, message, data }（axios 拦截器返回 body，业务数据在 res.data）
-//   - 旧式双层：{ data: { data: 业务 } }
+// axios 拦截器已把 response.data 原地替换为 responseData（业务数据本体），
+// 此处仅兼容两种调用形态：
+//   - 入参为 AxiosResponse（含 data 字段）→ 取出 data
+//   - 入参已是业务数据 → 原样返回
 // 用法：const payload = unwrap(res) ?? res
 // 返回 any：解构结果以宽松类型使用，避免笼统的 unknown 属性访问报错。
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function unwrap<T = any>(res: T | null | undefined) {
+export function unwrap<T = any>(res: T | null | undefined): any {
   if (res == null) return res
-  const obj = res as Record<string, any>
-  if (obj.data && typeof obj.data === 'object' && 'data' in obj.data) {
-    return obj.data.data as any
-  }
-  if (obj.data !== undefined) return obj.data
-  return res
+  const data = (res as { data?: unknown }).data
+  // 注意：业务数据为 null（如无数据响应）时返回 null，不回退整个 response
+  return data === undefined ? res : data
 }
