@@ -732,7 +732,10 @@ function hideImg(e: Event) {
   (e.target as HTMLElement).style.visibility = 'hidden'
 }
 
-watch(() => route.params.id, () => {
+watch(() => route.params.id, (id) => {
+  // keep-alive 缓存下组件未激活时路由也会变化（如切到 /chat 时本路由的 params.id 消失为 undefined）——
+  // 无 id 时跳过，避免误请求 /api/tweets/user/undefined
+  if (!id) return
   loadUser()
   loadOverview()
   loadSafety()
