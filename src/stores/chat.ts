@@ -56,6 +56,9 @@ export const useChatStore = defineStore('chat', () => {
   const connected = ref<boolean>(false);
   const messageLoading = ref<Record<string, boolean>>({}); // { sessionId: bool } 消息加载锁（按会话粒度，曾为全局 bool 锁）
   const hasMoreMessages = ref<Record<string, boolean>>({}); // { sessionId: bool }
+  // { sessionId: 已加载页数 } —— 分页游标独立跟踪：
+  // 旧实现用「数组长度 / 30 + 1」推算页码，SignalR 推送/去重/乐观消息改变数组长度后会拉错页 → 重复/漏消息
+  const loadedPages = ref<Record<string, number>>({});
 
   // ===== 会话 =====
   async function loadSessions(): Promise<void> {
@@ -134,14 +137,23 @@ export const useChatStore = defineStore('chat', () => {
     if (messageLoading.value[sessionId]) return;
     messageLoading.value[sessionId] = true;
     try {
-      const page = reset ? 1 : Math.floor((messages.value[sessionId] || []).length / 30) + 1;
+      // ⚠️ 分页契约：后端 GetBySessionIdAsync 返回 SentTime 降序（最新在前）+ MessageId 平局
+      // tie-breaker（稳定分页）；前端 messages[sessionId] 统一以【升序（旧→新）】存储——
+      // v-for 自上而下 = 数组序，新消息追加在尾部（底部）。两个方向必须在下方归一，不可混用。
+      const page = reset ? 1 : (loadedPages.value[sessionId] || 1) + 1;
       const res = await getMessages(sessionId, { page, pageSize: 30 });
       const data = res && res.data ? res.data : res;
-      const list = data.items || data.list || [];
+      const list: MessageDto[] = data.items || data.list || [];
+      const serverAsc = [...list].reverse(); // 后端 desc → 前端 asc（复制反转，勿原地改响应数据）
       if (reset) {
-        messages.value[sessionId] = list;
-      } else if (list.length) {
-        messages.value[sessionId] = [...list.reverse(), ...(messages.value[sessionId] || [])];
+        // 以本地已有消息（乐观发送/推送先到）为优先保留项，服务器列表补充全集；
+        // 合并按 messageId 去重 + 时间升序稳定排序，杜绝刷新后重复/倒序
+        messages.value[sessionId] = mergeMessages(messages.value[sessionId] || [], serverAsc);
+        loadedPages.value[sessionId] = 1;
+      } else if (serverAsc.length) {
+        // 向上翻页：更旧的一页并入头部（mergeMessages 内做去重 + 排序定位）
+        messages.value[sessionId] = mergeMessages(messages.value[sessionId] || [], serverAsc);
+        loadedPages.value[sessionId] = page;
       }
       hasMoreMessages.value[sessionId] = list.length >= 30;
     } catch (e) {
@@ -282,11 +294,50 @@ export const useChatStore = defineStore('chat', () => {
     return f ? f.friendName || '会话' : '会话';
   }
 
+  /** 消息时间戳归一为毫秒（后端 sentTime 是 ISO 字符串，本地乐观消息是 Date.now() 数字） */
+  function messageTime(m: MessageDto): number {
+    const v = m.sentTime as unknown;
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string') {
+      const ts = Date.parse(v);
+      return Number.isNaN(ts) ? 0 : ts;
+    }
+    return 0;
+  }
+
+  /** 升序比较：时间升序；同一时刻按 messageId 字典序（与后端 SentTime desc + MessageId tie-breaker 镜像一致） */
+  function compareMessages(a: MessageDto, b: MessageDto): number {
+    const ta = messageTime(a);
+    const tb = messageTime(b);
+    if (ta !== tb) return ta - tb;
+    return a.messageId < b.messageId ? -1 : a.messageId > b.messageId ? 1 : 0;
+  }
+
+  /**
+   * 合并消息列表（升序存储约束）：
+   * keep 内对象优先保留（保住本地乐观状态 status/已读标记），extra 仅补充 keep 缺失的 messageId；
+   * 结果按 compareMessages 稳定排序。reset 与向上翻页共用，天然去重。
+   */
+  function mergeMessages(keep: MessageDto[], extra: MessageDto[]): MessageDto[] {
+    const map = new Map<string, MessageDto>();
+    for (const m of keep) map.set(m.messageId, m);
+    for (const m of extra) {
+      if (!map.has(m.messageId)) map.set(m.messageId, m);
+    }
+    return [...map.values()].sort(compareMessages);
+  }
+
   function pushMessage(msg: MessageDto): void {
     const list = messages.value[msg.sessionId] || [];
     // 去重（本地乐观消息与服务器回执）
     if (list.some((m) => m.messageId === msg.messageId)) return;
-    messages.value[msg.sessionId] = [...list, msg];
+    // 升序（旧→新）数组：常规新消息直接追加尾部；乱序到达（时间早于末条，如并发多连接）时按序插入
+    const last = list[list.length - 1];
+    if (last && messageTime(msg) < messageTime(last)) {
+      messages.value[msg.sessionId] = mergeMessages(list, [msg]);
+    } else {
+      messages.value[msg.sessionId] = [...list, msg];
+    }
   }
 
   function bumpSession(sessionId: string, content: string): void {

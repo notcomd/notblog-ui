@@ -225,6 +225,8 @@ function scrollToBottom(force: boolean = false) {
 async function loadOlder() {
   const id = chat.activeSessionId
   if (!id || !msgBox.value) return
+  // 已无更多历史（hasMoreMessages=false）时不空转；undefined（尚未加载过）放行
+  if (chat.hasMoreMessages[id] === false) return
   const oldHeight = msgBox.value.scrollHeight
   scrollLock = true
   await chat.loadMessages(id, false)
