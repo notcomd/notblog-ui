@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router';
 
 import { getToken } from '@/utils/auth';
 
-// 部落主应用（轻芒·兴趣部落）
+// MonoHub 主应用
 import AppLayout from '@/layout/AppLayout.vue';
 import HomeView from '@/views/HomeView.vue';
 import CirclePage from '@/views/CirclePage.vue';

@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-[1400px] mx-auto space-y-6">
     <!-- 4列统计卡片 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+    <div class="grid grid-cols-4 gap-5">
       <div class="glass-card p-5 bg-gradient-to-br from-amber-400/10 to-orange-500/5 hover: transition-all cursor-pointer" tabindex="0" @click="router.push('/admin/users')" @keydown.enter.prevent="router.push('/admin/users')" @keydown.space.prevent="router.push('/admin/users')">
         <div class="flex items-center justify-between">
           <span class="text-3xl text-amber-500"><svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>

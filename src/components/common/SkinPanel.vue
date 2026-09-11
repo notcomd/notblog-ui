@@ -30,7 +30,7 @@
             :class="!theme.isDark ? 'border-amber-400 ring-2 ring-amber-400/30' : 'border-transparent hover:border-white/40'"
             style="background: linear-gradient(135deg, #fdfaf3 0%, #f0faf6 100%)"
             @click="setDark(false)">
-            <span class="absolute bottom-2 left-3 text-xs font-medium text-zinc-700">浅色 · 轻芒白</span>
+            <span class="absolute bottom-2 left-3 text-xs font-medium text-zinc-700">浅色 · 纸张白</span>
             <span v-if="!theme.isDark" class="absolute top-2 right-2 w-5 h-5 rounded-full bg-amber-400 text-white flex items-center justify-center">
               <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5" /></svg>
             </span>

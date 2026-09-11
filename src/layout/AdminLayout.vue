@@ -4,13 +4,11 @@
     <header class="fixed top-0 left-0 right-0 z-50 glass border-b border-white/40 dark:border-white/10">
       <div class="h-16 px-5 flex items-center gap-4">
         <router-link to="/admin" class="flex items-center gap-2 shrink-0">
-          <div class="w-9 h-9 rounded-[5%] bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-            </svg>
+          <div class="w-9 h-9 rounded-[5%] overflow-hidden bg-white border border-zinc-200/70 dark:border-white/10 flex items-center justify-center">
+            <img src="@/assets/monohub-logo.jpg" alt="MonoHub" class="w-full h-full object-cover" />
           </div>
           <div class="leading-tight">
-            <div class="text-base font-bold text-zinc-800 dark:text-zinc-100">轻芒 · 管理后台</div>
+            <div class="text-base font-bold text-zinc-800 dark:text-zinc-100">MonoHub · 管理后台</div>
             <div class="text-[10px] text-zinc-400">运营版</div>
           </div>
         </router-link>
@@ -64,25 +62,10 @@
       </div>
     </header>
 
-    <!-- 移动端横向导航条（lg:hidden）：管理端点分发入口 -->
-    <nav class="lg:hidden fixed top-14 left-0 right-0 z-40 flex items-center gap-1 px-3 py-2 glass border-b border-zinc-200/50 dark:border-zinc-800/50 overflow-x-auto scrollbar-none" aria-label="管理端导航">
-      <router-link
-        v-for="item in navItems"
-        :key="item.path"
-        :to="item.path"
-        class="shrink-0 flex items-center gap-1.5 px-3 h-9 rounded-[5%] text-sm transition-colors"
-        :class="isActive(item.path) ? 'bg-gradient-to-r from-amber-400/15 to-orange-500/10 text-amber-600 dark:text-amber-400 font-medium' : 'text-zinc-500 dark:text-zinc-300'"
-        :aria-current="isActive(item.path) ? 'page' : undefined"
-      >
-        <span class="shrink-0" v-html="item.icon"></span>
-        <span>{{ item.label }}</span>
-      </router-link>
-    </nav>
-
-    <!-- 左栏 + 主内容 -->
-    <div class="flex pt-14 lg:pt-16">
-      <!-- 侧边栏：桌面≥lg 固定显示；移动端隐藏（底部提供横向导航条） -->
-      <aside class="hidden lg:flex sticky top-16 h-[calc(100vh-4rem)] flex-col items-center py-5 gap-2 shrink-0 transition-all duration-300 border-r border-zinc-200/50 dark:border-zinc-800/50 bg-white/95 dark:bg-zinc-900/95"
+    <!-- 左栏 + 主内容（桌面化：侧栏常显，无移动横条） -->
+    <div class="flex pt-16">
+      <!-- 侧边栏：常驻显示 -->
+      <aside class="flex sticky top-16 h-[calc(100vh-4rem)] flex-col items-center py-5 gap-2 shrink-0 transition-all duration-300 border-r border-zinc-200/50 dark:border-zinc-800/50 bg-white/95 dark:bg-zinc-900/95"
         :class="collapsed ? 'w-[72px]' : 'w-[210px]'">
         <nav class="flex flex-col items-center gap-1.5 w-full px-3">
           <router-link
@@ -109,8 +92,7 @@
       </aside>
 
       <!-- 主内容 -->
-      <main class="flex-1 min-w-0 px-4 lg:px-6 py-4 lg:py-6 overflow-y-auto h-[calc(100vh-4rem)] lg:pt-20">
-        <div class="lg:hidden pt-2"></div>
+      <main class="flex-1 min-w-0 px-6 py-6 overflow-y-auto h-[calc(100vh-4rem)]">
         <router-view />
       </main>
     </div>

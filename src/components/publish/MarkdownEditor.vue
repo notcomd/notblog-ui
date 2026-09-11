@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <div class="flex flex-col lg:flex-row min-h-[420px]">
+    <div class="flex flex-row min-h-[420px]">
       <textarea
         v-if="view !== 'preview'"
         ref="taRef"
@@ -27,13 +27,13 @@
         aria-label="Markdown 编辑器"
         rows="16"
         class="resize-none outline-none p-4 text-sm leading-relaxed bg-white/40 dark:bg-zinc-900/40 font-mono text-zinc-700 dark:text-zinc-200 transition-all w-full"
-        :class="view === 'split' ? 'lg:w-1/2 lg:border-r lg:border-zinc-200/60 dark:lg:border-zinc-700/60' : ''"
+        :class="view === 'split' ? 'w-1/2 border-r border-zinc-200/60 dark:border-zinc-700/60' : ''"
         :placeholder="placeholderText"
         spellcheck="false"
         @input="onInput"
         @keydown.tab.prevent="insertTab"
       ></textarea>
-      <div v-if="view !== 'edit'" class="overflow-y-auto p-5 prose-sm bg-white/20 dark:bg-zinc-900/20 w-full" :class="view === 'split' ? 'lg:w-1/2' : ''">
+      <div v-if="view !== 'edit'" class="overflow-y-auto p-5 prose-sm bg-white/20 dark:bg-zinc-900/20 w-full" :class="view === 'split' ? 'w-1/2' : ''">
         <div v-if="modelValue.trim()" class="markdown-body" v-html="rendered"></div>
         <div v-else class="h-full min-h-[380px] flex flex-col items-center justify-center gap-2 text-zinc-400">
           <div class="text-5xl"><svg class="w-12 h-12 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>

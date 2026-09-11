@@ -1,7 +1,7 @@
 <template>
   <!-- 全局通知弹窗：顶部右侧堆叠，长方体卡片（图标 + 通知名称 + 消息 + 时间），可手动关闭 -->
   <Teleport to="body">
-    <div class="fixed top-3 right-3 lg:top-4 lg:right-4 z-[999] flex flex-col items-end gap-2 pointer-events-none" aria-live="polite">
+    <div class="fixed top-4 right-4 z-[999] flex flex-col items-end gap-2 pointer-events-none" aria-live="polite">
       <TransitionGroup name="notify-slide">
         <div
           v-for="item in toast.messages"

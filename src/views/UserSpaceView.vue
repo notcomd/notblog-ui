@@ -50,7 +50,7 @@
             <button class="text-xs text-amber-500 hover:text-amber-600 transition-colors" @click="goTab('works')">全部 →</button>
           </header>
           <div class="px-4 pb-4">
-            <div v-if="recentPosts.length" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div v-if="recentPosts.length" class="grid grid-cols-4 gap-3">
               <div v-for="p in recentPosts" :key="p.tweetGuid" class="group cursor-pointer" @click="router.push('/posts/' + p.tweetGuid)">
                 <div class="relative aspect-video rounded-[5%] overflow-hidden bg-zinc-100 dark:bg-zinc-900">
                   <img v-if="postThumb(p)" :src="postThumb(p)" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" @error="hideImg" />
@@ -77,7 +77,7 @@
             <button class="text-xs text-amber-500 hover:text-amber-600 transition-colors" @click="goTab('favorites')">全部 →</button>
           </header>
           <div class="px-4 pb-4">
-            <div v-if="recentFavorites.length" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div v-if="recentFavorites.length" class="grid grid-cols-4 gap-3">
               <div v-for="p in recentFavorites" :key="p.tweetGuid" class="group cursor-pointer" @click="router.push('/posts/' + p.tweetGuid)">
                 <div class="relative aspect-video rounded-[5%] overflow-hidden bg-zinc-100 dark:bg-zinc-900">
                   <img v-if="postThumb(p)" :src="postThumb(p)" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" @error="hideImg" />
@@ -104,7 +104,7 @@
             <button class="text-xs text-amber-500 hover:text-amber-600 transition-colors" @click="goTab('files')">全部 →</button>
           </header>
           <div class="px-4 pb-4">
-            <div v-if="recentFiles.length" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div v-if="recentFiles.length" class="grid grid-cols-4 gap-3">
               <div v-for="f in recentFiles" :key="f.fileId" class="group cursor-pointer" @click="previewFile(f)">
                 <div class="relative aspect-video rounded-[5%] overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
                   <img v-if="f.type === 'image'" :src="f.url" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" @error="hideImg" />
@@ -141,7 +141,7 @@
           </div>
           <span class="text-xs text-zinc-400">{{ isSelf ? '暂无文件' : '暂无公开文件' }}</span>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-3 gap-4">
           <div v-for="f in filteredFiles" :key="f.fileId" class="glass-card overflow-hidden card-lift group">
             <div class="aspect-video bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center overflow-hidden">
               <img v-if="f.type === 'image'" :src="f.url" alt="" class="w-full h-full object-cover" @error="hideImg" />
@@ -164,7 +164,7 @@
       </div>
 
       <!-- 账号与安全（仅自己，私密功能） -->
-      <div v-else-if="activeTab === 'security' && isSelf" class="grid lg:grid-cols-2 gap-5">
+      <div v-else-if="activeTab === 'security' && isSelf" class="grid grid-cols-2 gap-5">
         <!-- 修改密码 -->
         <div class="glass-card p-5">
           <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 mb-4 flex items-center gap-2">

@@ -8,10 +8,10 @@
       to="/home"
       class="flex items-center gap-2 rounded-[5%] shrink-0 mb-1 w-full pl-6 pr-3"
     >
-      <svg class="w-7 h-7 shrink-0 text-amber-500 dark:text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 3l7 4v5c0 4.4-3 7.9-7 9-4-1.1-7-4.6-7-9V7l7-4z" />
-      </svg>
-      <span class="wipe-text text-lg font-bold tracking-wide text-zinc-800 dark:text-zinc-100 whitespace-nowrap" :class="{ 'wipe-hidden': collapsed }">轻芒 · 兴趣部落</span>
+      <div class="w-8 h-8 shrink-0 rounded-lg overflow-hidden bg-white border border-zinc-200/70 dark:border-white/10">
+        <img src="@/assets/monohub-logo.jpg" alt="MonoHub" class="w-full h-full object-cover" />
+      </div>
+      <span class="wipe-text text-lg font-bold tracking-wide text-zinc-800 dark:text-zinc-100 whitespace-nowrap" :class="{ 'wipe-hidden': collapsed }">MonoHub</span>
     </router-link>
 
     <!-- 搜索功能：展开态为输入框，收缩态为图标入口（点击展开并聚焦） -->

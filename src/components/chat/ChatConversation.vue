@@ -6,15 +6,6 @@
     <template v-else>
       <!-- 会话头部 -->
       <div class="flex items-center gap-3 px-5 py-3 border-b border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
-        <!-- 移动端返回会话列表（桌面端隐藏） -->
-        <button
-          class="lg:hidden shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors"
-          title="返回会话列表" aria-label="返回会话列表" @click="goBackList">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
         <div class="flex-1 min-w-0">
           <div class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 truncate">{{ activeTitle }}</div>
           <div class="text-xs text-zinc-400 truncate">{{ activeSubtitle }}</div>
@@ -119,7 +110,7 @@ const mode = computed(() => route.query.action === 'createGroup' ? 'create' : ro
 const active = computed(() => chat.sessions.find(s => s.sessionId === chat.activeSessionId) || null)
 const activeMessages = computed(() => (chat.activeSessionId && chat.messages[chat.activeSessionId]) || [])
 const myId = computed(() => chat.currentUserId ? chat.currentUserId() : '')
-const activeTitle = computed(() => active.value ? (active.value.sessionName || '会话') : '轻芒会话')
+const activeTitle = computed(() => active.value ? (active.value.sessionName || '会话') : 'MonoHub')
 const activeSubtitle = computed(() => {
   if (!active.value) return '选择左侧会话开始聊天'
   if (active.value.groupId || active.value.circleId) return `${active.value.participants ? active.value.participants.length : 0} 人`
@@ -166,11 +157,6 @@ function timeText(t: any): string {
 
 function closeGroupMode() {
   router.replace({ path: '/chat' })
-}
-
-// 移动端返回会话列表（由头部返回按钮触发；桌面端该按钮隐藏）
-function goBackList() {
-  router.push({ path: '/chat' })
 }
 
 async function send() {

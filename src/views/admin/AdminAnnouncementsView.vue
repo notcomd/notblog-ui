@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-5">
+  <div class="max-w-[1400px] mx-auto grid grid-cols-2 gap-5">
     <!-- 左：新建公报表单 -->
     <div class="glass-card p-5 space-y-4 h-fit">
       <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 flex items-center gap-2">

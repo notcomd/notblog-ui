@@ -1,6 +1,6 @@
 <template>
   <!-- 会话侧边栏：消息 / 好友 / 群聊 列表 + 通知 + 会话操作 -->
-  <div class="w-full lg:w-80 lg:shrink-0 flex flex-col glass-card p-3 min-h-0">
+  <div class="w-80 shrink-0 flex flex-col glass-card p-3 min-h-0">
     <!-- 列表头部 -->
     <div class="flex items-center justify-between shrink-0 px-1 pb-2">
       <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{{ tabTitle }}</span>

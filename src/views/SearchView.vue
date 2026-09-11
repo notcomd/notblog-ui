@@ -1,56 +1,59 @@
 <template>
   <div class="max-w-[1100px] mx-auto">
-    <!-- ===== 顶部：搜索手账标题 + 大搜索框 ===== -->
-    <div class="text-center pt-4 pb-8">
-      <h1 class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-100 font-display">搜索部落</h1>
-      <p class="text-sm text-zinc-400 mt-1.5">搜文章、社区、好友与视频，从一段关键词开始探索</p>
-
-      <div class="mt-6 max-w-xl mx-auto">
-        <div class="relative">
-          <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <!-- ===== 顶部：标题 + 搜索框（左对齐一行式，收紧高度） ===== -->
+    <div class="pt-6 pb-7">
+      <div class="flex items-center justify-between gap-4">
+        <div class="min-w-0">
+          <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 font-display">搜索</h1>
+          <p class="text-xs text-zinc-400 mt-1">搜文章、社区、好友与视频，从一段关键词开始探索</p>
+        </div>
+        <div class="relative w-[400px] shrink-0">
+          <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input
             v-model="keyword"
             name="globalSearch"
             aria-label="输入关键词搜索"
             autocomplete="off"
             spellcheck="false"
-            class="w-full h-12 pl-12 pr-32 rounded-2xl bg-white/80 dark:bg-zinc-800/80 border border-zinc-200/70 dark:border-zinc-700/60 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all shadow-sm"
+            class="w-full h-11 pl-11 pr-28 rounded-xl bg-white/80 dark:bg-zinc-800/80 border border-zinc-200/70 dark:border-zinc-700/60 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all shadow-sm"
             placeholder="搜文章、社区、好友或视频…"
             @keyup.enter="onSearch"
           />
           <button
             type="button"
-            class="btn-sheen absolute right-2 top-1/2 -translate-y-1/2 h-9 px-5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium transition-all active:scale-95 disabled:opacity-50"
+            class="btn-sheen absolute! right-1.5 top-1/2 -translate-y-1/2 h-8 px-4 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium transition-all active:scale-95 disabled:opacity-50"
             :disabled="!keyword.trim() || loading"
             @click="onSearch"
           >搜索</button>
         </div>
-        <p class="text-[11px] text-zinc-400 mt-2">图文博客暂不支持搜索，敬请期待</p>
       </div>
     </div>
 
     <!-- ===== 关键词未输入：引导态 ===== -->
-    <div v-if="!searched" class="py-20 flex flex-col items-center gap-4 text-zinc-400">
-      <div class="text-6xl"><svg class="w-16 h-16 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/><path d="M11 8v6"/></svg></div>
+    <div v-if="!searched" class="py-24 flex flex-col items-center gap-4 text-zinc-400">
+      <svg class="w-14 h-14 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/><path d="M11 8v6"/></svg>
       <p class="text-sm">输入关键词，探索部落里的文章与社区</p>
     </div>
 
     <template v-else>
-      <!-- ===== Tab：全部 / 文章 / 社区 / 好友 / 视频 ===== -->
-      <div class="flex flex-wrap items-center gap-2 mb-6">
-        <button
-          v-for="tab in TABS"
-          :key="tab.key"
-          type="button"
-          class="h-9 px-4 rounded-full text-xs font-medium transition-all inline-flex items-center gap-1.5"
-          :class="activeTab === tab.key ? 'bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 border border-zinc-200/60 dark:border-zinc-700/60'"
-          :aria-pressed="activeTab === tab.key"
-          @click="switchTab(tab.key)"
-        >
-          <span class="w-1.5 h-1.5 rounded-full" :class="tab.dot" aria-hidden="true"></span>
-          {{ tab.label }}
-          <span class="font-numeric text-[10px] opacity-60" v-if="searched">{{ typeCount(tab.key) }}</span>
-        </button>
+      <!-- ===== Tab 分区：Tab 与结果计数同栏，分隔线区隔内容区 ===== -->
+      <div class="flex items-center justify-between gap-3 mb-5 pb-4 border-b border-zinc-200/70 dark:border-zinc-800/60">
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            v-for="tab in TABS"
+            :key="tab.key"
+            type="button"
+            class="h-9 px-4 rounded-full text-xs font-medium transition-all inline-flex items-center gap-1.5"
+            :class="activeTab === tab.key ? 'bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 border border-zinc-200/60 dark:border-zinc-700/60'"
+            :aria-pressed="activeTab === tab.key"
+            @click="switchTab(tab.key)"
+          >
+            <span class="w-1.5 h-1.5 rounded-full" :class="tab.dot" aria-hidden="true"></span>
+            {{ tab.label }}
+            <span class="font-numeric text-[10px] opacity-60">{{ typeCount(tab.key) }}</span>
+          </button>
+        </div>
+        <span class="text-xs text-zinc-400 whitespace-nowrap font-numeric shrink-0">{{ totalCount }} 条结果</span>
       </div>
 
       <!-- ===== 加载中：骨架 ===== -->
@@ -93,10 +96,10 @@
       </div>
 
       <!-- ===== 诚实空态 ===== -->
-      <div v-else class="py-20 flex flex-col items-center gap-4 text-zinc-400">
-        <div class="text-6xl"><svg class="w-16 h-16 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/></svg></div>
+      <div v-else class="py-24 flex flex-col items-center gap-4 text-zinc-400">
+        <svg class="w-14 h-14 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M8 11h6"/></svg>
         <p class="text-sm">没有找到与「{{ keyword }}」相关的结果</p>
-        <p class="text-xs text-zinc-400/80">换个关键词，或试试文章与社区</p>
+        <p class="text-xs text-zinc-400/80">换个关键词，或切换上方的分类再试</p>
       </div>
     </template>
   </div>
@@ -145,6 +148,9 @@ const visibleItems = computed<SearchItem[]>(() => {
   if (activeTab.value === 'all') return items.value
   return items.value.filter((it) => it.type === activeTab.value)
 })
+
+/** 当前关键词的全部结果数（Tab 栏右侧展示） */
+const totalCount = computed<number>(() => items.value.length)
 
 function typeCount(t: TabKey): number {
   if (t === 'all') return items.value.length

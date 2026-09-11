@@ -15,7 +15,7 @@
     </div>
 
     <!-- 文件网格（4列） -->
-    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div class="grid grid-cols-4 gap-4">
       <div v-for="f in files" :key="f.fileId" class="glass-card overflow-hidden card-lift group">
         <div class="aspect-video bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center overflow-hidden relative">
           <img v-if="f.type === 'image'" :src="f.url" alt="" class="w-full h-full object-cover" @error="hideImg" />
