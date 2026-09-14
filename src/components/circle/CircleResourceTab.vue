@@ -22,9 +22,10 @@
 </template>
 
 <script setup lang="ts">
-// 社区资源：circleLoader 拉取社区动态，提取 mediaUrls 去重展示
+// 社区资源：circleLoader 拉取社区动态，提取媒体（图片 + 视频封面）去重展示
 import { ref, watch } from 'vue'
 import { getCirclePosts } from '@/api/circle'
+import { isVideoUrl } from '@/utils/media'
 
 interface CircleData {
   circleGuid?: string
@@ -57,7 +58,8 @@ async function load() {
     const seen = new Set()
     resources.value = []
     for (const p of list) {
-      const urls = [...(p.mediaUrls || []), ...(p.cover ? [p.cover] : [])] as string[]
+      // 视频作品的 mediaUrls[0] 是视频文件本身，图墙只收图片与其封面（即全部非视频媒体）
+      const urls = [...(p.mediaUrls || []), ...(p.cover ? [p.cover] : [])].filter((u: string) => u && !isVideoUrl(u))
       for (const u of urls) {
         if (u && !seen.has(u)) {
           seen.add(u)

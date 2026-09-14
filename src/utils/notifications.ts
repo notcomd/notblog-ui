@@ -72,6 +72,12 @@ const TYPE_META: Record<string, NotificationMeta> = {
     bg: 'bg-sky-100 dark:bg-sky-500/20',
     fg: 'text-sky-600 dark:text-sky-300'
   },
+  FriendRequestReceived: {
+    name: '好友通知',
+    icon: '<circle cx="9" cy="8" r="3.5" /><path d="M3 20v-1a6 6 0 0 1 6-6 6 6 0 0 1 6 6v1" /><path d="M18 8v6M15 11h6" />',
+    bg: 'bg-emerald-100 dark:bg-emerald-500/20',
+    fg: 'text-emerald-600 dark:text-emerald-300'
+  },
   // —— 圈子 / 群组类 ——
   CircleInvited: {
     name: '圈子通知',

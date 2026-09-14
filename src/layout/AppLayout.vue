@@ -4,14 +4,15 @@
     <BackgroundLayer />
     <!-- 内容层：relative z-10 抬升到背景图层（z-0）之上（负 z-index 会被 body 背景 canvas 盖住，不可用） -->
     <div class="relative z-10 flex">
-      <!-- 左侧功能栏：常驻主导航（桌面化，无移动端隐藏） -->
-      <SideNav :blurred="isDetail" class="flex" />
+      <!-- 左侧功能栏：专注模式下隐藏（Markdown 长文写作让出整屏） -->
+      <SideNav v-if="!focus.focusMode" class="flex" />
       <!-- 右侧：顶栏 + 内容区（顶栏不再横跨全屏，Logo 已移至左侧功能栏） -->
       <div class="flex-1 min-w-0 flex flex-col">
-        <TopBar :blurred="isDetail" />
+        <TopBar v-if="!focus.focusMode" />
         <main
           ref="mainBox"
-          class="flex-1 min-h-0 px-6 py-6 overflow-y-auto scroll-native pb-6"
+          class="flex-1 min-h-0 overflow-y-auto scroll-native"
+          :class="focus.focusMode ? 'p-3' : 'px-6 py-6'"
         >
           <router-view v-slot="{ Component }">
             <transition name="page-fade">
@@ -24,9 +25,9 @@
       </div>
     </div>
 
-    <!-- 回到顶部（全局，右下角；监听 main 捕获阶段可覆盖页面内部滚动容器） -->
+    <!-- 回到顶部（专注模式下隐藏，避免遮挡编辑器） -->
     <button
-      v-if="showTopBtn"
+      v-if="showTopBtn && !focus.focusMode"
       class="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200/70 dark:border-zinc-700/60 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 active:scale-95 transition-all"
       title="回到顶部"
       aria-label="回到顶部"
@@ -42,17 +43,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import TopBar from '@/layout/TopBar.vue'
 import SideNav from '@/layout/SideNav.vue'
 import BackgroundLayer from '@/components/common/BackgroundLayer.vue'
 import CallPanel from '@/components/chat/CallPanel.vue'
+import { useFocusStore } from '@/stores/focus'
 
 const route = useRoute()
+const focus = useFocusStore()
 
-// 详情页覆盖模式：主框架置灰/模糊
-const isDetail = computed(() => route.path.startsWith('/posts/'))
+// 兜底：离开发布页时确保退出专注模式（防止组件异常卸载后框架长期隐藏）
+watch(() => route.path, (p) => {
+  if (p !== '/publish') focus.exit()
+})
 
 // keep-alive 缓存的信息流视图（返回时保留浏览位置）
 const cachedViews: string[] = ['HomeView', 'CirclePage', 'ChatPage', 'UserSpaceView']

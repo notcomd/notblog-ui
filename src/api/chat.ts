@@ -121,6 +121,15 @@ export function deleteMessage(messageId: string) {
   return service.delete(`/api/messages/${messageId}`);
 }
 
+// ==================== 用户查找（添加好友前置） ====================
+
+// 查找用户：GET /api/users/lookup?keyword= -> ApiResponse<UserBriefDto[]>
+// keyword 为邮箱或昵称（后端仅精确匹配、忽略大小写，未命中返回空数组）
+// UserBriefDto { userGuid, userName, avatar }；限流命中返回 429
+export function lookupUsers(keyword: string) {
+  return service.get('/api/users/lookup', { params: { keyword } });
+}
+
 // ==================== 好友操作 ====================
 
 // 发送好友请求：POST /api/friends/request
@@ -173,6 +182,23 @@ export function getGroupMembers(id: string) {
 // 群搜索：GET /api/groups/search
 export function searchGroups(params: QueryParams = {}) {
   return service.get('/api/groups/search', { params });
+}
+
+// ==================== 聊天附件上传 ====================
+
+// 聊天文件上传：POST /api/files/upload（multipart: file, description, isPublic）-> ApiResponse<FileRef{fileId,fileUri}>
+// 图片走 /api/files/upload-image（见 api/publish.ts uploadImage），此处仅处理非图片附件
+const CHAT_UPLOAD_TIMEOUT = 60000;
+
+export function uploadChatFile(file: File) {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('description', 'chat-file');
+  form.append('isPublic', 'true');
+  return service.post('/api/files/upload', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: CHAT_UPLOAD_TIMEOUT
+  });
 }
 
 // ==================== 常量 ====================

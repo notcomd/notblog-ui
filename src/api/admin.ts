@@ -65,12 +65,14 @@ export function rejectTweet(tweetGuid: string, reason: string) {
 }
 
 // 屏蔽/删除内容后端暂无管理端点
-export function blockTweet() {
+// 占位实现：形参为「端点接入后的调用契约」（当前不使用），与调用方保持一致，避免签名漂移
+export function blockTweet(tweetGuid?: string, reason?: string) {
   // 后端暂未提供该端点；严禁将此操作伪装为成功，避免误操作
   return Promise.reject(new Error('屏蔽内容功能尚未接入后端，操作未执行'));
 }
 
-export function deleteTweet() {
+// 占位实现：形参为「端点接入后的调用契约」（当前不使用）
+export function deleteTweet(tweetGuid?: string) {
   // 后端暂未提供该端点；严禁将此操作伪装为成功，避免误操作
   return Promise.reject(new Error('删除内容功能尚未接入后端，操作未执行'));
 }

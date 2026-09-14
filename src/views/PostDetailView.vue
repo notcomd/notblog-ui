@@ -62,7 +62,7 @@
       <div class="col-span-3 min-w-0">
         <div class="glass-card overflow-hidden">
           <!-- 媒体：视频模式 -> 播放器（含弹幕系统）；图文模式 -> 轮播 -->
-          <VideoPlayer v-if="isVideo && mediaUrls.length" :src="mediaUrls[0]" :video-guid="tweet.tweetGuid" class="p-3" />
+          <VideoPlayer v-if="isVideo && videoUrl" :src="videoUrl" :video-guid="tweet.tweetGuid" class="p-3" />
           <div v-else-if="mediaUrls.length" class="relative bg-zinc-100 dark:bg-zinc-900">
             <div class="relative overflow-hidden aspect-[4/3]">
               <transition name="fade">
@@ -215,6 +215,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { submitReport } from '@/api/report'
 import { renderMarkdown, looksLikeMarkdown } from '@/utils/markdown'
+import { isVideoPost, pickVideoUrl } from '@/utils/media'
 import { compactNumber, relativeTime } from '@/utils/format'
 
 const route = useRoute()
@@ -258,8 +259,11 @@ const activeMedia = ref(0)
 const commentSection = ref<any>(null)
 const mediaFailed = ref(false)
 
-const isVideo = computed(() => !!tweet.value && !!tweet.value.isVideo)
-const mediaUrls = computed(() => (tweet.value && tweet.value.mediaUrls) || [])
+const mediaUrls = computed<string[]>(() => (tweet.value && tweet.value.mediaUrls) || [])
+// 视频判定：优先后端 isVideo，兜底按媒体地址后缀识别（后端 TweetDto 暂无该字段，曾因此让视频帖走图文轮播而无法播放）
+const isVideo = computed(() => isVideoPost(tweet.value))
+// 播放地址：取媒体里第一个视频地址，兜底用首图（避免封面排在 videos 前时取错）
+const videoUrl = computed(() => pickVideoUrl(mediaUrls.value) || mediaUrls.value[0] || '')
 const authorName = computed(() => {
   const a = tweet.value && tweet.value.author
   return a ? (a.userName || a.name || a.nickname || '用户') : '用户'

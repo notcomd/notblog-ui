@@ -1,8 +1,13 @@
 <template>
-  <div class="max-w-[1400px] mx-auto">
-    <div class="glass-card p-6 min-h-[calc(100vh-20rem)] flex flex-col">
-      <!-- 头部：标题 + 返回工作台（类型选择已移至工作台，此处不再提供 Tab 切换） -->
-      <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+  <!-- 专注写作时解除宽度上限，编辑器横向也铺满 -->
+  <div class="mx-auto" :class="focus.focusMode ? 'max-w-none' : 'max-w-[1400px]'">
+    <!-- 专注写作时收掉卡片内边距与头部标题区，把空间全部让给编辑器 -->
+    <div
+      class="glass-card flex flex-col"
+      :class="focus.focusMode ? 'p-0 min-h-0' : 'p-6 min-h-[calc(100vh-20rem)]'"
+    >
+      <!-- 头部：标题 + 返回工作台（类型选择已移至工作台，此处不再提供 Tab 切换；专注模式下隐藏） -->
+      <div v-if="!focus.focusMode" class="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div class="min-w-0">
           <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-1">{{ title }}</h1>
           <p class="text-sm text-zinc-400">{{ subtitle }}</p>
@@ -34,9 +39,11 @@ import MarkdownEditorPage from '@/components/publish/MarkdownEditorPage.vue'
 import { getMyCircles } from '@/api/circle'
 import { getDraft } from '@/utils/drafts'
 import { useToastStore } from '@/stores/toast'
+import { useFocusStore } from '@/stores/focus'
 
 const route = useRoute()
 const toast = useToastStore()
+const focus = useFocusStore()
 
 const mode = ref<'post' | 'video' | 'workspace'>('post')
 const myCircles = ref<any[]>([])

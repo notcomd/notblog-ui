@@ -1,11 +1,10 @@
 <template>
-  <!-- 会话侧边栏：消息 / 好友 / 群聊 列表 + 通知 + 会话操作 -->
-  <div class="w-80 shrink-0 flex flex-col glass-card p-3 min-h-0">
-    <!-- 列表头部 -->
-    <div class="flex items-center justify-between shrink-0 px-1 pb-2">
-      <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{{ tabTitle }}</span>
+  <!-- 会话侧边栏：扁平栏（与社区侧栏同构：无卡片化，仅右侧分隔线）+ 会话/好友/群聊列表 -->
+  <div class="w-80 shrink-0 flex flex-col p-3 border-r border-zinc-200/60 dark:border-zinc-800/60 min-h-0">
+    <!-- 列表头部：仅保留功能按钮（徽标与标题已移除），右对齐 -->
+    <div class="flex items-center justify-end gap-2 shrink-0 px-1 pb-3">
       <div v-if="tab === 'messages'" class="flex items-center gap-2">
-        <span v-if="msgUnread > 0" class="text-xs text-zinc-400">未读 {{ msgUnread > 99 ? '99+' : msgUnread }}</span>
+        <span v-if="msgUnread > 0" class="text-[11px] px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-500">{{ msgUnread > 99 ? '99+' : msgUnread }}</span>
         <button
           class="h-7 px-2.5 rounded-[5%] text-xs font-medium transition-colors inline-flex items-center gap-1 shrink-0"
           :class="msgUnread > 0 ? 'bg-amber-400/15 text-amber-600 dark:text-amber-300 hover:bg-amber-400/25' : 'text-zinc-400 cursor-default'"
@@ -37,14 +36,16 @@
       <button
         v-for="s in visibleSessions"
         :key="String(s.sessionId || s.notifyGuid)"
-        class="w-full flex items-center gap-3 px-3 py-2 rounded-[5%] transition-all text-left"
+        class="relative w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors text-left"
         :class="isActiveRow(s) ? 'bg-gradient-to-r from-amber-400/15 to-orange-400/10' : 'hover:bg-white/60 dark:hover:bg-zinc-800/60'"
         @click="onItemClick(s)"
         @contextmenu.prevent="openRowContextMenu(s, $event)"
       >
+        <!-- 选中态：左侧琥珀光条（与社区侧栏一致） -->
+        <span v-if="isActiveRow(s)" class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 rounded-full bg-gradient-to-b from-amber-400 to-orange-500"></span>
         <div class="relative shrink-0">
-          <img v-if="!isNotify(s)" :src="sessionAvatar(s)" alt="" class="w-11 h-11 rounded-[5%] object-cover border border-white/60 dark:border-white/10" @error="hideImg" />
-          <div v-else class="w-11 h-11 rounded-[5%] flex items-center justify-center" :class="notificationMeta(s.type).bg">
+          <img v-if="!isNotify(s)" :src="sessionAvatar(s)" alt="" class="w-11 h-11 rounded-[10px] object-cover border border-white/60 dark:border-white/10" @error="hideImg" />
+          <div v-else class="w-11 h-11 rounded-[10px] flex items-center justify-center" :class="notificationMeta(s.type).bg">
             <svg class="w-5 h-5" :class="notificationMeta(s.type).fg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="notificationMeta(s.type).icon" aria-hidden="true"></svg>
           </div>
           <span v-if="!isNotify(s) && !s.groupId" class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-zinc-800" :class="isRowOnline(s) ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600'"></span>
@@ -78,14 +79,15 @@
       </button>
     </div>
 
-    <!-- 底部 Tab 切换 -->
-    <div class="mt-2 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60 flex gap-1">
-      <button v-for="b in BOTTOM_TABS" :key="b.key" class="flex-1 py-2 rounded-[5%] text-sm font-medium transition-all inline-flex items-center justify-center gap-1.5"
-        :class="tab === b.key ? 'bg-amber-400/15 text-amber-600 dark:text-amber-300' : 'text-zinc-500 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'"
+    <!-- 底部 Tab 切换：下划线指示（与社区详情卡 tab 同构） -->
+    <div class="mt-2 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60 flex items-center">
+      <button v-for="b in BOTTOM_TABS" :key="b.key" class="relative flex-1 h-10 text-sm transition-colors inline-flex items-center justify-center gap-1.5"
+        :class="tab === b.key ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'"
         @click="switchTab(b.key)"
       >
         <span>{{ b.label }}</span>
         <span v-if="b.key === 'messages' && msgUnread > 0" class="min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{{ msgUnread > 99 ? '99+' : msgUnread }}</span>
+        <span v-if="tab === b.key" class="absolute left-6 right-6 bottom-0 h-px rounded-full bg-amber-500"></span>
       </button>
     </div>
 
@@ -102,16 +104,16 @@
     <div v-if="addFriendOpen" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/30" @click.self="addFriendOpen = false">
       <div class="glass-card p-6 w-[min(26rem,92vw)]">
         <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-1">添加好友</h3>
-        <p class="text-xs text-zinc-400 mb-4">输入对方邮箱查找用户并发起好友请求</p>
+        <p class="text-xs text-zinc-400 mb-4">输入对方邮箱或昵称查找用户并发起好友请求</p>
         <div class="flex gap-2">
-          <input v-model="addEmail" type="email" name="addEmail" aria-label="对方邮箱" class="flex-1 min-w-0 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="对方邮箱" @keydown.enter.exact.prevent="onLookupEnter" />
-          <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium" :disabled="addLoading || !addEmail.trim()" @click="lookupUser">查找</button>
+          <input v-model="addKeyword" type="text" name="addKeyword" aria-label="对方邮箱或昵称" class="flex-1 min-w-0 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none" placeholder="对方邮箱或昵称" @keydown.enter.exact.prevent="onLookupEnter" />
+          <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium" :disabled="addLoading || !addKeyword.trim()" @click="lookupUser">查找</button>
         </div>
         <div class="mt-4">
           <div v-if="addLoading" class="py-8 text-center text-xs text-zinc-400">查找中…</div>
-          <div v-else-if="addNotFound" class="py-8 text-center text-xs text-zinc-400">未找到该用户，请确认邮箱是否正确</div>
+          <div v-else-if="addNotFound" class="py-8 text-center text-xs text-zinc-400">未找到该用户，请确认邮箱或昵称是否正确</div>
           <div v-else-if="addUser" class="flex items-center gap-3 p-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60">
-            <img :src="addUser.imageCover || demoAvatar((addUser.userName || '友').charAt(0), '#a1a1aa')" alt="" class="w-12 h-12 rounded-[5%] object-cover" @error="hideImg" />
+            <img :src="addUser.imageCover || demoAvatar((addUser.userName || '友').charAt(0), '#a1a1aa')" alt="" class="w-12 h-12 rounded-[10px] object-cover" @error="hideImg" />
             <span class="flex-1 min-w-0 text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate">{{ addUser.userName || '未命名用户' }}</span>
             <span v-if="addUserIsSelf" class="shrink-0 text-xs px-2 py-1 rounded-[5%] bg-zinc-100 dark:bg-zinc-800 text-zinc-500">不能添加自己</span>
             <span v-else-if="addUserIsFriend" class="shrink-0 text-xs px-2 py-1 rounded-[5%] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">已是好友</span>
@@ -133,7 +135,7 @@
           <div v-if="friendSearching" class="py-8 text-center text-xs text-zinc-400">搜索中…</div>
           <div v-else-if="friendSearched && friendResults.length === 0" class="py-8 text-center text-xs text-zinc-400">未找到匹配的好友</div>
           <button v-for="f in friendResults" :key="f.friendshipId || f.friendId" class="w-full flex items-center gap-3 px-3 py-2 rounded-[5%] transition-all text-left hover:bg-white/60 dark:hover:bg-zinc-800/60" @click="openFriendChat(f)">
-            <img :src="f.friendAvatar || demoAvatar('友', '#a1a1aa')" alt="" class="w-10 h-10 rounded-[5%] object-cover" @error="hideImg" />
+            <img :src="f.friendAvatar || demoAvatar('友', '#a1a1aa')" alt="" class="w-10 h-10 rounded-[10px] object-cover" @error="hideImg" />
             <span class="flex-1 min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ friendDisplayName(f) }}</span>
           </button>
         </div>
@@ -151,7 +153,7 @@ import { useChatStore } from '@/stores/chat'
 import { useToastStore } from '@/stores/toast'
 import {
   pinSession, unpinSession, muteSession, unmuteSession, deleteSession,
-  createSession, sendFriendRequest, searchFriends,
+  createSession, sendFriendRequest, searchFriends, lookupUsers,
   getUnreadMessages, markRead
 } from '@/api/chat'
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '@/api/notification'
@@ -197,7 +199,6 @@ const BOTTOM_TABS: { key: string; label: string }[] = [
 ]
 
 const tab = ref('messages')
-const tabTitle = computed(() => (tab.value === 'friends' ? '好友' : tab.value === 'groups' ? '群聊' : '消息'))
 const sessionsLoading = ref(true)
 const notifItems = ref<SessionItem[]>([])
 const sessionMenuTarget = ref<string | null>(null)
@@ -423,7 +424,7 @@ function onCtxDelete() {
 
 // 添加好友
 const addFriendOpen = ref(false)
-const addEmail = ref('')
+const addKeyword = ref('')
 const addUser = ref<any | null>(null)
 const addLoading = ref(false)
 const addNotFound = ref(false)
@@ -435,15 +436,32 @@ function onLookupEnter(e: KeyboardEvent) {
   if (e.isComposing || e.keyCode === 229) return
   lookupUser()
 }
+// 查找用户：走 Message 服务 GET /api/users/lookup（需认证 + 精确匹配 + 按用户限流）
 async function lookupUser() {
-  const email = addEmail.value.trim()
-  if (!email || addLoading.value) return
+  const keyword = addKeyword.value.trim()
+  if (!keyword || addLoading.value) return
   addLoading.value = true
   addNotFound.value = false
   addUser.value = null
-  // 已移除无鉴权 Identity 查询；等待后端安全接口
-  addNotFound.value = true
-  addLoading.value = false
+  try {
+    const res = await lookupUsers(keyword)
+    const data = res && res.data ? res.data : res
+    const list = Array.isArray(data) ? data : []
+    const first = list[0]
+    if (!first) {
+      addNotFound.value = true
+      return
+    }
+    addUser.value = {
+      userGuid: first.userGuid,
+      userName: first.userName,
+      imageCover: first.avatar
+    }
+  } catch (e: any) {
+    toast.push(e?.message || '查找失败，请稍后重试', 'error')
+  } finally {
+    addLoading.value = false
+  }
 }
 
 async function sendAddRequest() {
@@ -454,7 +472,7 @@ async function sendAddRequest() {
     await sendFriendRequest({ friendId: u.userGuid })
     toast.push('好友请求已发送，等待对方验证', 'success')
     addFriendOpen.value = false
-    addEmail.value = ''
+    addKeyword.value = ''
     addUser.value = null
   } catch (e) {
     toast.push('发送失败：' + (e.message || '请稍后重试'), 'error')

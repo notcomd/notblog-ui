@@ -86,7 +86,7 @@ import AdminModal from '@/components/admin/AdminModal.vue'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 import { getAdminFiles, deleteAdminFile } from '@/api/admin'
 import { useToastStore } from '@/stores/toast'
-import { relativeTime } from '@/utils/format'
+import { formatSize, relativeTime } from '@/utils/format'
 
 const toast = useToastStore()
 
@@ -140,13 +140,6 @@ async function doDelete(reason: string): Promise<void> {
   } catch (e) {
     toast.push('删除失败', 'error')
   }
-}
-
-function formatSize(bytes: number): string {
-  if (!bytes) return '0 B'
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / 1024 / 1024).toFixed(1) + ' MB'
 }
 
 function hideImg(e: any): void {

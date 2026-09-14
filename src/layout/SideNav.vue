@@ -1,7 +1,7 @@
 <template>
   <aside
-    class="sticky top-0 h-screen flex flex-col items-center py-6 gap-3 shrink-0 bg-white dark:bg-zinc-900 border-r border-zinc-200/60 dark:border-zinc-800/60 transition-[width,opacity] duration-[250ms] ease"
-    :class="[collapsed ? 'w-[72px]' : 'w-[220px]', blurred ? 'opacity-60 saturate-50' : '']"
+    class="sticky top-0 h-screen flex flex-col items-center py-6 gap-3 shrink-0 bg-white dark:bg-zinc-900 border-r border-zinc-200/60 dark:border-zinc-800/60 transition-[width] duration-[250ms] ease"
+    :class="collapsed ? 'w-[72px]' : 'w-[220px]'"
   >
     <!-- 顶部 Logo（pl-6 让图标与导航项图标对齐 x=24；文字展开从左向右显示、收缩从右向左擦除） -->
     <router-link
@@ -100,8 +100,6 @@ import { computed, ref, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { MAIN_NAV_ITEMS, buildSpaceNavItems } from '@/layout/navItems'
-
-withDefaults(defineProps<{ blurred?: boolean }>(), { blurred: false })
 
 const route = useRoute()
 const router = useRouter()

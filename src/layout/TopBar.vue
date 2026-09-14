@@ -1,5 +1,5 @@
 <template>
-  <header class="sticky top-0 z-50 transition-all duration-300" :class="blurred ? 'opacity-60 saturate-50 pointer-events-none' : ''">
+  <header class="sticky top-0 z-50">
     <div class="h-16 px-5 flex items-center">
       <!-- 左上：当前功能标题（随功能栏激活项变化，如：首页/社区/会话/广场、个人空间 Tab） -->
       <div v-if="titleItem" class="shrink-0 min-w-0">
@@ -167,7 +167,6 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-withDefaults(defineProps<{ blurred?: boolean }>(), { blurred: false })
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useFeedTabStore } from '@/stores/feedTab'

@@ -319,7 +319,8 @@ import { getMyUserInfo } from '@/api/userinfo'
 import { createSession } from '@/api/chat'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
-import { relativeTime } from '@/utils/format'
+import { formatSize, relativeTime } from '@/utils/format'
+import { isVideoPost, pickCoverUrl } from '@/utils/media'
 
 const route = useRoute()
 const router = useRouter()
@@ -367,14 +368,12 @@ const expPercent = computed(() => {
 function goTab(key: string): void {
   router.push({ path: `/users/${userId.value}`, query: { tab: key } })
 }
-// 概览缩略辅助（与 PostCard 同字段约定：mediaUrls[0] 封面 / isVideo 或 URL 后缀）
+// 概览缩略辅助（与 PostCard 同字段约定：封面取首张非视频媒体 / isVideo 判定见 utils/media）
 function postThumb(p: any): string {
-  const urls = p.mediaUrls || []
-  return urls[0] || ''
+  return pickCoverUrl(p.mediaUrls)
 }
 function postIsVideo(p: any): boolean {
-  if (p.isVideo) return true
-  return /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(postThumb(p))
+  return isVideoPost(p)
 }
 function postTitle(p: any): string {
   const t: string = (p.content || '').replace(/[#*`>~-]/g, '').trim()
@@ -719,13 +718,6 @@ function providerIcon(p: string): string {
 
 function previewFile(f: any): void {
   toast.push(`预览 ${f.name} 功能开发中`, 'info')
-}
-
-function formatSize(bytes: number): string {
-  if (!bytes) return '0 B'
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / 1024 / 1024).toFixed(1) + ' MB'
 }
 
 function hideImg(e: Event) {

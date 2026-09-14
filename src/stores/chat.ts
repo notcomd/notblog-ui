@@ -37,6 +37,13 @@ interface MessageDto {
   messageType?: number;
   status?: number;
   content?: string;
+  mediaUrl?: string | null;
+  thumbnailUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
+  mimeType?: string | null;
+  duration?: number | null;
+  caption?: string | null;
   sentTime?: number;
   isRead?: boolean;
   isRecalled?: boolean;
@@ -215,6 +222,61 @@ export const useChatStore = defineStore('chat', () => {
       if (sent) sent.status = 1;
     } catch (e) {
       console.error('发送消息失败:', e);
+      const failed = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
+      if (failed) failed.status = -1;
+      throw e;
+    }
+    return msg;
+  }
+
+  // 发送媒体消息（图片/文件）：调用方先上传拿到 fileId，再由 Hub 落库（服务端统一解析媒体元数据）
+  // localUrl 为发送中的即时预览地址；状态约定同 sendText
+  async function sendMedia(
+    sessionId: string,
+    payload: { messageType: number; fileId: string; localUrl?: string; fileName?: string; fileSize?: number }
+  ): Promise<MessageDto> {
+    const me = currentUserId();
+    const messageId = 'local-' + Date.now();
+    const summary = payload.messageType === MessageType.Image ? '[图片]' : '[文件]';
+    const msg: MessageDto = {
+      messageId,
+      sessionId,
+      senderId: me,
+      receiverId: null,
+      messageType: payload.messageType,
+      status: 0,
+      content: summary,
+      mediaUrl: payload.localUrl || null,
+      fileName: payload.fileName || null,
+      fileSize: payload.fileSize ?? null,
+      sentTime: Date.now()
+    };
+    pushMessage(msg);
+    bumpSession(sessionId, summary);
+
+    try {
+      const conn = await connectSignalR();
+      await conn.invoke('SendMessage', sessionId, {
+        sessionId,
+        messageType: payload.messageType,
+        content: null,
+        fileId: payload.fileId,
+        thumbnailFileId: null,
+        duration: null,
+        caption: null,
+        latitude: null,
+        longitude: null,
+        locationName: null,
+        linkUrl: null,
+        linkTitle: null,
+        linkDescription: null,
+        expressionCode: null,
+        replyToMessageId: null
+      });
+      const sent = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
+      if (sent) sent.status = 1;
+    } catch (e) {
+      console.error('发送媒体消息失败:', e);
       const failed = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
       if (failed) failed.status = -1;
       throw e;
@@ -440,6 +502,7 @@ export const useChatStore = defineStore('chat', () => {
     loadMessages,
     retryMessage,
     sendText,
+    sendMedia,
     sendTyping,
     markSessionRead,
     clearUnread,

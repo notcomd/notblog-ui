@@ -41,3 +41,12 @@ export function compactNumber(n: number | string | null | undefined): string {
   if (v >= 1_000) return `${(v / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
   return String(v);
 }
+
+// 文件体积：1536 -> 1.5 KB
+export function formatSize(bytes: number | null | undefined): string {
+  const b = Number(bytes) || 0;
+  if (b <= 0) return '0 B';
+  if (b < 1024) return b + ' B';
+  if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1024 / 1024).toFixed(1) + ' MB';
+}

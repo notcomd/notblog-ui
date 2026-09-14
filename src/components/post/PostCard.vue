@@ -10,14 +10,15 @@
     <!-- 封面区：图文 9:16 竖图 / 视频 1:1 带播放按钮 -->
     <div class="relative w-full overflow-hidden" :class="isVideo ? 'aspect-square' : 'aspect-[9/16]'">
       <img
+        v-if="cover"
         :src="cover"
         alt=""
         class="w-full h-full object-cover"
         loading="lazy"
         @error="onCoverError"
       />
-      <!-- 加载失败柔和占位 -->
-      <div v-if="coverFailed" class="absolute inset-0 bg-gradient-to-br from-amber-100 to-emerald-100 dark:from-zinc-800 dark:to-zinc-800 flex items-center justify-center">
+      <!-- 无封面或加载失败：柔和占位 -->
+      <div v-if="!cover || coverFailed" class="absolute inset-0 bg-gradient-to-br from-amber-100 to-emerald-100 dark:from-zinc-800 dark:to-zinc-800 flex items-center justify-center">
         <svg class="w-10 h-10 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="4" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
       </div>
       <!-- 视频播放按钮悬浮层 -->
@@ -71,6 +72,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { compactNumber, relativeTime } from '@/utils/format'
+import { isVideoPost, pickCoverUrl } from '@/utils/media'
 import { toggleLike, toggleFavorite } from '@/api/tweet'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
@@ -116,15 +118,10 @@ function requireLogin(): boolean {
   return false
 }
 
-const cover = computed(() => {
-  const urls = props.post.mediaUrls || []
-  return urls[0] || ''
-})
+// 封面：取第一张非视频媒体（视频作品 mediaUrls = [视频, 封面]，取 [0] 会把视频当封面而加载失败）
+const cover = computed(() => pickCoverUrl(props.post.mediaUrls))
 // 视频判定：优先后端字段，兜底按媒体 URL 后缀识别（后端 TweetDto 暂无 isVideo 字段）
-const isVideo = computed(() => {
-  if (props.post.isVideo) return true
-  return /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(cover.value)
-})
+const isVideo = computed(() => isVideoPost(props.post))
 const authorName = computed(() => {
   const a = props.post.author
   return a ? (a.userName || a.name || a.nickname || '用户') : '用户'

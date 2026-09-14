@@ -41,7 +41,7 @@
         class="px-5 py-3 border-b border-zinc-200/60 dark:border-zinc-700/60 max-h-48 overflow-y-auto overscroll-contain">
         <div v-for="m in members" :key="m.id"
           class="flex items-center gap-2 py-1 text-sm text-zinc-600 dark:text-zinc-300">
-          <img :src="m.avatar || demoAvatar('友', '#a1a1aa')" alt="" class="w-7 h-7 rounded-full object-cover" />
+          <img :src="m.avatar || demoAvatar('友', '#a1a1aa')" alt="" class="w-7 h-7 rounded-[10px] object-cover" />
           <span>{{ m.name }}</span>
           <span class="ml-auto w-2 h-2 rounded-full"
             :class="m.online ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600'"></span>
@@ -56,7 +56,19 @@
             :class="isMine(m) ? 'justify-end' : 'justify-start'">
             <div class="max-w-[70%] rounded-[10px] px-3 py-2 text-sm"
               :class="isMine(m) ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white' : 'bg-white/70 dark:bg-zinc-800/70 text-zinc-700 dark:text-zinc-200'">
-              <div class="whitespace-pre-wrap break-words">{{ m.content }}</div>
+              <!-- 图片消息：点击新窗口查看原图 -->
+              <a v-if="m.messageType === MessageType.Image && m.mediaUrl" :href="m.mediaUrl" target="_blank" rel="noopener" class="block">
+                <img :src="m.mediaUrl" alt="图片消息" class="max-w-[260px] max-h-[260px] rounded-[10px] object-cover" @error="hideImg" />
+              </a>
+              <!-- 文件消息：文件名 + 体积，点击下载 -->
+              <a v-else-if="m.messageType === MessageType.File && m.mediaUrl" :href="m.mediaUrl" target="_blank" rel="noopener" class="flex items-center gap-2 min-w-[150px]">
+                <svg aria-hidden="true" class="w-8 h-8 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span class="min-w-0">
+                  <span class="block truncate">{{ m.fileName || '文件' }}</span>
+                  <span class="block text-[11px] opacity-70">{{ formatSize(m.fileSize) }}</span>
+                </span>
+              </a>
+              <div v-else class="whitespace-pre-wrap break-words">{{ m.content }}</div>
               <div class="mt-1 flex items-center gap-2 text-[10px] opacity-70">
                 <span>{{ timeText(m.sentTime) }}</span>
                 <span v-if="isMine(m) && m.status === 0">发送中…</span>
@@ -69,13 +81,41 @@
         </template>
       </div>
 
-      <!-- 输入区 -->
+      <!-- 输入区：表情 / 图片 / 文件 + 文本 + 发送 -->
       <div class="border-t border-zinc-200/60 dark:border-zinc-700/60 p-3 flex items-end gap-2">
-        <textarea ref="draftBox" v-model="draft" rows="1" name="messageInput" aria-label="消息输入"
-          class="flex-1 resize-none rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3 py-2.5 text-sm outline-none max-h-[120px]"
-          placeholder="输入消息，Enter 发送，Shift+Enter 换行" @keydown.enter.exact.prevent="onEnter" @input="onInput"></textarea>
+        <!-- 表情：弹出面板，插入到光标处 -->
+        <div class="relative shrink-0">
+          <button
+            class="w-10 h-10 rounded-[10px] flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors"
+            title="表情" aria-label="表情" @click="emojiOpen = !emojiOpen">
+            <svg aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </button>
+          <div v-if="emojiOpen" class="fixed inset-0 z-[60]" @click="emojiOpen = false"></div>
+          <div v-if="emojiOpen" class="absolute bottom-full left-0 mb-2 w-[272px] glass-card p-2 grid grid-cols-8 gap-0.5 z-[70]">
+            <button v-for="e in EMOJIS" :key="e" class="h-8 rounded-[10px] text-lg leading-none hover:bg-white/70 dark:hover:bg-zinc-800/70 transition-colors" @click="insertEmoji(e)">{{ e }}</button>
+          </div>
+        </div>
+        <!-- 图片：选择后上传并发送图片消息 -->
         <button
-          class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium shrink-0"
+          class="w-10 h-10 rounded-[10px] flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-40 shrink-0"
+          title="图片" aria-label="图片" :disabled="uploading" @click="pickImage">
+          <svg aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        </button>
+        <!-- 文件：选择后上传并发送文件消息 -->
+        <button
+          class="w-10 h-10 rounded-[10px] flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-40 shrink-0"
+          title="文件" aria-label="文件" :disabled="uploading" @click="pickFile">
+          <svg aria-hidden="true" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <input ref="imageInput" type="file" accept="image/*" class="hidden" @change="onImagePicked" />
+        <input ref="fileInput" type="file" class="hidden" @change="onFilePicked" />
+
+        <textarea ref="draftBox" v-model="draft" rows="1" name="messageInput" aria-label="消息输入"
+          class="flex-1 resize-none rounded-[10px] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3 py-2.5 text-sm outline-none max-h-[120px]"
+          placeholder="输入消息，Enter 发送，Shift+Enter 换行" @keydown.enter.exact.prevent="onEnter" @input="onInput"></textarea>
+        <span v-if="uploading" class="text-xs text-zinc-400 shrink-0 pb-2.5">上传中…</span>
+        <button
+          class="h-10 px-4 rounded-[10px] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium shrink-0 disabled:opacity-50"
           :disabled="!draft.trim() || sending" @click="send">发送</button>
       </div>
     </template>
@@ -90,6 +130,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { useChatStore } from '@/stores/chat'
 import { useToastStore } from '@/stores/toast'
 import { useCallStore } from '@/stores/call'
+import { uploadImage } from '@/api/publish'
+import { uploadChatFile, MessageType } from '@/api/chat'
+import { unwrap } from '@/utils/response'
+import { formatSize } from '@/utils/format'
 import ChatGroupDialogs from '@/components/chat/ChatGroupDialogs.vue'
 
 const chat = useChatStore()
@@ -103,6 +147,14 @@ const sending = ref(false)
 const msgBox = ref<HTMLElement | null>(null)
 const draftBox = ref<HTMLTextAreaElement | null>(null)
 const memberOpen = ref(false)
+const emojiOpen = ref(false)
+const uploading = ref(false)
+const imageInput = ref<HTMLInputElement | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024
+const MAX_FILE_SIZE = 50 * 1024 * 1024
+// 表情面板：常用表情，插入到输入框光标处
+const EMOJIS: string[] = ['😀','😄','😁','😆','😅','😂','🙂','😉','😊','😍','😘','😜','🤗','🤔','😐','😴','😢','😭','😡','🥺','👍','👌','🙏','👏','💪','🎉','🔥','❤️','💡','🌟','☕','🍔','🍺','🌈','✅','❌','⏰','📌','🚀','🎁']
 let typingTimer: ReturnType<typeof setTimeout> | null = null
 let scrollLock = false
 
@@ -173,6 +225,102 @@ async function send() {
   } finally {
     sending.value = false
   }
+}
+
+/** 打开图片选择器（上传中不可重复触发） */
+function pickImage(): void {
+  if (!uploading.value) imageInput.value?.click()
+}
+
+/** 打开文件选择器（上传中不可重复触发） */
+function pickFile(): void {
+  if (!uploading.value) fileInput.value?.click()
+}
+
+/** 在输入框光标处插入表情（无光标时追加到末尾） */
+function insertEmoji(emoji: string): void {
+  const el = draftBox.value
+  if (!el) {
+    draft.value += emoji
+    return
+  }
+  const start = el.selectionStart ?? draft.value.length
+  const end = el.selectionEnd ?? start
+  draft.value = draft.value.slice(0, start) + emoji + draft.value.slice(end)
+  nextTick(() => {
+    const pos = start + emoji.length
+    el.focus()
+    el.setSelectionRange(pos, pos)
+    autoGrow(el)
+  })
+}
+
+/** 上传附件换取 FileDev 文件 ID 与可访问地址（图片走 upload-image，其余走 upload） */
+async function uploadAttachment(file: File): Promise<{ fileId: string; url: string }> {
+  const isImage = file.type.startsWith('image/')
+  const res = isImage ? await uploadImage(file, 'chat-image') : await uploadChatFile(file)
+  const data = unwrap(res) || {}
+  const fileId = data.fileId || data.file_id || ''
+  if (!fileId) throw new Error('上传未返回文件ID')
+  return { fileId, url: data.fileUri || data.file_url || '' }
+}
+
+/** 选择图片 → 上传 → 发送图片消息 */
+async function onImagePicked(e: Event): Promise<void> {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = ''
+  if (!file || !chat.activeSessionId) return
+  if (file.size > MAX_IMAGE_SIZE) {
+    toast.push('图片不能超过 10MB', 'error')
+    return
+  }
+  uploading.value = true
+  try {
+    const { fileId, url } = await uploadAttachment(file)
+    await chat.sendMedia(chat.activeSessionId, {
+      messageType: MessageType.Image,
+      fileId,
+      localUrl: url || URL.createObjectURL(file)
+    })
+    scrollToBottom(true)
+  } catch (err) {
+    toast.push('图片发送失败：' + ((err as Error).message || '请重试'), 'error')
+  } finally {
+    uploading.value = false
+  }
+}
+
+/** 选择文件 → 上传 → 发送文件消息 */
+async function onFilePicked(e: Event): Promise<void> {
+  const el = e.target as HTMLInputElement
+  const file = el.files && el.files[0]
+  el.value = ''
+  if (!file || !chat.activeSessionId) return
+  if (file.size > MAX_FILE_SIZE) {
+    toast.push('文件不能超过 50MB', 'error')
+    return
+  }
+  uploading.value = true
+  try {
+    const { fileId, url } = await uploadAttachment(file)
+    await chat.sendMedia(chat.activeSessionId, {
+      messageType: MessageType.File,
+      fileId,
+      localUrl: url || URL.createObjectURL(file),
+      fileName: file.name,
+      fileSize: file.size
+    })
+    scrollToBottom(true)
+  } catch (err) {
+    toast.push('文件发送失败：' + ((err as Error).message || '请重试'), 'error')
+  } finally {
+    uploading.value = false
+  }
+}
+
+function hideImg(e: Event): void {
+  (e.target as HTMLElement).style.visibility = 'hidden'
 }
 
 async function retryMessage(m: any) {
