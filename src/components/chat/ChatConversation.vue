@@ -34,7 +34,47 @@
         <button v-if="active && active.groupId"
           class="h-8 px-3 rounded-[5%] text-xs bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300"
           @click="memberOpen = !memberOpen">成员</button>
+        <!-- 进行中的房间入口（群组） -->
+        <button v-if="active && active.groupId"
+          class="relative h-8 px-3 rounded-[5%] text-xs bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
+          title="进行中的语音/视频房间" aria-label="进行中的房间" @click="roomOpen = true">
+          房间
+          <span v-if="rooms.length"
+            class="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] flex items-center justify-center">
+            {{ rooms.length }}
+          </span>
+        </button>
       </div>
+
+      <!-- 进行中的房间快捷条（群组） -->
+      <div v-if="active && active.groupId && rooms.length"
+        class="px-5 py-2 border-b border-zinc-200/60 dark:border-zinc-700/60 flex items-center gap-2 overflow-x-auto overscroll-contain">
+        <button v-for="r in rooms" :key="r.callId"
+          class="shrink-0 h-7 px-3 rounded-full bg-white/60 dark:bg-zinc-800/60 text-xs text-zinc-600 dark:text-zinc-300 flex items-center gap-1.5 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
+          :title="r.type === 'Video' ? '视频房' : '语音房' + (r.requiresPassword ? '（需密码）' : '')"
+          @click="joinRoom(r)">
+          {{ r.type === 'Video' ? '📹' : '🎤' }} {{ r.type === 'Video' ? '视频' : '语音' }}房
+          <span class="text-[10px] opacity-70">{{ (r.joinedMembers || []).length }}人</span>
+          <span v-if="r.requiresPassword" class="text-[10px] opacity-70">🔒</span>
+        </button>
+      </div>
+
+      <!-- 发起邀请对话框 -->
+      <CallInviteDialog
+        v-if="inviteOpen && active"
+        :session-id="active.sessionId"
+        :type="inviteType"
+        :members="inviteMembers"
+        @close="inviteOpen = false"
+      />
+      <!-- 房间列表对话框 -->
+      <RoomJoinDialog
+        v-if="roomOpen && active"
+        :session-id="active.sessionId"
+        :rooms="rooms"
+        @close="roomOpen = false"
+        @refresh="refreshRooms"
+      />
 
       <!-- 群成员下拉 -->
       <div v-if="memberOpen"
@@ -52,29 +92,36 @@
       <div ref="msgBox" class="flex-1 overflow-y-auto px-5 py-4 min-h-0 space-y-3" @scroll="onScroll">
         <div v-if="!active" class="py-24 text-center text-sm text-zinc-400">选择一个会话开始聊天</div>
         <template v-else>
-          <div v-for="m in activeMessages" :key="m.messageId" class="flex"
+          <div v-for="m in activeMessages" :key="m.messageId" class="flex items-start gap-2.5"
             :class="isMine(m) ? 'justify-end' : 'justify-start'">
-            <div class="max-w-[70%] rounded-[10px] px-3 py-2 text-sm"
-              :class="isMine(m) ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white' : 'bg-white/70 dark:bg-zinc-800/70 text-zinc-700 dark:text-zinc-200'">
-              <!-- 图片消息：点击新窗口查看原图 -->
-              <a v-if="m.messageType === MessageType.Image && m.mediaUrl" :href="m.mediaUrl" target="_blank" rel="noopener" class="block">
-                <img :src="m.mediaUrl" alt="图片消息" class="max-w-[260px] max-h-[260px] rounded-[10px] object-cover" @error="hideImg" />
-              </a>
-              <!-- 文件消息：文件名 + 体积，点击下载 -->
-              <a v-else-if="m.messageType === MessageType.File && m.mediaUrl" :href="m.mediaUrl" target="_blank" rel="noopener" class="flex items-center gap-2 min-w-[150px]">
-                <svg aria-hidden="true" class="w-8 h-8 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                <span class="min-w-0">
-                  <span class="block truncate">{{ m.fileName || '文件' }}</span>
-                  <span class="block text-[11px] opacity-70">{{ formatSize(m.fileSize) }}</span>
-                </span>
-              </a>
-              <div v-else class="whitespace-pre-wrap break-words">{{ m.content }}</div>
-              <div class="mt-1 flex items-center gap-2 text-[10px] opacity-70">
-                <span>{{ timeText(m.sentTime) }}</span>
-                <span v-if="isMine(m) && m.status === 0">发送中…</span>
-                <span v-else-if="isMine(m) && m.status === -1" class="text-red-200 cursor-pointer"
-                  @click="retryMessage(m)" role="button" tabindex="0" @keydown.enter.prevent="retryMessage(m)"
-                  @keydown.space.prevent="retryMessage(m)">发送失败，点击重试</span>
+            <!-- 发送者头像（自己的排到气泡右侧） -->
+            <img :src="senderAvatar(m)" alt=""
+              class="w-8 h-8 rounded-[10px] object-cover border border-white/60 dark:border-white/10 shrink-0"
+              :class="isMine(m) ? 'order-2' : ''" @error="hideImg" />
+            <div class="min-w-0 max-w-[70%] flex flex-col" :class="isMine(m) ? 'items-end' : 'items-start'">
+              <span class="text-xs text-zinc-400 px-1 pb-0.5 truncate max-w-[220px]">{{ senderName(m) }}</span>
+              <div class="rounded-[10px] px-3 py-2 text-sm"
+                :class="isMine(m) ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white' : 'bg-white/70 dark:bg-zinc-800/70 text-zinc-700 dark:text-zinc-200'">
+                <!-- 图片消息：点击新窗口查看原图 -->
+                <a v-if="m.messageType === MessageType.Image && m.mediaUrl" :href="m.mediaUrl" target="_blank" rel="noopener" class="block">
+                  <img :src="m.mediaUrl" alt="图片消息" class="max-w-[260px] max-h-[260px] rounded-[10px] object-cover" @error="hideImg" />
+                </a>
+                <!-- 文件消息：文件名 + 体积，点击下载 -->
+                <a v-else-if="m.messageType === MessageType.File && m.mediaUrl" :href="m.mediaUrl" target="_blank" rel="noopener" class="flex items-center gap-2 min-w-[150px]">
+                  <svg aria-hidden="true" class="w-8 h-8 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <span class="min-w-0">
+                    <span class="block truncate">{{ m.fileName || '文件' }}</span>
+                    <span class="block text-[11px] opacity-70">{{ formatSize(m.fileSize) }}</span>
+                  </span>
+                </a>
+                <div v-else class="whitespace-pre-wrap break-words">{{ m.content }}</div>
+                <div class="mt-1 flex items-center gap-2 text-[10px] opacity-70">
+                  <span>{{ timeText(m.sentTime) }}</span>
+                  <span v-if="isMine(m) && m.status === 0">发送中…</span>
+                  <span v-else-if="isMine(m) && m.status === -1" class="text-red-200 cursor-pointer"
+                    @click="retryMessage(m)" role="button" tabindex="0" @keydown.enter.prevent="retryMessage(m)"
+                    @keydown.space.prevent="retryMessage(m)">发送失败，点击重试</span>
+                </div>
               </div>
             </div>
           </div>
@@ -128,15 +175,19 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { charAvatar as demoAvatar } from '@/utils/avatar'
 import { useRoute, useRouter } from 'vue-router'
 import { useChatStore } from '@/stores/chat'
+import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
-import { useCallStore } from '@/stores/call'
+import { useCallStore, type CallPayload } from '@/stores/call'
 import { uploadImage } from '@/api/publish'
 import { uploadChatFile, MessageType } from '@/api/chat'
 import { unwrap } from '@/utils/response'
 import { formatSize } from '@/utils/format'
 import ChatGroupDialogs from '@/components/chat/ChatGroupDialogs.vue'
+import CallInviteDialog from '@/components/chat/CallInviteDialog.vue'
+import RoomJoinDialog from '@/components/chat/RoomJoinDialog.vue'
 
 const chat = useChatStore()
+const auth = useAuthStore()
 const toast = useToastStore()
 const call = useCallStore()
 const route = useRoute()
@@ -151,6 +202,11 @@ const emojiOpen = ref(false)
 const uploading = ref(false)
 const imageInput = ref<HTMLInputElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+// 群组房间：邀请对话框 + 房间列表
+const inviteOpen = ref(false)
+const inviteType = ref<'Audio' | 'Video'>('Audio')
+const roomOpen = ref(false)
+const rooms = ref<CallPayload[]>([])
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024
 const MAX_FILE_SIZE = 50 * 1024 * 1024
 // 表情面板：常用表情，插入到输入框光标处
@@ -189,15 +245,74 @@ const members = computed(() => {
 // 可通话会话：排除通知会话（notifyGuid）；后端限制私聊/群聊/频道可发起通话
 const canCall = computed(() => !!active.value && !active.value.notifyGuid)
 
-function startCall(type: string) {
+// 邀请对话框成员：群组成员（排除自己）
+const inviteMembers = computed(() => members.value.filter((m) => m.id !== String(myId.value)))
+
+function startCall(type: 'Audio' | 'Video') {
   if (!active.value) return
+  if (active.value.groupId) {
+    // 群组：打开邀请对话框（选择成员 + 可选密码）
+    inviteType.value = type
+    inviteOpen.value = true
+    return
+  }
+  // 私聊：直接发起即时呼叫
   call.startCall(active.value.sessionId, type)
+}
+
+/** 刷新会话下的活跃房间（群组） */
+async function refreshRooms() {
+  const a = active.value
+  if (!a || !a.groupId) {
+    rooms.value = []
+    return
+  }
+  rooms.value = await call.getSessionRooms(a.sessionId)
+}
+
+/** 快捷条加入房间：需密码则打开房间对话框，否则直接加入 */
+async function joinRoom(r: CallPayload) {
+  if (r.requiresPassword) {
+    roomOpen.value = true
+    return
+  }
+  await call.joinCall(r.callId)
 }
 
 
 function isMine(m: any): boolean {
   return String(m.senderId) === String(myId.value)
 }
+
+/** 按发送者 id 查好友（好友接口不返回头像，仅作昵称/头像的兜底来源） */
+function friendOf(senderId: any) {
+  return chat.friends.find(f => String(f.friendId) === String(senderId))
+}
+
+/** 发送者昵称：优先用户资料缓存，其次好友昵称，最后自己用登录名、对方用占位名 */
+function senderName(m: any): string {
+  const p = chat.profiles[String(m.senderId)]
+  if (p && p.name) return p.name
+  const f = friendOf(m.senderId)
+  if (f && f.friendName) return String(f.friendName)
+  return isMine(m) ? (auth.user && auth.user.name) || '我' : '用户'
+}
+
+/** 发送者头像：优先用户资料缓存，其次好友头像，最后按昵称首字生成矢量头像 */
+function senderAvatar(m: any): string {
+  const p = chat.profiles[String(m.senderId)]
+  if (p && p.avatar) return p.avatar
+  const f = friendOf(m.senderId)
+  if (f && typeof f.friendAvatar === 'string' && f.friendAvatar) return f.friendAvatar
+  return demoAvatar(senderName(m).charAt(0), isMine(m) ? '#f59e0b' : '#a1a1aa')
+}
+
+/** 补取当前会话出现的发送者资料（已缓存的 id 由 store 跳过，不会重复请求） */
+function loadSenderProfiles(): void {
+  const ids = activeMessages.value.map(m => String(m.senderId || '')).filter(Boolean)
+  if (ids.length) chat.loadProfiles(ids)
+}
+
 function timeText(t: any): string {
   const d = new Date(t)
   const now = new Date()
@@ -387,13 +502,18 @@ function onScroll() {
   if (msgBox.value && msgBox.value.scrollTop <= 40) loadOlder()
 }
 
-watch(() => activeMessages.value.length, () => scrollToBottom())
+watch(() => activeMessages.value.length, () => {
+  scrollToBottom()
+  loadSenderProfiles()
+})
 watch(() => chat.activeSessionId, async (id) => {
   if (id) {
     await chat.openSession(id)
     chat.clearUnread(id)
     await chat.markSessionRead(id).catch(() => { })
+    loadSenderProfiles()
     scrollToBottom(true)
+    await refreshRooms()
   }
 })
 watch(() => route.params.sessionId, async (id) => {

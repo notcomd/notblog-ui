@@ -8,14 +8,24 @@
       </div>
       <div class="text-center">
         <p class="text-xl font-semibold text-white">{{ peerName }}</p>
-        <p class="mt-1 text-sm text-zinc-400">{{ typeLabel }}通话邀请…</p>
+        <p class="mt-1 text-sm text-zinc-400">{{ typeLabel }}通话邀请{{ call.requiresPassword ? '（需密码）' : '' }}…</p>
+      </div>
+      <!-- 房间入会密码 -->
+      <div v-if="call.requiresPassword" class="flex flex-col items-center gap-2 w-64">
+        <input
+          v-model="incomingPassword"
+          type="password"
+          placeholder="输入入会密码"
+          class="w-full h-11 rounded-xl bg-white/10 text-white text-sm placeholder:text-zinc-500 px-4 outline-none focus:ring-2 focus:ring-emerald-500/60"
+          @keyup.enter="doAccept"
+        />
       </div>
       <div class="flex gap-6">
         <button class="w-16 h-16 rounded-full bg-red-500/90 text-white flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-transform" @click="call.rejectCall()">
           <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
           <span class="text-[10px]">拒绝</span>
         </button>
-        <button class="w-16 h-16 rounded-full bg-emerald-500/90 text-white flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-transform" @click="call.acceptCall()">
+        <button class="w-16 h-16 rounded-full bg-emerald-500/90 text-white flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-transform" @click="doAccept">
           <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
           <span class="text-[10px]">接听</span>
         </button>
@@ -39,6 +49,21 @@
 
     <!-- ===== 通话中 ===== -->
     <div v-else-if="call.status === 'active'" class="w-full h-full relative flex items-center justify-center">
+      <!-- 常驻房间徽标 + 关闭房间（仅创建者） -->
+      <div v-if="isRoom" class="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-3">
+        <span class="px-3 h-8 rounded-full bg-white/10 text-white text-xs flex items-center gap-2">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3a4 4 0 0 0-4 4v3H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1V7a4 4 0 0 0-4-4Zm-2 7V7a2 2 0 1 1 4 0v3h-4Z"/></svg>
+          {{ typeLabel }}房 · 常驻（{{ call.joinedMembers.length }} 人在线）{{ call.requiresPassword ? '· 密码保护' : '' }}
+        </span>
+        <button
+          v-if="isRoomCreator"
+          class="px-3 h-8 rounded-full bg-red-500/90 text-white text-xs flex items-center gap-1.5 hover:bg-red-500 transition-colors"
+          title="关闭房间（全员退出）" aria-label="关闭房间"
+          @click="call.closeRoom()"
+        >
+          关闭房间
+        </button>
+      </div>
       <!-- 远端视频（视频通话） -->
       <div v-if="hasVideo && remoteVideos.length" class="w-full h-full p-6 grid gap-3" :class="remoteVideos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'">
         <video
@@ -118,6 +143,7 @@ const chat = useChatStore()
 
 const muted = ref(false)
 const cameraOff = ref(false)
+const incomingPassword = ref('')
 const startTime = ref(Date.now())
 const durationText = ref('00:00')
 let timer: ReturnType<typeof setInterval> | null = null
@@ -128,7 +154,8 @@ const END_REASON_TEXT: Record<number, string> = {
   2: '无人接听，通话已结束',
   3: '所有成员已离开',
   4: '对方已挂断',
-  5: '通话异常结束'
+  5: '通话异常结束',
+  6: '房间已被创建者关闭'
 }
 
 const session = computed(() =>
@@ -149,6 +176,15 @@ const typeLabel = computed(() => (call.type === 'Video' ? '视频' : '语音'))
 const hasVideo = computed(() => call.type === 'Video')
 const remoteVideos = computed(() => call.remoteStreams)
 const endReasonText = computed(() => END_REASON_TEXT[call.endReason] || '通话已结束')
+// 常驻房间（群组通话）：显示房间徽标；创建者可关闭房间
+const isRoom = computed(() => call.roomKind === 'Room')
+const isRoomCreator = computed(() => !!call.callerId && !!call.myId && String(call.callerId) === String(call.myId))
+
+// 接听（带密码）
+function doAccept() {
+  call.acceptCall(incomingPassword.value || undefined)
+  incomingPassword.value = ''
+}
 
 function toggleMute() {
   muted.value = !muted.value

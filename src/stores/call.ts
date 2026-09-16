@@ -19,16 +19,21 @@ import { getIceServers } from '@/utils/rtcConfig';
 
 type CallStatus = 'idle' | 'ringing' | 'incoming' | 'active' | 'ended';
 type CallType = 'Audio' | 'Video';
+type CallRoomKind = 'Instant' | 'Room';
 
-interface CallPayload {
+export interface CallPayload {
   callId: string;
   sessionId: string;
   type: CallType;
   callerId: string;
+  roomKind?: CallRoomKind;
+  status?: string;
   participants?: string[];
+  invitedMembers?: string[];
   joinedMembers?: string[];
   busyUsers?: string[];
   offlineUsers?: string[];
+  requiresPassword?: boolean;
 }
 
 interface SignalPayload {
@@ -47,11 +52,14 @@ interface CallState {
   callId: string | null;
   sessionId: string | null;
   type: CallType | null; // 'Audio' | 'Video'
+  roomKind: CallRoomKind | null; // 'Instant' 即时呼叫 | 'Room' 常驻房间
   callerId: string | null;
   participants: string[];
+  invitedMembers: string[];
   joinedMembers: string[];
   busyUsers: string[];
   offlineUsers: string[];
+  requiresPassword: boolean; // 房间是否需密码入会
   endReason: string; // 结束原因（展示用）
   localStream: MediaStream | null;
   remoteStreams: Record<string, MediaStream>; // userId -> MediaStream
@@ -69,11 +77,14 @@ export const useCallStore = defineStore('call', {
     callId: null,
     sessionId: null,
     type: null, // 'Audio' | 'Video'
+    roomKind: null, // 'Instant' 即时呼叫 | 'Room' 常驻房间
     callerId: null,
     participants: [],
+    invitedMembers: [],
     joinedMembers: [],
     busyUsers: [],
     offlineUsers: [],
+    requiresPassword: false,
     endReason: '', // 结束原因（展示用）
     localStream: null,
     remoteStreams: reactive({}), // userId -> MediaStream
@@ -83,7 +94,13 @@ export const useCallStore = defineStore('call', {
   actions: {
     // ---------- 呼叫控制 ----------
 
-    async startCall(sessionId: string, type: CallType): Promise<void> {
+    /**
+     * 发起通话 / 创建房间。
+     * 群组会话为常驻房间（创建即入会，result.status === 'Active'）；私聊为即时呼叫（响铃）。
+     * @param opts.memberIds 被邀请成员（群组房间；为空 = 邀请全部）
+     * @param opts.password 入会密码（可选，仅群组房间）
+     */
+    async startCall(sessionId: string, type: CallType, opts?: { memberIds?: string[]; password?: string }): Promise<void> {
       if (this.status === 'active' || this.status === 'ringing') {
         useToastStore().push('已有通话进行中', 'error');
         return;
@@ -92,7 +109,19 @@ export const useCallStore = defineStore('call', {
         this.myId = (useAuthStore().user && useAuthStore().user.id) || '';
         const conn = await connectCallSignalR();
         this.bindEvents(conn);
-        const result = (await conn.invoke('StartCall', sessionId, type)) as CallPayload;
+        const result = (await conn.invoke(
+          'StartCall',
+          sessionId,
+          type,
+          opts?.memberIds?.length ? opts.memberIds : null,
+          opts?.password ?? null
+        )) as CallPayload;
+        this.roomKind = result.roomKind || 'Instant';
+        if (result.status === 'Active') {
+          // 常驻房间：创建即入会
+          await this.enterActive(result);
+          return;
+        }
         this.status = 'ringing';
         this.callId = result.callId;
         this.sessionId = sessionId;
@@ -111,19 +140,71 @@ export const useCallStore = defineStore('call', {
       }
     },
 
-    async acceptCall(): Promise<void> {
+    /**
+     * 接听来电（房间模式需密码时须传 password）。
+     * 密码错误保留来电状态（可重试），其他错误复位。
+     */
+    async acceptCall(password?: string): Promise<void> {
       if (!this.callId) return;
       try {
         const conn = await connectCallSignalR();
-        const call = (await conn.invoke('AcceptCall', this.callId)) as CallPayload | null;
+        const call = (await conn.invoke('AcceptCall', this.callId, password ?? null)) as CallPayload | null;
         if (!call) {
           this.reset();
           return;
         }
         await this.enterActive(call);
       } catch (e) {
-        useToastStore().push(`接听失败: ${(e as Error).message || '请稍后重试'}`, 'error');
-        this.reset();
+        const msg = (e as Error).message || '';
+        useToastStore().push(`接听失败: ${msg}`, 'error');
+        if (!/密码错误/.test(msg)) this.reset();
+      }
+    },
+
+    /**
+     * 加入常驻房间（自由加入 / 断线重连；房间需密码时须传 password）。
+     */
+    async joinCall(callId: string, password?: string): Promise<void> {
+      if (this.status === 'active' || this.status === 'ringing') {
+        useToastStore().push('已有通话进行中', 'error');
+        return;
+      }
+      try {
+        this.myId = (useAuthStore().user && useAuthStore().user.id) || '';
+        const conn = await connectCallSignalR();
+        this.bindEvents(conn);
+        const call = (await conn.invoke('JoinCall', callId, password ?? null)) as CallPayload | null;
+        if (!call) return;
+        await this.enterActive(call);
+      } catch (e) {
+        useToastStore().push(`加入失败: ${(e as Error).message || '请稍后重试'}`, 'error');
+      }
+    },
+
+    /**
+     * 关闭常驻房间（仅创建者）。房间内全部成员收到 CallEnded（RoomClosed）。
+     */
+    async closeRoom(): Promise<void> {
+      if (!this.callId) return;
+      try {
+        const conn = await connectCallSignalR();
+        await conn.invoke('CloseRoom', this.callId);
+      } catch (e) {
+        useToastStore().push(`关闭房间失败: ${(e as Error).message || '请稍后重试'}`, 'error');
+      }
+    },
+
+    /**
+     * 查询会话下的全部活跃房间（供群组成员自由加入）。
+     */
+    async getSessionRooms(sessionId: string): Promise<CallPayload[]> {
+      try {
+        const conn = await connectCallSignalR();
+        this.bindEvents(conn);
+        return (await conn.invoke('GetSessionRooms', sessionId)) as CallPayload[];
+      } catch (e) {
+        console.error('查询会话房间失败:', e);
+        return [];
       }
     },
 
@@ -173,9 +254,11 @@ export const useCallStore = defineStore('call', {
         this.callId = call.callId;
         this.sessionId = call.sessionId;
         this.type = call.type;
+        this.roomKind = call.roomKind || 'Instant';
         this.callerId = call.callerId;
         this.participants = call.participants || [];
         this.joinedMembers = call.joinedMembers || [];
+        this.requiresPassword = !!call.requiresPassword;
       });
 
       // 通话建立（呼叫方/已接通成员收到）→ 等新加入者 offer
@@ -184,6 +267,7 @@ export const useCallStore = defineStore('call', {
         this.callId = call.callId;
         this.sessionId = call.sessionId;
         this.type = call.type;
+        this.roomKind = call.roomKind || 'Instant';
         this.callerId = call.callerId;
         this.participants = call.participants || [];
         this.joinedMembers = call.joinedMembers || [];
@@ -237,6 +321,7 @@ export const useCallStore = defineStore('call', {
       this.callId = call.callId;
       this.sessionId = call.sessionId;
       this.type = call.type;
+      this.roomKind = call.roomKind || this.roomKind || 'Instant';
       this.callerId = call.callerId;
       this.participants = call.participants || [];
       this.joinedMembers = call.joinedMembers || [];
@@ -398,11 +483,14 @@ export const useCallStore = defineStore('call', {
       this.callId = null;
       this.sessionId = null;
       this.type = null;
+      this.roomKind = null;
       this.callerId = null;
       this.participants = [];
+      this.invitedMembers = [];
       this.joinedMembers = [];
       this.busyUsers = [];
       this.offlineUsers = [];
+      this.requiresPassword = false;
       this.endReason = '';
       this.localStream = null;
       Object.keys(this.remoteStreams).forEach((k) => delete this.remoteStreams[k]);
