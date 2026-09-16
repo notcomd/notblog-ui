@@ -7,8 +7,10 @@ import {
   getFriends,
   getGroups,
   getUnreadCount,
+  getUserProfile,
   MessageType
 } from '@/api/chat';
+import { unwrap } from '@/utils/response';
 import { connectSignalR, isConnected } from '@/socket/signalr';
 
 interface SessionDto {
@@ -27,6 +29,12 @@ interface FriendDto {
   friendId: string;
   friendName?: string;
   [key: string]: unknown;
+}
+
+/** 用户资料（昵称/头像）：消息与好友接口都不返回，按 userId 从 UsersApi 补取的读侧缓存项 */
+interface ChatUserProfile {
+  name: string;
+  avatar: string;
 }
 
 interface MessageDto {
@@ -66,6 +74,7 @@ export const useChatStore = defineStore('chat', () => {
   // { sessionId: 已加载页数 } —— 分页游标独立跟踪：
   // 旧实现用「数组长度 / 30 + 1」推算页码，SignalR 推送/去重/乐观消息改变数组长度后会拉错页 → 重复/漏消息
   const loadedPages = ref<Record<string, number>>({});
+  const profiles = ref<Record<string, ChatUserProfile>>({}); // { userId: { name, avatar } } 发送者资料缓存
 
   // ===== 会话 =====
   async function loadSessions(): Promise<void> {
@@ -119,6 +128,30 @@ export const useChatStore = defineStore('chat', () => {
     } catch (e) {
       /* 静默 */
     }
+  }
+
+  // ===== 用户资料 =====
+  /**
+   * 按需补取用户昵称/头像（消息列表逐条显示发送者头像所需）。
+   * 好友/会话/消息接口都不返回昵称与头像，故按 userId 走 GET /api/users/{userGuid}；
+   * 已缓存或已在途的 id 直接跳过（占位写入即视为「已查询」），
+   * 查询失败也保留空资料，避免渲染循环触发重复请求。
+   */
+  async function loadProfiles(userIds: string[]): Promise<void> {
+    const targets = [
+      ...new Set(userIds.map((id) => String(id || '')).filter((id) => id && !profiles.value[id]))
+    ];
+    await Promise.all(
+      targets.map(async (id) => {
+        profiles.value[id] = { name: '', avatar: '' };
+        try {
+          const d = unwrap(await getUserProfile(id)) || {};
+          profiles.value[id] = { name: d.nickName || d.userName || '', avatar: d.avatarUrl || '' };
+        } catch (e) {
+          /* 静默：调用方回退首字头像 */
+        }
+      })
+    );
   }
 
   // ===== 消息 =====
@@ -494,10 +527,12 @@ export const useChatStore = defineStore('chat', () => {
     connected,
     messageLoading,
     hasMoreMessages,
+    profiles,
     loadSessions,
     loadFriends,
     loadGroups,
     loadUnread,
+    loadProfiles,
     openSession,
     loadMessages,
     retryMessage,

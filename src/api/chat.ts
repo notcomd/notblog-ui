@@ -121,13 +121,20 @@ export function deleteMessage(messageId: string) {
   return service.delete(`/api/messages/${messageId}`);
 }
 
-// ==================== 用户查找（添加好友前置） ====================
+// ==================== 用户资料 / 查找 ====================
 
 // 查找用户：GET /api/users/lookup?keyword= -> ApiResponse<UserBriefDto[]>
 // keyword 为邮箱或昵称（后端仅精确匹配、忽略大小写，未命中返回空数组）
 // UserBriefDto { userGuid, userName, avatar }；限流命中返回 429
 export function lookupUsers(keyword: string) {
   return service.get('/api/users/lookup', { params: { keyword } });
+}
+
+// 用户公开资料：GET /api/users/{userGuid} -> ApiResponse<UserProfileDto>
+// UserProfileDto { userGuid, nickName, bio, avatarUrl, ... }；
+// 好友/会话/消息接口都不返回昵称与头像（friendAvatar 恒为 null），故按 id 逐个补取
+export function getUserProfile(userGuid: string) {
+  return service.get(`/api/users/${userGuid}`);
 }
 
 // ==================== 好友操作 ====================
