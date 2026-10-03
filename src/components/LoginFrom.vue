@@ -1,124 +1,54 @@
 <template>
   <div
+    ref="rootEl"
     class="qm-auth"
     :class="appClasses"
     role="region"
     aria-label="登入 MonoHub"
   >
-    <!-- ===== 叶片 SVG 精灵（隐藏；仅作 <use> 引用源，id 加 qm- 前缀避免全局冲突） ===== -->
-    <svg class="svg-leafs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-      <defs>
-        <filter id="qmLeafShadowA" x="0" y="11.42" width="141.121" height="116.457" filterUnits="userSpaceOnUse">
-          <feOffset input="SourceAlpha" />
-          <feGaussianBlur stdDeviation="2" result="b" />
-          <feFlood flood-opacity="0.102" />
-          <feComposite operator="in" in2="b" />
-          <feComposite in="SourceGraphic" />
-        </filter>
-        <filter id="qmLeafShadowB" x="30" y="5" width="150" height="140" filterUnits="userSpaceOnUse">
-          <feOffset input="SourceAlpha" />
-          <feGaussianBlur stdDeviation="5" result="d" />
-          <feFlood flood-opacity="0.102" />
-          <feComposite operator="in" in2="d" />
-          <feComposite in="SourceGraphic" />
-        </filter>
-      </defs>
-      <g id="qm-leafs" transform="translate(-744.034 -593.436)">
-        <path
-          d="M863.5,421.5s8.259,5.707,15.234,25.935"
-          transform="translate(156.156 66.187) rotate(16)"
-          fill="none"
-          stroke="var(--qm-leaf-stroke)"
-          stroke-linecap="round"
-          stroke-width="0.4"
-        />
-        <g transform="matrix(1, 0, 0, 1, 744.03, 593.44)" filter="url(#qmLeafShadowA)">
-          <path
-            d="M902.99,490.315s-43.333-18.667-50.49-50.667,10.49-31.667,10.49-31.667A314.915,314.915,0,0,1,895.5,411c16.5,2.5,69.5,37.5,81,70.5,3.829,10.989,7.49,22.815-7.176,29.815S902.99,490.315,902.99,490.315Z"
-            transform="translate(-844.79 -390.56)"
-            fill="var(--qm-leaf-1)"
-          />
-        </g>
-        <path
-          d="M863.5,421.5s12.557,3.337,25.522,21.57"
-          transform="translate(355.423 -110.67) rotate(32)"
-          fill="none"
-          stroke="var(--qm-leaf-stroke)"
-          stroke-linecap="round"
-          stroke-width="0.4"
-        />
-        <g transform="matrix(1, 0, 0, 1, 744.03, 593.44)" filter="url(#qmLeafShadowB)">
-          <path
-            d="M906.186,482.446A113.239,113.239,0,0,1,885.911,470c-5.977-4.556-11.973-10.782-16.832-16.173-12.146-13.478-10.038-42.395-5.407-45.119s27.019,5.924,27.019,5.924,30.8,14.016,39.021,25.114c16.177,21.847,23.864,43.4,14.867,49.079S908.19,483.261,906.186,482.446Z"
-            transform="translate(-701.6 -564.26) rotate(12.09)"
-            fill="var(--qm-leaf-2)"
-          />
-        </g>
-      </g>
-    </svg>
-
-    <!-- ===== 三片叶片：随屏幕状态换位 ===== -->
-    <div class="leafs" aria-hidden="true">
-      <div class="leaf leaf--1">
-        <svg xmlns="http://www.w3.org/2000/svg" width="176" height="152" viewBox="0 0 176 152">
-          <use href="#qm-leafs" />
-        </svg>
-      </div>
-      <div class="leaf leaf--2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="176" height="152" viewBox="0 0 176 152">
-          <use href="#qm-leafs" />
-        </svg>
-      </div>
-      <div class="leaf leaf--3">
-        <svg xmlns="http://www.w3.org/2000/svg" width="176" height="152" viewBox="0 0 176 152">
-          <use href="#qm-leafs" />
-        </svg>
-      </div>
-    </div>
-
-    <!-- ===== 第一屏：欢迎 ===== -->
-    <section class="screen first-screen">
-      <p class="number font-numeric">MONOHUB</p>
-      <h1 class="heading font-display">MonoHub</h1>
-      <p class="description">在这里，遇见同好，记录热爱。<br />登录后即可发布、收藏与交流。</p>
+    <!-- ===== 第一屏：欢迎（无卡片，内容直接浮于背景之上） ===== -->
+    <section
+      class="screen screen--intro"
+      :inert="screen !== 'intro' ? true : undefined"
+      :aria-hidden="screen !== 'intro'"
+    >
+      <p class="eyebrow font-numeric">MONOHUB</p>
+      <h1 class="display font-display">在这里，遇见同好</h1>
+      <p class="lede">记录热爱，分享灵感。<br />登录后即可发布、收藏与交流。</p>
       <button
         type="button"
-        class="btn-circle btn-pTSecond"
-        aria-label="前往登入"
+        class="cta btn-sheen"
         @click="goForm"
         @mouseenter="introHover = true"
         @mouseleave="introHover = false"
         @focus="introHover = true"
         @blur="introHover = false"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <span>开始登入</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M5 12h13M13 6l6 6-6 6" />
         </svg>
       </button>
     </section>
 
     <!-- ===== 第二屏：登入（单表单双通道） ===== -->
-    <section class="screen second-screen">
-      <button type="button" class="btn-circle btn-pTFirst" aria-label="返回欢迎页" @click="backToIntro">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <section
+      class="screen screen--form"
+      :inert="screen !== 'form' ? true : undefined"
+      :aria-hidden="screen !== 'form'"
+    >
+      <button type="button" class="back" @click="backToIntro">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M19 12H6M11 18l-6-6 6-6" />
         </svg>
+        返回
       </button>
 
-      <h1 class="heading font-display">登入</h1>
+      <h2 class="title font-display">登入</h2>
+      <p class="subtitle">用邮箱验证码或密码继续</p>
 
       <!-- 通道切换 -->
       <div class="tabs">
-        <button
-          type="button"
-          class="tab"
-          :class="{ 'tab--active': mode === 'password' }"
-          :aria-pressed="mode === 'password'"
-          :disabled="loading || submitted"
-          @click="switchMode('password')"
-        >
-          密码登入
-        </button>
         <button
           type="button"
           class="tab"
@@ -129,42 +59,52 @@
         >
           验证码登入
         </button>
+        <button
+          type="button"
+          class="tab"
+          :class="{ 'tab--active': mode === 'password' }"
+          :aria-pressed="mode === 'password'"
+          :disabled="loading || submitted"
+          @click="switchMode('password')"
+        >
+          密码登入
+        </button>
       </div>
 
       <form class="form" novalidate @submit.prevent="onSubmit">
         <!-- 邮箱 -->
-        <div class="form__field">
-          <label class="sr-only" for="qm-login-email">邮箱</label>
+        <div class="field">
+          <label class="field__label" for="qm-login-email">邮箱</label>
           <input
             id="qm-login-email"
             v-model="email"
-            class="form__input"
+            class="field__input"
             type="email"
             name="email"
             autocomplete="email"
-            placeholder="邮箱"
+            :aria-describedby="errors.email ? 'qm-email-error' : undefined"
             :disabled="loading || submitted"
           />
         </div>
-        <p v-if="errors.email" class="form__error">{{ errors.email }}</p>
+        <p v-if="errors.email" id="qm-email-error" class="error" role="alert">{{ errors.email }}</p>
 
         <!-- 密码登入 -->
         <template v-if="mode === 'password'">
-          <div class="form__field">
-            <label class="sr-only" for="qm-login-password">密码</label>
+          <div class="field">
+            <label class="field__label" for="qm-login-password">密码</label>
             <input
               id="qm-login-password"
               v-model="password"
-              class="form__input form__input--peek"
+              class="field__input field__input--peek"
               :type="showPassword ? 'text' : 'password'"
               name="password"
               autocomplete="current-password"
-              placeholder="密码"
+              :aria-describedby="errors.password ? 'qm-password-error' : undefined"
               :disabled="loading || submitted"
             />
             <button
               type="button"
-              class="form__peek"
+              class="peek"
               tabindex="-1"
               :aria-label="showPassword ? '隐藏密码' : '显示密码'"
               @click="showPassword = !showPassword"
@@ -179,48 +119,48 @@
               </svg>
             </button>
           </div>
-          <p v-if="errors.password" class="form__error">{{ errors.password }}</p>
+          <p v-if="errors.password" id="qm-password-error" class="error" role="alert">{{ errors.password }}</p>
 
-          <div class="form__row">
+          <div class="row">
             <label class="remember">
               <input v-model="rememberMe" type="checkbox" :disabled="loading || submitted" />
               <span>记住我</span>
             </label>
-            <button type="button" class="form__link" @click="onForgotPassword">忘记密码？</button>
+            <button type="button" class="link" @click="onForgotPassword">忘记密码？</button>
           </div>
         </template>
 
         <!-- 验证码登入（未注册邮箱自动注册） -->
         <template v-else>
-          <div class="form__field">
-            <label class="sr-only" for="qm-login-code">邮箱验证码</label>
+          <div class="field">
+            <label class="field__label" for="qm-login-code">邮箱验证码</label>
             <input
               id="qm-login-code"
               v-model="code"
-              class="form__input form__input--code"
+              class="field__input field__input--code"
               type="text"
               inputmode="text"
               maxlength="9"
               name="code"
               autocomplete="one-time-code"
-              placeholder="邮箱验证码"
+              :aria-describedby="errors.code ? 'qm-code-error' : undefined"
               :disabled="loading || submitted"
             />
             <button
               type="button"
-              class="form__code-btn"
+              class="send"
               :disabled="codeCountdown > 0 || loading || submitted"
               @click="handleSendCode"
             >
               {{ codeCountdown > 0 ? `${codeCountdown}s 后重发` : '获取验证码' }}
             </button>
           </div>
-          <p v-if="errors.code" class="form__error">{{ errors.code }}</p>
-          <p class="form__hint">未注册邮箱将自动注册，初始密码会发送到您的邮箱。</p>
+          <p v-if="errors.code" id="qm-code-error" class="error" role="alert">{{ errors.code }}</p>
+          <p class="hint">未注册邮箱将自动注册，初始密码会发送到您的邮箱。</p>
         </template>
 
         <div class="form__submit">
-          <button type="submit" class="btn-words btn-form" :disabled="loading || submitted">
+          <button type="submit" class="btn-form btn-sheen" :disabled="loading || submitted">
             <span class="btn-form__label">{{ loading ? '处理中' : mode === 'password' ? '登入' : '登入 / 注册' }}</span>
           </button>
           <div class="form__success" aria-live="polite">成功</div>
@@ -262,15 +202,21 @@
     </section>
 
     <!-- ===== 第三屏：欢迎回来 ===== -->
-    <section class="screen third-screen">
-      <h1 class="heading font-display">欢迎</h1>
-      <p class="description">{{ successText }}</p>
+    <section
+      class="screen screen--done"
+      :inert="screen !== 'welcome' ? true : undefined"
+      :aria-hidden="screen !== 'welcome'"
+    >
+      <div class="done-mark" aria-hidden="true">✓</div>
+      <h2 class="display font-display">欢迎回来</h2>
+      <p class="lede">{{ successText }}</p>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { animate, createTimeline, stagger } from 'animejs'
 import { login, sendEmailCode, oauthLoginInit } from '@/api/auth'
 import type { TokenResult } from '@/types'
 
@@ -297,7 +243,8 @@ const submitted = ref(false)
 const isNewUser = ref(false)
 
 // ==================== 表单状态 ====================
-const mode = ref<LoginMode>('password')
+// 默认通道为验证码登入（与标签页排序一致：验证码在前，密码在后）
+const mode = ref<LoginMode>('code')
 const email = ref('')
 const password = ref('')
 const code = ref('')
@@ -320,14 +267,13 @@ const formReady = computed<boolean>(() => {
   return mode.value === 'password' ? password.value.length > 0 : CODE_REGEX.test(code.value)
 })
 
-/** 卡片根节点的状态类：模板的动画全部由这些类驱动 */
+/** 根节点状态类：模板的动画全部由这些类驱动 */
 const appClasses = computed<Record<string, boolean>>(() => ({
   'on-btn-pTSecond': introHover.value,
   'second-screen-opened': screen.value !== 'intro',
   'third-screen-opened': screen.value === 'welcome',
   'form-ready': formReady.value,
-  'form-submitted': submitted.value,
-  'has-alert': errorMessage.value.length > 0
+  'form-submitted': submitted.value
 }))
 
 const successText = computed<string>(() =>
@@ -335,6 +281,187 @@ const successText = computed<string>(() =>
     ? '账号已创建，初始密码已发送至你的邮箱。'
     : '登录成功，正在进入部落…'
 )
+
+// ==================== 三屏过渡（anime.js） ====================
+// 三屏以绝对定位叠放，显示与否完全由 anime.js 写入行内 opacity/transform 控制
+// （CSS 只保留布局与 pointer-events，避免 CSS 过渡与 JS 动画抢同一批属性）
+const rootEl = ref<HTMLElement | null>(null)
+let running: { cancel: () => void }[] = []
+
+/** 各屏参与错峰入场的元素（选择器限定在屏内，避免跨屏误匹配） */
+const INTRO_ITEMS = '.screen--intro .eyebrow, .screen--intro .display, .screen--intro .lede, .screen--intro .cta'
+const FORM_ITEMS = '.screen--form .back, .screen--form .title, .screen--form .subtitle, .screen--form .tabs, .screen--form .form, .screen--form .divider, .screen--form .oauth'
+
+const reduceMotion = (): boolean =>
+  typeof window !== 'undefined'
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+const pick = (sel: string): HTMLElement | null =>
+  rootEl.value ? rootEl.value.querySelector<HTMLElement>(sel) : null
+
+const pickAll = (sel: string): HTMLElement[] =>
+  rootEl.value ? Array.from(rootEl.value.querySelectorAll<HTMLElement>(sel)) : []
+
+/** 静态落位（首帧初始化 / 减弱动效时替代动画）。
+    位移一律归零：隐藏屏若带向下位移会撑出可滚动溢出区域（入场 from 值由 anime.js 注入，无需预设偏移） */
+const place = (node: HTMLElement | null, visible: boolean): void => {
+  if (!node) return
+  node.style.opacity = visible ? '1' : '0'
+  node.style.transform = 'translateY(0px)'
+}
+
+/** 清空子元素的行内动画残留，交回给新的时间线 */
+const resetItems = (items: HTMLElement[]): void => {
+  items.forEach((n) => {
+    n.style.opacity = '1'
+    n.style.transform = 'none'
+  })
+}
+
+/** 播放前把子项同步压到透明。
+    anime.js 的 from 值要等该补间开始才写入，若子项此时是不透明 1，
+    会先以完整不透明度绘制（首屏闪一下、切换时先整块出现再跳回透明，观感像卡顿）。 */
+const hideItems = (items: HTMLElement[]): void => {
+  items.forEach((n) => {
+    n.style.opacity = '0'
+  })
+}
+
+const stopRunning = (): void => {
+  running.forEach((a) => a.cancel())
+  running = []
+}
+
+/** 第一屏入场：标题/说明/按钮自下而上错峰浮现 */
+const playIntroIn = (withScreen: boolean): void => {
+  const intro = pick('.screen--intro')
+  if (!intro) return
+  const items = pickAll(INTRO_ITEMS)
+
+  if (reduceMotion()) {
+    place(intro, true)
+    resetItems(items)
+    return
+  }
+
+  stopRunning()
+  hideItems(items)
+  if (!withScreen) {
+    if (!items.length) return
+    running = [animate(items, {
+      opacity: [0, 1],
+      translateY: [16, 0],
+      duration: 620,
+      delay: stagger(85),
+      ease: 'outQuart'
+    })]
+    return
+  }
+
+  const tl = createTimeline({ defaults: { ease: 'outQuart' } })
+  tl.add(intro, { opacity: [0, 1], translateY: [-12, 0], duration: 420 }, 0)
+  if (items.length) {
+    tl.add(items, { opacity: [0, 1], translateY: [16, 0], duration: 460, delay: stagger(70) }, 110)
+  }
+  running = [tl]
+}
+
+/** 第一屏 → 第二屏：欢迎屏上移退场，表单整屏滑入 + 子项错峰 */
+const playToForm = (): void => {
+  const intro = pick('.screen--intro')
+  const form = pick('.screen--form')
+  if (!intro || !form) return
+  const items = pickAll(FORM_ITEMS)
+
+  if (reduceMotion()) {
+    place(intro, false)
+    place(form, true)
+    resetItems(items)
+    return
+  }
+
+  stopRunning()
+  hideItems(items)
+  const tl = createTimeline({ defaults: { ease: 'outQuart' } })
+  tl.add(intro, { opacity: [1, 0], translateY: [0, -26], duration: 300, ease: 'inQuad' }, 0)
+    .add(form, { opacity: [0, 1], translateY: [26, 0], duration: 520 }, 130)
+  if (items.length) {
+    tl.add(items, { opacity: [0, 1], translateY: [16, 0], duration: 480, delay: stagger(50) }, 210)
+  }
+  running = [tl]
+}
+
+/** 第二屏 → 第一屏（返回）：表单下移退场，欢迎屏重新错峰浮现 */
+const playBackToIntro = (): void => {
+  const form = pick('.screen--form')
+  if (!form) return
+
+  if (reduceMotion()) {
+    place(form, false)
+    playIntroIn(true)
+    return
+  }
+
+  const intro = pick('.screen--intro')
+  const items = pickAll(INTRO_ITEMS)
+  stopRunning()
+  hideItems(items)
+  const tl = createTimeline({ defaults: { ease: 'outQuart' } })
+  tl.add(form, { opacity: [1, 0], translateY: [0, 24], duration: 280, ease: 'inQuad' }, 0)
+  // 退场结束后把位移归零：向下位移留在隐藏屏上会撑出多余的可滚动区域
+  tl.call(() => { if (form) form.style.transform = 'translateY(0px)' }, 300)
+  if (intro) tl.add(intro, { opacity: [0, 1], translateY: [-12, 0], duration: 400 }, 120)
+  if (items.length) {
+    tl.add(items, { opacity: [0, 1], translateY: [16, 0], duration: 440, delay: stagger(65) }, 190)
+  }
+  running = [tl]
+}
+
+/** 第二屏 → 第三屏：表单退场，勾选标记弹性放大，文案依次跟进 */
+const playToWelcome = (): void => {
+  const form = pick('.screen--form')
+  const done = pick('.screen--done')
+  if (!form || !done) return
+  const mark = pick('.screen--done .done-mark')
+  const title = pick('.screen--done .display')
+  const lede = pick('.screen--done .lede')
+
+  if (reduceMotion()) {
+    place(form, false)
+    place(done, true)
+    if (mark) {
+      mark.style.opacity = '1'
+      mark.style.transform = 'none'
+    }
+    resetItems([title, lede].filter((n): n is HTMLElement => !!n))
+    return
+  }
+
+  stopRunning()
+  hideItems([mark, title, lede].filter((n): n is HTMLElement => !!n))
+  const tl = createTimeline({ defaults: { ease: 'outQuart' } })
+  tl.add(form, { opacity: [1, 0], translateY: [0, -24], duration: 300, ease: 'inQuad' }, 0)
+    .add(done, { opacity: [0, 1], translateY: [18, 0], duration: 300 }, 150)
+  if (mark) tl.add(mark, { opacity: [0, 1], scale: [0.5, 1], duration: 720, ease: 'outBack' }, 210)
+  if (title) tl.add(title, { opacity: [0, 1], translateY: [18, 0], duration: 480 }, 320)
+  if (lede) tl.add(lede, { opacity: [0, 1], translateY: [14, 0], duration: 480 }, 410)
+  running = [tl]
+}
+
+// 屏幕切换驱动动画（首屏 'intro' 不触发，由 onMounted 单独播放入场）
+watch(screen, (next) => {
+  if (next === 'form') playToForm()
+  else if (next === 'welcome') playToWelcome()
+  else playBackToIntro()
+})
+
+onMounted(() => {
+  // 先落位再播动画：第二/第三屏预置为隐藏，第一屏内容错峰浮现
+  place(pick('.screen--intro'), true)
+  place(pick('.screen--form'), false)
+  place(pick('.screen--done'), false)
+  playIntroIn(false)
+})
 
 // ==================== 屏幕切换 ====================
 const goForm = (): void => {
@@ -508,6 +635,7 @@ const handleGoogleLogin = (): void => { void handleOAuthLogin('google') }
 
 // ==================== 清理 ====================
 onBeforeUnmount(() => {
+  stopRunning()
   if (codeTimer) clearInterval(codeTimer)
   if (welcomeTimer) clearTimeout(welcomeTimer)
   if (finishTimer) clearTimeout(finishTimer)
@@ -516,426 +644,408 @@ onBeforeUnmount(() => {
 
 <style scoped>
 /* ============================================================
-   MonoHub 登入卡片（改编自「创意动画登录注册 UI」模板）
-   结构：三屏卡片 + 三片叶 + 圆形按钮涟漪 + 下划线表单
-   配色：保留模板的自然叶片，主色替换为品牌暖琥珀
+   MonoHub 登入（极简无卡片）
+   内容直接浮于柔和背景之上：三屏交叉过渡 + 下划线表单 + 品牌暖琥珀
+   配色/字体/圆角均沿用全局设计系统（input.css 的品牌色板与字体类）
    ============================================================ */
 
-/* ===== 主题变量（浅色） ===== */
 .qm-auth {
-  --qm-paper-1: #fffdf7;
-  --qm-paper-2: #f7f3ea;
-  --qm-ink-1: #26261f;
-  --qm-ink-2: #6b6a60;
-  --qm-brand-ink: #b45309;
-  --qm-brand: #f59e0b;
-  --qm-brand-deep: #ea580c;
-  --qm-leaf-1: #34d399;
-  --qm-leaf-2: #10b981;
-  --qm-leaf-stroke: #047857;
-  --qm-line: #c9c3b6;
-  --qm-placeholder: #b3ab9c;
-  --qm-soft: #ece6da;
+  /* 浅色：深墨文字 + 加深的次级色，叠于奶白背景上均满足 WCAG AA */
+  --qm-fg: #27272a;
+  --qm-fg-muted: #52525b;
+  --qm-line: rgba(39, 39, 42, 0.24);
+  --qm-accent: #9a3412;
   --qm-danger: #dc2626;
-  --qm-cream: #fffbeb;
-  --qm-grad-brand: linear-gradient(to right bottom, var(--qm-brand), var(--qm-brand-deep));
-  --qm-grad-paper: linear-gradient(to right bottom, var(--qm-paper-1), var(--qm-paper-2));
+  --qm-soft: rgba(39, 39, 42, 0.08);
+  --qm-soft-hover: rgba(39, 39, 42, 0.14);
+  --qm-surface: rgba(255, 255, 255, 0.72);
+  --qm-surface-border: rgba(39, 39, 42, 0.14);
+  --qm-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   position: relative;
-  isolation: isolate;
-  width: min(360px, calc(100vw - 32px));
-  height: clamp(540px, calc(100vh - 32px), 640px);
-  border-radius: 22px;
-  overflow: hidden;
-  color: var(--qm-ink-1);
-  box-shadow:
-    0 34px 64px -24px rgba(24, 24, 27, 0.5),
-    0 14px 28px -14px rgba(24, 24, 27, 0.3);
+  /* 三屏用 grid 同格叠放（见 .screen），容器高度随当前屏内容自然增长，
+     校验错误等新增内容不会再溢出容器；min-height 仅保证矮内容时的视觉体量 */
+  display: grid;
+  width: min(400px, calc(100vw - 48px));
+  min-height: clamp(560px, calc(100vh - 200px), 620px);
+  color: var(--qm-fg);
 }
 
 html[data-theme='dark'] .qm-auth {
-  --qm-paper-1: #26262b;
-  --qm-paper-2: #1b1b1f;
-  --qm-ink-1: #f4f4f5;
-  --qm-ink-2: #a1a1aa;
-  --qm-brand-ink: #fbbf24;
-  --qm-line: #4b4b52;
-  --qm-placeholder: #71717a;
-  --qm-soft: #3a3a41;
+  --qm-fg: #fafafa;
+  --qm-fg-muted: #d4d4d8;
+  --qm-line: rgba(255, 255, 255, 0.3);
+  --qm-accent: #fbbf24;
   --qm-danger: #fca5a5;
-  --qm-grad-brand: linear-gradient(to right bottom, #f59e0b, #d97706);
-  box-shadow:
-    0 34px 64px -24px rgba(0, 0, 0, 0.75),
-    0 14px 28px -14px rgba(0, 0, 0, 0.55);
+  --qm-soft: rgba(255, 255, 255, 0.12);
+  --qm-soft-hover: rgba(255, 255, 255, 0.2);
+  --qm-surface: rgba(24, 24, 27, 0.55);
+  --qm-surface-border: rgba(255, 255, 255, 0.16);
 }
 
-/* ===== 叶片精灵（隐藏，仅作引用源） ===== */
-.svg-leafs {
-  position: absolute;
-  top: -100%;
-  left: -100%;
-  visibility: hidden;
-}
-
-/* ===== 叶片 =====
-   图形本体：一片朝右下的叶子，叶柄位于盒子右下角（art 占 x 6.6~138.8、y 13.8~123.6）。
-   摆放原则 —— 叶从卡片边缘「探入」，由卡片的 overflow:hidden 自然裁切，
-   因此 right/bottom 多为负值（把叶柄推到卡外，只留叶身在画面内）；
-   左下的叶用 scaleX(-1) 做镜像，让叶柄朝左下角，与右下叶对称。 */
-.leaf {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  z-index: 4;
-  width: 150px;
-  transform-origin: center;
-  pointer-events: none;
-  transition: 0.3s;
-}
-
-.leaf svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-/* 默认（第一屏）：左下 / 右下两片从底边探入，右上叶倒挂 */
-.leaf--1 {
-  right: -36px;
-  bottom: -34px;
-  transform: rotate(-10deg);
-}
-
-.leaf--2 {
-  right: 246px;
-  bottom: -30px;
-  transform: rotate(10deg) scaleX(-1);
-}
-
-.leaf--3 {
-  right: -52px;
-  bottom: 510px;
-  transform: rotate(176deg);
-}
-
-/* ===== 屏幕 ===== */
+/* ===== 三屏：grid 同格叠放（无卡片背景/边框/阴影） =====
+   三屏共用同一网格单元，容器高度取三者内容的最大值，容器高度永远够用；
+   显示/隐藏与位移动画由 anime.js 写入行内样式控制（见 script 的三屏过渡段落），
+   CSS 只负责布局与交互拦截，避免两套机制争抢同一批属性导致动画跳变。 */
 .screen {
-  position: absolute;
-  top: 0;
-  left: 0;
+  grid-area: 1 / 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 26px;
-  border-radius: inherit;
-  color: var(--qm-cream);
-  background: transparent;
+  pointer-events: none;
+  /* 提升为独立合成层：opacity/transform 动画走合成器，避免逐帧重绘触发
+     body::after 全屏 mix-blend-mode 颗粒层的整屏重新混合（那是切换卡顿的主因） */
+  will-change: opacity, transform;
 }
 
-.first-screen {
-  align-items: flex-start;
-  background: var(--qm-grad-brand);
-}
-
-.second-screen {
-  left: 100%;
-  z-index: 2;
-  justify-content: center;
-  padding: 72px 26px 26px;
-  color: var(--qm-brand-ink);
-}
-
-.third-screen {
-  left: 100%;
-  z-index: 3;
-  background: var(--qm-grad-brand);
-  /* 琥珀色以圆形从主按钮位置扩散，铺满后完全覆盖第二屏（不留表单残影） */
-  clip-path: circle(0% at 42% 65%);
+/* 当前屏可交互（与模板的 inert 双保险） */
+.qm-auth:not(.second-screen-opened) .screen--intro,
+.second-screen-opened .screen--form,
+.third-screen-opened .screen--done {
+  pointer-events: auto;
 }
 
 /* ===== 文案 ===== */
-.number {
-  width: 100%;
-  margin-bottom: 14px;
-  text-align: right;
+.eyebrow {
+  margin: 0 0 18px;
+  color: var(--qm-accent);
   font-size: 11px;
-  letter-spacing: 0.12em;
-  opacity: 0.85;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
 }
 
-.heading {
+.display {
+  margin: 0;
+  font-size: clamp(32px, 4.6vw, 44px);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: 0.01em;
+}
+
+.lede {
+  margin: 18px 0 0;
+  max-width: 34ch;
+  color: var(--qm-fg-muted);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.title {
+  margin: 0;
   font-size: 30px;
-  letter-spacing: 0.06em;
-  transition: 0.4s;
+  font-weight: 600;
+  line-height: 1.25;
 }
 
-.description {
-  margin-top: 16px;
+.subtitle {
+  margin: 8px 0 0;
+  color: var(--qm-fg-muted);
   font-size: 13px;
-  line-height: 2;
-  opacity: 0.95;
 }
 
-/* ===== 圆形按钮 ===== */
-.btn-circle {
-  display: flex;
-  justify-content: center;
+/* ===== 第一屏 CTA ===== */
+.cta {
+  display: inline-flex;
   align-items: center;
-  width: 42px;
-  height: 42px;
+  gap: 10px;
+  align-self: flex-start;
+  margin-top: 32px;
+  padding: 13px 26px;
   border: none;
-  border-radius: 100px;
-  background: transparent;
-  color: inherit;
+  border-radius: 999px;
+  background: linear-gradient(to bottom right, #f59e0b, #ea580c);
+  color: #fffbeb;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
   cursor: pointer;
+  box-shadow: 0 14px 28px -16px rgba(234, 88, 12, 0.9);
+  transition: transform 0.25s var(--qm-ease), box-shadow 0.25s var(--qm-ease);
 }
 
-.btn-pTSecond {
-  margin-top: 22px;
-  border: 1px solid var(--qm-cream);
-  transform: scale(0.8);
-  transform-origin: left center;
-  transition: 0.3s;
+.cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 32px -16px rgba(234, 88, 12, 0.95);
 }
 
-.btn-pTSecond:hover,
-.btn-pTSecond:focus-visible {
-  transform: scale(1);
+.cta:active {
+  transform: translateY(0) scale(0.98);
 }
 
-.btn-pTSecond::before {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--qm-grad-paper);
-  transform: scale(0);
-  transition: 0.6s;
+/* 暖琥珀底上用深色描边，保证键盘焦点可见 */
+.cta:focus-visible {
+  outline: 2px solid var(--qm-fg);
+  outline-offset: 3px;
 }
 
-.btn-pTFirst {
-  position: absolute;
-  top: 18px;
-  left: 18px;
-  color: var(--qm-cream);
-  background: var(--qm-grad-brand);
-  transition: 0.3s;
+.cta svg {
+  transition: transform 0.25s var(--qm-ease);
 }
 
-.btn-pTFirst:hover {
+.on-btn-pTSecond .cta svg {
+  transform: translateX(3px);
+}
+
+/* ===== 返回 ===== */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-bottom: 18px;
+  padding: 6px 12px 6px 9px;
+  border: none;
+  border-radius: 999px;
+  background: var(--qm-soft);
+  color: var(--qm-fg-muted);
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.back:hover {
+  color: var(--qm-fg);
+  background: var(--qm-surface-border);
+}
+
+.back svg {
+  transition: transform 0.2s var(--qm-ease);
+}
+
+.back:hover svg {
   transform: translateX(-2px);
 }
 
-/* ===== 通道切换 ===== */
+/* ===== 通道切换（下划线标签页） ===== */
 .tabs {
   display: flex;
-  gap: 18px;
-  margin-top: 22px;
+  gap: 24px;
+  margin-top: 24px;
+  border-bottom: 1px solid var(--qm-line);
 }
 
 .tab {
-  padding: 0 0 7px;
+  position: relative;
+  padding: 0 0 10px;
   border: none;
-  border-bottom: 1px solid transparent;
   background: transparent;
-  color: var(--qm-ink-2);
-  font-size: 13px;
-  letter-spacing: 0.06em;
+  color: var(--qm-fg-muted);
+  font-family: inherit;
+  font-size: 14px;
   cursor: pointer;
-  transition: 0.35s;
+  transition: color 0.2s ease;
+}
+
+.tab:hover:not(:disabled) {
+  color: var(--qm-fg);
 }
 
 .tab--active {
-  color: var(--qm-brand-ink);
-  border-bottom-color: var(--qm-brand-ink);
+  color: var(--qm-fg);
+  font-weight: 600;
+}
+
+.tab--active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(to right, #f59e0b, #ea580c);
 }
 
 .tab:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
-/* ===== 表单 ===== */
+/* ===== 表单（可见标签 + 下划线输入） ===== */
 .form {
-  width: 100%;
-  margin: 18px 0 0;
-  text-align: center;
-  opacity: 0;
-  transform: translateY(18px);
+  margin: 20px 0 0;
 }
 
-.form__field {
+.field {
   position: relative;
-  width: 100%;
-  height: auto;
-  margin-bottom: 20px;
+  margin-top: 18px;
 }
 
-.form__field::before,
-.form__field::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0;
-  transition: 0.5s;
-}
-
-.form__field::before {
-  border-bottom: 1px solid var(--qm-line);
-  opacity: 0.45;
-}
-
-.form__field::after {
-  border-bottom: 1px solid var(--qm-brand-ink);
-}
-
-.form__field:focus-within::after {
-  width: 100%;
-}
-
-.form__input {
-  width: 100%;
-  padding: 0 0 9px;
-  border: none;
-  background: transparent;
-  color: var(--qm-ink-1);
-  font-family: inherit;
-  font-size: 14px;
-}
-
-.form__input::placeholder {
-  color: var(--qm-placeholder);
-}
-
-.form__input--peek {
-  padding-right: 30px;
-}
-
-.form__input--code {
-  padding-right: 104px;
-}
-
-.form__peek {
-  position: absolute;
-  right: 0;
-  bottom: 8px;
-  display: flex;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--qm-ink-2);
-  cursor: pointer;
-  transition: color 0.25s;
-}
-
-.form__peek:hover {
-  color: var(--qm-brand-ink);
-}
-
-.form__code-btn {
-  position: absolute;
-  right: 0;
-  bottom: 8px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--qm-brand-ink);
-  font-family: inherit;
+.field__label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--qm-fg-muted);
   font-size: 12px;
-  cursor: pointer;
-  transition: 0.25s;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: color 0.2s ease;
 }
 
-.form__code-btn:disabled {
-  color: var(--qm-ink-2);
+.field__input {
+  width: 100%;
+  padding: 0 0 10px;
+  border: none;
+  border-bottom: 1px solid var(--qm-line);
+  background: transparent;
+  color: var(--qm-fg);
+  font-family: inherit;
+  font-size: 15px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* 焦点：2px 品牌色下划线 + 标签同色（替代默认描边环，避免方框压在标签上） */
+.field__input:focus {
+  outline: none;
+  border-bottom-color: var(--qm-accent);
+  box-shadow: 0 1px 0 0 var(--qm-accent);
+}
+
+.field:focus-within .field__label {
+  color: var(--qm-accent);
+}
+
+.field__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.field__input--peek {
+  padding-right: 34px;
+}
+
+.field__input--code {
+  padding-right: 108px;
+}
+
+.peek,
+.send {
+  position: absolute;
+  right: 0;
+  bottom: 8px;
+  padding: 4px 0;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.peek {
+  display: flex;
+  color: var(--qm-fg-muted);
+  transition: color 0.2s ease;
+}
+
+.peek:hover {
+  color: var(--qm-fg);
+}
+
+.send {
+  color: var(--qm-accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.send:disabled {
+  color: var(--qm-fg-muted);
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-.form__error {
-  margin: -12px 0 12px;
-  text-align: left;
-  font-size: 11.5px;
+.error {
+  margin: 8px 0 0;
   color: var(--qm-danger);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
-.form__hint {
-  margin: -6px 0 14px;
-  text-align: left;
-  font-size: 11.5px;
+.hint {
+  margin: 10px 0 0;
+  color: var(--qm-fg-muted);
+  font-size: 12px;
   line-height: 1.7;
-  color: var(--qm-ink-2);
 }
 
-.form__row {
+.row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 18px;
+  margin-top: 18px;
 }
 
 .remember {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  font-size: 12.5px;
-  color: var(--qm-ink-2);
+  gap: 8px;
+  color: var(--qm-fg-muted);
+  font-size: 13px;
   cursor: pointer;
 }
 
 .remember input {
-  width: 14px;
-  height: 14px;
-  accent-color: var(--qm-brand);
+  width: 15px;
+  height: 15px;
+  accent-color: #f59e0b;
   cursor: pointer;
 }
 
-.form__link {
-  padding: 0;
+.link {
+  padding: 4px 0;
   border: none;
   background: transparent;
-  color: var(--qm-brand-ink);
+  color: var(--qm-accent);
   font-family: inherit;
-  font-size: 12.5px;
+  font-size: 13px;
   cursor: pointer;
-  transition: opacity 0.25s;
+  transition: opacity 0.2s ease;
 }
 
-.form__link:hover {
+.link:hover {
   opacity: 0.75;
 }
 
-/* ===== 主按钮（含 ✓ 与涟漪） ===== */
-.btn-words {
-  width: 100%;
-  border: none;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.4s, transform 1s 0.5s;
+/* ===== 主按钮（就绪转品牌色；提交后收成 ✓） ===== */
+.form__submit {
+  position: relative;
+  margin-top: 24px;
 }
 
 .btn-form {
   position: relative;
-  margin-top: 4px;
-  padding: 12px 0;
-  border-radius: 100px;
+  width: 100%;
+  padding: 13px 0;
+  border: none;
+  border-radius: 999px;
   background: var(--qm-soft);
-  color: var(--qm-ink-2);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  color: var(--qm-fg-muted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.35s ease, color 0.35s ease, width 0.45s var(--qm-ease), margin 0.45s var(--qm-ease);
 }
 
 .btn-form:disabled {
   cursor: not-allowed;
 }
 
+/* 未就绪（灰）态仍可点击：hover 给出可交互反馈；就绪后由品牌渐变接管 */
+.qm-auth:not(.form-ready) .btn-form:hover:not(:disabled) {
+  background: var(--qm-soft-hover);
+}
+
+.form-ready .btn-form {
+  color: #fffbeb;
+  background: linear-gradient(to bottom right, #f59e0b, #ea580c);
+  box-shadow: 0 14px 28px -18px rgba(234, 88, 12, 0.9);
+}
+
 .btn-form__label {
-  transition: opacity 0.3s;
+  transition: opacity 0.25s ease;
 }
 
 .btn-form::before {
@@ -943,38 +1053,55 @@ html[data-theme='dark'] .qm-auth {
   position: absolute;
   top: 50%;
   left: 50%;
-  font-size: 15px;
+  color: #fffbeb;
+  font-size: 16px;
   transform: translate(-50%, -50%) scale(0);
-  transition: 0.5s 0.4ms cubic-bezier(0.17, 0.09, 0.77, 1.8);
+  transition: transform 0.45s cubic-bezier(0.17, 0.09, 0.77, 1.8);
 }
 
-.form__submit {
-  position: relative;
+.form-submitted .btn-form {
+  width: 46px;
+  margin-left: calc(50% - 46px);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.form-submitted .btn-form__label {
+  opacity: 0;
+}
+
+.form-submitted .btn-form::before {
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .form__success {
   position: absolute;
   top: 50%;
-  left: 50%;
-  font-size: 13px;
-  color: var(--qm-brand-ink);
-  pointer-events: none;
+  left: calc(50% + 12px);
+  color: var(--qm-accent);
+  font-size: 14px;
+  font-weight: 600;
   opacity: 0;
-  transform: translate(-50%, -50%) scale(0.9);
-  transition: 1s 0.5s;
+  transform: translateY(-50%) scale(0.9);
+  transform-origin: left center;
+  transition: opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s;
+  pointer-events: none;
+}
+
+.form-submitted .form__success {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
 }
 
 /* ===== 分隔线与第三方 ===== */
 .divider {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 22px 0 16px;
-  font-size: 11px;
-  color: var(--qm-ink-2);
+  gap: 12px;
+  margin: 24px 0 16px;
+  color: var(--qm-fg-muted);
+  font-size: 12px;
   white-space: nowrap;
-  opacity: 0;
-  transform: translateY(14px);
 }
 
 .divider::before,
@@ -982,47 +1109,49 @@ html[data-theme='dark'] .qm-auth {
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--qm-soft);
+  background: var(--qm-line);
 }
 
 .oauth {
   display: flex;
   justify-content: center;
   gap: 14px;
-  opacity: 0;
-  transform: translateY(14px);
 }
 
 .oauth-btn {
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   width: 46px;
   height: 46px;
-  border: 1px solid var(--qm-soft);
+  border: 1px solid var(--qm-surface-border);
   border-radius: 50%;
-  background: var(--qm-paper-1);
+  background: var(--qm-surface);
+  color: var(--qm-fg);
   cursor: pointer;
-  transition: 0.25s;
+  transition: transform 0.22s var(--qm-ease), border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
 .oauth-btn:hover {
-  border-color: var(--qm-brand);
   transform: translateY(-2px);
-  box-shadow: 0 8px 18px -10px rgba(245, 158, 11, 0.9);
+  border-color: #f59e0b;
+  box-shadow: 0 10px 20px -12px rgba(245, 158, 11, 0.9);
 }
 
-/* ===== 错误提示 ===== */
+.oauth-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+/* ===== 提示 ===== */
 .alert {
-  margin-top: 14px;
+  margin: 16px 0 0;
   padding: 10px 12px;
-  border: 1px solid rgba(239, 68, 68, 0.28);
+  border: 1px solid rgba(220, 38, 38, 0.3);
   border-radius: 10px;
-  background: rgba(239, 68, 68, 0.08);
-  text-align: left;
-  font-size: 11.5px;
-  line-height: 1.7;
+  background: rgba(220, 38, 38, 0.08);
   color: var(--qm-danger);
+  font-size: 12.5px;
+  line-height: 1.7;
   animation: qm-alert-in 0.3s ease-out;
 }
 
@@ -1037,258 +1166,65 @@ html[data-theme='dark'] .qm-auth {
   }
 }
 
-/* ============================================================
-   状态类驱动的动画（模板机制）
-   ============================================================ */
-
-/* ===== 悬停进入按钮：叶片轻微摇曳 ===== */
-.on-btn-pTSecond .leaf--1 {
-  right: -30px;
-  bottom: -26px;
-  transform: rotate(-4deg);
+/* ===== 第三屏 ===== */
+.done-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 22px;
+  border-radius: 50%;
+  background: linear-gradient(to bottom right, #f59e0b, #ea580c);
+  color: #fffbeb;
+  font-size: 26px;
+  box-shadow: 0 16px 30px -18px rgba(234, 88, 12, 0.9);
 }
 
-.on-btn-pTSecond .leaf--2 {
-  right: 240px;
-  bottom: -36px;
-  transform: rotate(4deg) scaleX(-1);
-}
-
-.on-btn-pTSecond .leaf--3 {
-  right: -46px;
-  bottom: 502px;
-  transform: rotate(168deg);
-}
-
-/* ===== 第二屏展开 ===== */
-.second-screen-opened .leaf {
-  transition: 1s;
-}
-
-/* 第二屏：叶片退到卡片四角留白带，避让表单内容与多行错误提示 */
-.second-screen-opened .leaf--1 {
-  right: -40px;
-  bottom: -40px;
-  transform: rotate(-8deg);
-}
-
-.second-screen-opened .leaf--2 {
-  right: 250px;
-  bottom: -44px;
-  transform: rotate(8deg) scaleX(-1);
-}
-
-.second-screen-opened .leaf--3 {
-  right: -60px;
-  bottom: 518px;
-  transform: rotate(184deg);
-}
-
-/* 错误提示出现时表单内容变高，底部叶片顺势下移避让 */
-.has-alert.second-screen-opened .leaf--1,
-.has-alert.second-screen-opened .leaf--2 {
-  bottom: -64px;
-}
-
-.second-screen-opened .first-screen .heading {
-  opacity: 0;
-  transform: translateX(30px);
-}
-
-.second-screen-opened .btn-pTSecond::before {
-  border-radius: 0;
-  /* 卡片 360×640，按钮位于左下：scale(28) 才能保证涟漪铺满整卡（含四角） */
-  transform: scale(28);
-}
-
-.second-screen-opened .second-screen {
-  left: 0;
-}
-
-.second-screen-opened .second-screen .heading {
-  opacity: 1;
-  transform: translateX(0);
-  transition: 1s 0.4s;
-}
-
-.second-screen-opened .second-screen .form {
-  opacity: 1;
-  transform: translateY(0);
-  transition: 0.7s 0.1s;
-}
-
-.second-screen-opened .form__field::before {
-  width: 100%;
-  transition: 0.8s 0.3s;
-}
-
-.second-screen-opened .second-screen .tabs {
-  opacity: 1;
-  transform: translateY(0);
-  transition: 0.6s 0.16s;
-}
-
-.second-screen-opened .divider {
-  opacity: 1;
-  transform: translateY(0);
-  transition: 0.6s 0.3s;
-}
-
-.second-screen-opened .oauth {
-  opacity: 1;
-  transform: translateY(0);
-  transition: 0.6s 0.36s;
-}
-
-.second-screen .heading {
-  opacity: 0;
-  transform: translateX(30px);
-}
-
-.second-screen .tabs {
-  opacity: 0;
-  transform: translateY(14px);
-  transition: 0.5s;
-}
-
-/* ===== 第三屏展开 ===== */
-/* 第三屏：叶片环绕（成功态无表单内容，可放开） */
-.third-screen-opened .leaf--1 {
-  right: -30px;
-  bottom: -28px;
-  transform: rotate(-14deg);
-}
-
-.third-screen-opened .leaf--2 {
-  right: 240px;
-  bottom: -26px;
-  transform: rotate(14deg) scaleX(-1);
-}
-
-.third-screen-opened .leaf--3 {
-  right: -46px;
-  bottom: 504px;
-  transform: rotate(170deg);
-}
-
-.third-screen-opened .second-screen .heading {
-  opacity: 0;
-  transform: translateX(30px);
-}
-
-.third-screen-opened .third-screen {
-  left: 0;
-  clip-path: circle(150% at 42% 65%);
-  transition: clip-path 0.6s ease;
-}
-
-.third-screen-opened .third-screen .heading {
-  opacity: 1;
-  transform: translate(0);
-  transition: 1s 0.4s;
-}
-
-.third-screen-opened .third-screen .description {
-  opacity: 1;
-  transform: translateY(0);
-  transition: 0.6s 0.55s;
-}
-
-.third-screen .heading {
-  opacity: 0;
-  transform: translateY(30px);
-}
-
-.third-screen .description {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: 0.5s;
-}
-
-/* ===== 表单填写完成 ===== */
-.form-ready .btn-form {
-  color: var(--qm-cream);
-  background: var(--qm-brand);
-}
-
-/* ===== 提交成功 ===== */
-.form-submitted .btn-form {
-  width: 42px;
-  padding-left: 0;
-  padding-right: 0;
-  transform: translateX(-28px);
-}
-
-.form-submitted .btn-form__label {
-  opacity: 0;
-}
-
-.form-submitted .btn-form::before {
-  transform: translate(-50%, -50%) scale(1);
-}
-
-.form-submitted .form__success {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
-
-/* ===== 窄/矮视口收紧间距 ===== */
+/* ===== 矮视口收紧间距 ===== */
 @media (max-height: 700px) {
-  .second-screen {
-    padding-top: 62px;
+  .display {
+    font-size: 32px;
   }
 
-  .heading {
+  .title {
     font-size: 26px;
   }
 
-  .form {
-    margin-top: 14px;
+  .cta {
+    margin-top: 24px;
   }
 
-  .form__field {
-    margin-bottom: 16px;
+  .field {
+    margin-top: 16px;
   }
 
   .divider {
-    margin: 16px 0 12px;
-  }
-
-  .oauth-btn {
-    width: 42px;
-    height: 42px;
+    margin: 20px 0 12px;
   }
 }
 
-/* ===== 减弱动态偏好：保留淡入，关闭位移/涟漪/叶片位移 ===== */
+/* ===== 减弱动态偏好：取消 CSS 过渡（三屏过渡由 script 中的减弱动效分支跳过） ===== */
 @media (prefers-reduced-motion: reduce) {
-  .leaf,
-  .heading,
-  .description,
-  .form,
-  .tabs,
-  .divider,
-  .oauth,
-  .third-screen,
-  .btn-pTSecond,
-  .btn-pTSecond::before,
-  .btn-pTFirst,
-  .oauth-btn,
-  .form__success,
+  .qm-auth,
+  .cta,
+  .cta svg,
+  .back,
+  .back svg,
+  .tab,
+  .field__input,
+  .peek,
+  .send,
+  .link,
   .btn-form,
-  .btn-form::before {
+  .btn-form::before,
+  .form__success,
+  .oauth-btn {
     transition: none !important;
   }
 
-  .btn-pTSecond {
-    transform: none;
-  }
-
-  .form,
-  .tabs,
-  .divider,
-  .oauth,
-  .description {
+  .cta:hover,
+  .oauth-btn:hover {
     transform: none;
   }
 

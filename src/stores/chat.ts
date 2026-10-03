@@ -1,31 +1,50 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import type { HubConnection } from '@microsoft/signalr';
 import {
   getSessions,
   getMessages,
   getFriends,
   getGroups,
   getUnreadCount,
+  getUnreadMessages,
   getUserProfile,
+  markRead,
   MessageType
 } from '@/api/chat';
 import { unwrap } from '@/utils/response';
+import { toMillis } from '@/utils/format';
+import { charAvatar, groupAvatar } from '@/utils/avatar';
+import { useAuthStore } from '@/stores/auth';
 import { connectSignalR, isConnected } from '@/socket/signalr';
 
-interface SessionDto {
+export interface SessionDto {
   sessionId: string;
   sessionName?: string;
+  avatarUrl?: string;
+  groupId?: string;
+  circleId?: string;
+  notifyGuid?: string;
   isPinned?: boolean;
+  isMuted?: boolean;
+  isRead?: boolean;
   unreadCount?: number;
   lastMessageTime?: number;
   createdTime?: number;
+  createTime?: number;
   lastMessageContent?: string;
   participants?: string[];
   [key: string]: unknown;
 }
 
-interface FriendDto {
+/** 群成员渲染项（membersOf 的返回元素） */
+export interface MemberView {
+  id: string;
+  name: string;
+  avatar: string;
+  online: boolean;
+}
+
+export interface FriendDto {
   friendId: string;
   friendName?: string;
   [key: string]: unknown;
@@ -37,7 +56,7 @@ interface ChatUserProfile {
   avatar: string;
 }
 
-interface MessageDto {
+export interface MessageDto {
   messageId: string;
   sessionId: string;
   senderId: string;
@@ -59,6 +78,10 @@ interface MessageDto {
 }
 
 export const useChatStore = defineStore('chat', () => {
+  // 仅用于展示兜底（本人昵称）；当前用户 id 不走 auth.user——
+  // auth.user 只在 store 创建时解析一次 token，登录后可能仍是旧值
+  const auth = useAuthStore();
+
   // ===== 状态 =====
   const sessions = ref<SessionDto[]>([]); // 会话列表（未读置顶 + 最近活跃排序）
   const friends = ref<FriendDto[]>([]); // 好友列表
@@ -76,16 +99,27 @@ export const useChatStore = defineStore('chat', () => {
   const loadedPages = ref<Record<string, number>>({});
   const profiles = ref<Record<string, ChatUserProfile>>({}); // { userId: { name, avatar } } 发送者资料缓存
 
+  /**
+   * 列表加载统一实现：四个 load* 原本各写一份「请求 → 解包 → items/list/data → 赋值」。
+   * 后端列表响应有三种形态（{items}/{list}/裸数组），此处一并兼容。
+   */
+  async function loadList(
+    fetcher: () => Promise<unknown>,
+    assign: (list: any[]) => void,
+    label: string
+  ): Promise<void> {
+    try {
+      const data = unwrap(await fetcher());
+      const list = (data && (data.items || data.list || data)) || [];
+      assign(Array.isArray(list) ? list : []);
+    } catch (e) {
+      console.error(`加载${label}失败:`, e);
+    }
+  }
+
   // ===== 会话 =====
   async function loadSessions(): Promise<void> {
-    try {
-      const res = await getSessions();
-      const data = res && res.data ? res.data : res;
-      const list = data.items || data.list || data || [];
-      sessions.value = sortSessions(list);
-    } catch (e) {
-      console.error('加载会话失败:', e);
-    }
+    await loadList(getSessions, (list) => { sessions.value = sortSessions(list) }, '会话');
   }
 
   function sortSessions(list: SessionDto[]): SessionDto[] {
@@ -101,33 +135,53 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   async function loadFriends(): Promise<void> {
-    try {
-      const res = await getFriends();
-      const data = res && res.data ? res.data : res;
-      friends.value = data.items || data.list || data || [];
-    } catch (e) {
-      console.error('加载好友失败:', e);
-    }
+    await loadList(getFriends, (list) => { friends.value = list }, '好友');
   }
 
   async function loadGroups(): Promise<void> {
-    try {
-      const res = await getGroups();
-      const data = res && res.data ? res.data : res;
-      groups.value = data.items || data.list || data || [];
-    } catch (e) {
-      console.error('加载群组失败:', e);
-    }
+    await loadList(getGroups, (list) => { groups.value = list }, '群组');
   }
 
   async function loadUnread(): Promise<void> {
     try {
-      const res = await getUnreadCount();
-      const data = res && res.data ? res.data : res;
+      const data = unwrap(await getUnreadCount()) || {};
       unreadTotal.value = (data && (data.total !== undefined ? data.total : data.unreadCount)) || 0;
     } catch (e) {
       /* 静默 */
     }
+  }
+
+  /**
+   * 首屏数据单次加载（会话/好友/群/未读）。
+   * 侧栏与主视窗原本各写一份相同的 Promise.all，同一页面会重复请求两遍；
+   * 此处做单飞（in-flight 复用）+ 单次（成功后不再重复），供两处共用。
+   * initialLoaded 供侧栏区分「首次加载中」与「真的没有会话」，避免空态闪错。
+   */
+  const initialLoaded = ref(false);
+  let initialLoading: Promise<void> | null = null;
+
+  function ensureLoaded(): Promise<void> {
+    if (initialLoaded.value) return Promise.resolve();
+    if (!initialLoading) {
+      initialLoading = Promise.all([loadSessions(), loadFriends(), loadGroups(), loadUnread()])
+        .then(() => {
+          initialLoaded.value = true;
+          // 深链冷启动时 activateSession 早于本节执行，clearUnread 当时查不到会话而空转，
+          // 侧栏会残留未读角标；会话列表就绪后补清一次当前会话的未读。
+          if (activeSessionId.value) clearUnread(activeSessionId.value);
+        })
+        .finally(() => {
+          initialLoading = null;
+        });
+    }
+    return initialLoading;
+  }
+
+  /** 会话不存在时由调用方（CircleChatTab 拉到的社区频道会话）注入列表 */
+  function upsertSession(session: SessionDto): void {
+    if (!session?.sessionId) return;
+    if (sessions.value.some((s) => s.sessionId === session.sessionId)) return;
+    sessions.value = sortSessions([...sessions.value, session]);
   }
 
   // ===== 用户资料 =====
@@ -155,20 +209,27 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   // ===== 消息 =====
-  async function openSession(sessionId: string): Promise<void> {
-    if (activeSessionId.value === sessionId) {
-      // ⚠️ 已激活但消息为空（首次加载失败/被并发锁吞掉）→ 补加载；
-      //    否则该会话永远打不开，必须刷新重置 store 才能重试（用户反馈「点击会话要刷新才出现内容」）
-      if (!messages.value[sessionId] || !messages.value[sessionId].length) {
-        await loadMessages(sessionId, true);
-      }
-      return;
-    }
+  /**
+   * 激活会话（唯一入口：路由深链、侧栏点击、社区频道切换都走这里）：
+   * 设置当前会话、确保消息已加载、清零本会话未读角标、通知服务端已读。
+   *
+   * ⚠️ 两条必须保留的语义：
+   * 1. 幂等——已是当前会话时只「确保消息已加载」，不重复清零/标记已读
+   *    （该流程原先在 4 处各写一遍，导致同一会话被重复标记已读）。
+   * 2. 不要求会话已存在于 sessions——路由深链时本方法会在 loadSessions 之前被调用，
+   *    此刻 sessions 为空，故不能用「找不到会话就返回」把加载挡掉。
+   * 3. 消息为空也要（重新）加载：首次加载失败或被并发锁吞掉时，否则该会话永远空白，
+   *    必须刷新重置 store 才能重试（用户反馈「点击会话要刷新才出现内容」）。
+   */
+  async function activateSession(sessionId: string): Promise<void> {
+    if (!sessionId) return;
+    const isCurrent = activeSessionId.value === sessionId;
     activeSessionId.value = sessionId;
-    if (!messages.value[sessionId]) {
+    if (!messages.value[sessionId]?.length) {
       await loadMessages(sessionId, true);
     }
-    // 打开会话即通知服务端已读（SignalR MarkAsRead 逐条），并清零本会话未读角标
+    if (isCurrent) return;
+    clearUnread(sessionId);
     await markSessionRead(sessionId);
   }
 
@@ -182,7 +243,7 @@ export const useChatStore = defineStore('chat', () => {
       // v-for 自上而下 = 数组序，新消息追加在尾部（底部）。两个方向必须在下方归一，不可混用。
       const page = reset ? 1 : (loadedPages.value[sessionId] || 1) + 1;
       const res = await getMessages(sessionId, { page, pageSize: 30 });
-      const data = res && res.data ? res.data : res;
+      const data = unwrap(res) || {};
       const list: MessageDto[] = data.items || data.list || [];
       const serverAsc = [...list].reverse(); // 后端 desc → 前端 asc（复制反转，勿原地改响应数据）
       if (reset) {
@@ -200,6 +261,58 @@ export const useChatStore = defineStore('chat', () => {
       console.error('加载消息失败:', e);
     } finally {
       messageLoading.value[sessionId] = false;
+    }
+  }
+
+  /**
+   * 经 Hub 发送一条消息。
+   * SendMessage 载荷字段众多（含大量当前未使用的可空字段），集中在此构造，
+   * 避免 sendText / sendMedia 各维护一份完全相同的载荷。
+   */
+  async function invokeSendMessage(
+    sessionId: string,
+    payload: { messageType: number; content?: string | null; fileId?: string | null }
+  ): Promise<void> {
+    const conn = await connectSignalR();
+    await conn.invoke('SendMessage', sessionId, {
+      sessionId,
+      messageType: payload.messageType,
+      content: payload.content ?? null,
+      fileId: payload.fileId ?? null,
+      thumbnailFileId: null,
+      duration: null,
+      caption: null,
+      latitude: null,
+      longitude: null,
+      locationName: null,
+      linkUrl: null,
+      linkTitle: null,
+      linkDescription: null,
+      expressionCode: null,
+      replyToMessageId: null
+    });
+  }
+
+  /** 发送状态回写：0=发送中, 1=已发送, -1=发送失败 */
+  function setMessageStatus(sessionId: string, messageId: string, status: number): void {
+    const target = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
+    if (target) target.status = status;
+  }
+
+  /** 乐观插入 + 失败回滚的统一收尾（sendText / sendMedia 共用） */
+  async function deliver(
+    sessionId: string,
+    messageId: string,
+    invoke: () => Promise<void>,
+    errorLabel: string
+  ): Promise<void> {
+    try {
+      await invoke();
+      setMessageStatus(sessionId, messageId, 1);
+    } catch (e) {
+      console.error(errorLabel, e);
+      setMessageStatus(sessionId, messageId, -1);
+      throw e;
     }
   }
 
@@ -223,8 +336,7 @@ export const useChatStore = defineStore('chat', () => {
       sentTime: Date.now()
     };
 
-    const list = messages.value[sessionId] || [];
-    const existing = list.find((m) => m.messageId === messageId);
+    const existing = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
     if (existing) {
       Object.assign(existing, msg);
     } else {
@@ -232,33 +344,12 @@ export const useChatStore = defineStore('chat', () => {
     }
     bumpSession(sessionId, content);
 
-    try {
-      const conn = await connectSignalR();
-      await conn.invoke('SendMessage', sessionId, {
-        sessionId,
-        messageType: MessageType.Text,
-        content,
-        fileId: null,
-        thumbnailFileId: null,
-        duration: null,
-        caption: null,
-        latitude: null,
-        longitude: null,
-        locationName: null,
-        linkUrl: null,
-        linkTitle: null,
-        linkDescription: null,
-        expressionCode: null,
-        replyToMessageId: null
-      });
-      const sent = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
-      if (sent) sent.status = 1;
-    } catch (e) {
-      console.error('发送消息失败:', e);
-      const failed = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
-      if (failed) failed.status = -1;
-      throw e;
-    }
+    await deliver(
+      sessionId,
+      messageId,
+      () => invokeSendMessage(sessionId, { messageType: MessageType.Text, content }),
+      '发送消息失败:'
+    );
     return msg;
   }
 
@@ -287,40 +378,18 @@ export const useChatStore = defineStore('chat', () => {
     pushMessage(msg);
     bumpSession(sessionId, summary);
 
-    try {
-      const conn = await connectSignalR();
-      await conn.invoke('SendMessage', sessionId, {
-        sessionId,
-        messageType: payload.messageType,
-        content: null,
-        fileId: payload.fileId,
-        thumbnailFileId: null,
-        duration: null,
-        caption: null,
-        latitude: null,
-        longitude: null,
-        locationName: null,
-        linkUrl: null,
-        linkTitle: null,
-        linkDescription: null,
-        expressionCode: null,
-        replyToMessageId: null
-      });
-      const sent = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
-      if (sent) sent.status = 1;
-    } catch (e) {
-      console.error('发送媒体消息失败:', e);
-      const failed = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
-      if (failed) failed.status = -1;
-      throw e;
-    }
+    await deliver(
+      sessionId,
+      messageId,
+      () => invokeSendMessage(sessionId, { messageType: payload.messageType, fileId: payload.fileId }),
+      '发送媒体消息失败:'
+    );
     return msg;
   }
 
   // 重发失败消息
   async function retryMessage(sessionId: string, messageId: string): Promise<boolean> {
-    const list = messages.value[sessionId] || [];
-    const target = list.find((m) => m.messageId === messageId);
+    const target = (messages.value[sessionId] || []).find((m) => m.messageId === messageId);
     if (!target || target.status !== -1) return false;
     await sendText(sessionId, target.content as string, target.messageId);
     return true;
@@ -336,35 +405,81 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  async function markSessionRead(sessionId: string): Promise<void> {
-    const list = messages.value[sessionId] || [];
-    if (!list.length) return;
+  /**
+   * 取真实未读消息 id（可按会话过滤）。
+   * ⚠️ 后端 MessageDto 只有 ReadTime、没有 IsRead 字段，也没有批量已读端点
+   * （只有 PUT /api/messages/{id}/read 与 GET /api/messages/unread），
+   * 故只能先查未读集合再逐条标记。不可对整页消息无差别调用：每次标记后端都要
+   * 存库 + 失效未读缓存 + 查会话 + 可能推送，全量并发即惊群。
+   */
+  async function unreadMessageIds(sessionId?: string): Promise<string[]> {
     try {
-      const conn = await connectSignalR();
-      for (const m of list) {
-        if (m.senderId !== currentUserId()) {
-          await conn.invoke('MarkAsRead', m.messageId);
-          m.isRead = true;
-        }
-      }
+      const data = unwrap(await getUnreadMessages()) || {};
+      const list = (data.items || data.list || data) || [];
+      return [
+        ...new Set(
+          (Array.isArray(list) ? list : [])
+            .filter((m: MessageDto) => !sessionId || String(m.sessionId) === String(sessionId))
+            .map((m: MessageDto) => m.messageId)
+            .filter(Boolean)
+        )
+      ].map((id) => String(id));
     } catch (e) {
-      /* 静默 */
+      return [];
     }
   }
 
+  /**
+   * 打开会话时上报本会话已读 —— 走 Hub 的 MarkAsRead。
+   * 该 Hub 方法除标记已读外，还会向会话其他参与者推送已读回执并失效未读计数缓存，
+   * 故会话打开必须走实时通道（REST 端点没有这层通知）。
+   */
+  async function markSessionRead(sessionId: string): Promise<void> {
+    if (!messages.value[sessionId]?.length) return;
+    const ids = await unreadMessageIds(sessionId);
+    if (!ids.length) return;
+    try {
+      const conn = await connectSignalR();
+      await Promise.all(ids.map((id) => conn.invoke('MarkAsRead', id).catch(() => {})));
+    } catch (e) {
+      /* 静默：已读上报失败不应阻塞会话打开 */
+    }
+  }
+
+  /**
+   * 用户显式「设为已读 / 一键已读」—— 走 REST。
+   * 刻意不复用上面的 Hub 通道：REST 不依赖实时连接，Hub 不可用时仍能生效
+   * （这也是这两处操作原本的实现方式）。
+   */
+  async function markUnreadRead(sessionId?: string): Promise<void> {
+    const ids = await unreadMessageIds(sessionId);
+    await Promise.all(ids.map((id) => markRead(id).catch(() => {})));
+  }
+
   // ===== 内部工具 =====
+  // currentUserId 会被展示解析（每个会话行/每条消息）频繁调用，
+  // 而解析需 atob + JSON.parse，故按 token 值缓存：token 变化（登录/登出）时自动失效重算。
+  let cachedToken: string | null = null;
+  let cachedUserId = '';
+
   function currentUserId(): string {
-    // 当前用户 ID 从 JWT payload 解析
-    // ⚠️ Identity 签发的 JWT claim 名是完整 URI（.NET 10 不压缩），payload 无 sub
-    const t = localStorage.getItem('token');
+    const t = localStorage.getItem('token') || '';
+    if (t === cachedToken) return cachedUserId;
+    cachedToken = t;
+    cachedUserId = parseUserIdFromToken(t);
+    return cachedUserId;
+  }
+
+  function parseUserIdFromToken(t: string): string {
+    // ⚠️ Identity 签发的 JWT claim 名是完整 URI（.NET 10 不压缩）；同时兼容短名与 user_guid
     try {
       const payload = JSON.parse(
-        decodeURIComponent(
-          escape(atob((t as string).split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
-        )
+        decodeURIComponent(escape(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))))
       );
       return (
         payload.sub ||
+        payload.nameid ||
+        payload.user_guid ||
         payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ||
         ''
       );
@@ -373,31 +488,96 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  /** 单聊对端 id；无 participants 时返回空串（曾硬编码 'u-002'，会把会话解析到错误的昵称/头像/在线态） */
   function peerIdOf(sessionId: string): string {
     const s = sessions.value.find((x) => x.sessionId === sessionId);
-    const me = currentUserId();
-    if (!s || !s.participants) return 'u-002';
-    return s.participants.find((p) => p !== me) || 'u-002';
+    if (!s || !s.participants) return '';
+    return s.participants.find((p) => p !== currentUserId()) || '';
   }
 
-  function sessionName(sessionId: string): string {
-    const s = sessions.value.find((x) => x.sessionId === sessionId);
-    if (s && s.sessionName) return s.sessionName;
-    // 单聊：从好友列表找
-    const peerId = peerIdOf(sessionId);
-    const f = friends.value.find((x) => String(x.friendId) === String(peerId));
-    return f ? f.friendName || '会话' : '会话';
+  // ===== 展示解析（会话 / 消息 / 群成员的昵称与头像） =====
+  // 原在 ChatSidebar 与 ChatConversation 各写一份重叠的多层兜底，且两处结果不一致
+  // （侧栏能显示好友名，会话头部只显示「会话」）。统一收敛到此处，组件只负责渲染。
+
+  function friendById(id: unknown): FriendDto | undefined {
+    return friends.value.find((x) => String(x.friendId) === String(id));
   }
 
-  /** 消息时间戳归一为毫秒（后端 sentTime 是 ISO 字符串，本地乐观消息是 Date.now() 数字） */
-  function messageTime(m: MessageDto): number {
-    const v = m.sentTime as unknown;
-    if (typeof v === 'number') return v;
-    if (typeof v === 'string') {
-      const ts = Date.parse(v);
-      return Number.isNaN(ts) ? 0 : ts;
+  function groupById(id: unknown): Record<string, any> | undefined {
+    return groups.value.find((x) => String(x.groupId) === String(id));
+  }
+
+  /** 会话标题：会话自带名 → 单聊对端好友名 → 兜底「会话」 */
+  function sessionTitle(session: SessionDto | null | undefined): string {
+    if (!session) return '';
+    if (session.sessionName) return session.sessionName;
+    const f = friendById(peerIdOf(session.sessionId));
+    return (f && f.friendName) || '会话';
+  }
+
+  /** 会话头像：会话头像 → 群头像 → 单聊对端好友头像 → 群组占位图（不返回空串，避免破图留白） */
+  function sessionAvatar(session: SessionDto | null | undefined): string {
+    if (!session) return groupAvatar();
+    if (session.avatarUrl) return session.avatarUrl;
+    if (session.groupId) {
+      const g = groupById(session.groupId);
+      if (g && g.avatarUrl) return String(g.avatarUrl);
     }
-    return 0;
+    const f = friendById(peerIdOf(session.sessionId));
+    if (f && typeof f.friendAvatar === 'string' && f.friendAvatar) return f.friendAvatar;
+    return groupAvatar();
+  }
+
+  /** 单聊对端是否在线（群聊无「对端」概念 → false） */
+  function isPeerOnline(session: SessionDto | null | undefined): boolean {
+    if (!session) return false;
+    const peerId = peerIdOf(session.sessionId);
+    return !!peerId && onlineUsers.value[peerId] === true;
+  }
+
+  /** 是否本人发送 */
+  function isMine(message: MessageDto): boolean {
+    return String(message.senderId) === String(currentUserId());
+  }
+
+  /** 发送者昵称：资料缓存 → 好友昵称 → 本人用登录名、他人用占位名 */
+  function senderName(message: MessageDto): string {
+    const p = profiles.value[String(message.senderId)];
+    if (p && p.name) return p.name;
+    const f = friendById(message.senderId);
+    if (f && f.friendName) return String(f.friendName);
+    return isMine(message) ? (auth.user?.name || '我') : '用户';
+  }
+
+  /** 发送者头像：资料缓存 → 好友头像 → 首字头像 */
+  function senderAvatar(message: MessageDto): string {
+    const p = profiles.value[String(message.senderId)];
+    if (p && p.avatar) return p.avatar;
+    const f = friendById(message.senderId);
+    if (f && typeof f.friendAvatar === 'string' && f.friendAvatar) return f.friendAvatar;
+    return charAvatar(senderName(message).charAt(0), isMine(message) ? '#f59e0b' : '#a1a1aa');
+  }
+
+  /** 群成员列表（成员 id 可能不在好友列表，此时用占位名） */
+  function membersOf(session: SessionDto | null | undefined): MemberView[] {
+    if (!session || !session.groupId) return [];
+    const g = groupById(session.groupId);
+    const ids: unknown[] = (g && g.participants) || session.participants || [];
+    return ids.map((pid) => {
+      const id = String(pid);
+      const f = friendById(id);
+      return {
+        id,
+        name: (f && f.friendName) || '成员',
+        avatar: (f && typeof f.friendAvatar === 'string' && f.friendAvatar) || '',
+        online: onlineUsers.value[id] === true
+      };
+    });
+  }
+
+  /** 消息时间戳归一为毫秒（复用 utils/format 的 toMillis） */
+  function messageTime(m: MessageDto): number {
+    return toMillis(m.sentTime as string | number | undefined);
   }
 
   /** 升序比较：时间升序；同一时刻按 messageId 字典序（与后端 SentTime desc + MessageId tie-breaker 镜像一致） */
@@ -455,6 +635,8 @@ export const useChatStore = defineStore('chat', () => {
 
   // ===== SignalR 事件绑定 =====
   async function initRealtime(): Promise<void> {
+    // connected 既是「已连接」标记，也是重复注册守卫：
+    // 无此守卫时 conn.on 会被注册多次，未读数随之双增
     if (connected.value) return;
     try {
       const conn = await connectSignalR();
@@ -474,8 +656,7 @@ export const useChatStore = defineStore('chat', () => {
 
       conn.on('MessageRecalled', (messageId: string) => {
         for (const sessionId of Object.keys(messages.value)) {
-          const list = messages.value[sessionId];
-          const m = list.find((x) => x.messageId === messageId);
+          const m = messages.value[sessionId].find((x) => x.messageId === messageId);
           if (m) m.isRecalled = true;
         }
       });
@@ -488,6 +669,7 @@ export const useChatStore = defineStore('chat', () => {
         onlineUsers.value[String(userId)] = false;
       });
 
+      // TypingIndicator 由服务端带上输入者 userId（且服务端已排除输入者自身）
       conn.on('TypingIndicator', (sessionId: string, userId: string) => {
         typing.value[sessionId] = String(userId);
         // 3 秒后清除
@@ -512,7 +694,7 @@ export const useChatStore = defineStore('chat', () => {
   function removeSession(sessionId: string): void {
     sessions.value = sessions.value.filter((s) => s.sessionId !== sessionId);
     delete messages.value[sessionId];
-    if (activeSessionId.value === sessionId) activeSessionId.value = null;
+    if (activeSessionId.value === sessionId) activeSessionId.value = '';
   }
 
   return {
@@ -524,24 +706,34 @@ export const useChatStore = defineStore('chat', () => {
     unreadTotal,
     onlineUsers,
     typing,
-    connected,
     messageLoading,
     hasMoreMessages,
     profiles,
+    initialLoaded,
+    ensureLoaded,
     loadSessions,
     loadFriends,
     loadGroups,
     loadUnread,
     loadProfiles,
-    openSession,
+    upsertSession,
+    activateSession,
     loadMessages,
     retryMessage,
     sendText,
     sendMedia,
     sendTyping,
     markSessionRead,
+    markUnreadRead,
     clearUnread,
-    sessionName,
+    // 展示解析
+    sessionTitle,
+    sessionAvatar,
+    isPeerOnline,
+    isMine,
+    senderName,
+    senderAvatar,
+    membersOf,
     peerIdOf,
     currentUserId,
     initRealtime,

@@ -10,6 +10,20 @@
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="icon" href="/favicon.ico">
     <title>MonoHub</title>
+    <!-- 主题预置：首次绘制前就把已保存的主题写到 <html>，否则刷新时会先以默认亮色渲染一帧再切回。
+         键名与取值需与 src/stores/theme.ts 保持一致（THEME_KEY / 两个主题色）。 -->
+    <script>
+      (function () {
+        try {
+          var dark = localStorage.getItem('qingmang_theme') === 'dark';
+          var el = document.documentElement;
+          el.setAttribute('data-theme', dark ? 'dark' : 'light');
+          el.style.colorScheme = dark ? 'dark' : 'light';
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.content = dark ? '#18181b' : '#fdfaf3';
+        } catch (e) { /* 隐私模式等场景下 localStorage 不可用，保持默认亮色 */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

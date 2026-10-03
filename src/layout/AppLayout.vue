@@ -15,11 +15,12 @@
           :class="focus.focusMode ? 'p-3' : 'px-6 py-6'"
         >
           <router-view v-slot="{ Component }">
-            <transition name="page-fade">
+            <!-- anime.js 驱动的页面过渡：先退场再入场，避免两页内容叠加错位 -->
+            <Transition :css="false" mode="out-in" @enter="pageEnter" @leave="pageLeave">
               <keep-alive :include="cachedViews">
                 <component :is="Component" />
               </keep-alive>
-            </transition>
+            </Transition>
           </router-view>
         </main>
       </div>
@@ -50,6 +51,7 @@ import SideNav from '@/layout/SideNav.vue'
 import BackgroundLayer from '@/components/common/BackgroundLayer.vue'
 import CallPanel from '@/components/chat/CallPanel.vue'
 import { useFocusStore } from '@/stores/focus'
+import { pageEnter, pageLeave } from '@/utils/pageTransition'
 
 const route = useRoute()
 const focus = useFocusStore()
@@ -99,22 +101,3 @@ onUnmounted(() => {
   window.removeEventListener('scroll', onMainScroll, true)
 })
 </script>
-
-<style scoped>
-.page-fade-enter-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.page-fade-leave-active {
-  transition: opacity 0.15s ease;
-}
-
-.page-fade-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.page-fade-leave-to {
-  opacity: 0;
-}
-</style>

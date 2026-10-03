@@ -6,21 +6,32 @@
         <span class="text-lg font-bold tracking-wide font-display text-zinc-800 dark:text-zinc-100 truncate">{{ titleItem.label }}</span>
       </div>
       <!-- 广场页信息流切换（并入顶部栏，仅 /home 显示）：热门 | 最新 -->
-      <div v-if="isHome" class="flex items-center ml-6 shrink-0">
+      <!-- 制表符语义：role=tablist/tab + roving tabindex，方向键在两项间移动焦点 -->
+      <div v-if="isHome" ref="tablistEl" class="flex items-center ml-6 shrink-0" role="tablist" aria-label="信息流">
         <button
+          role="tab"
+          data-tab="hot"
+          :aria-selected="feedTab.tab === 'hot'"
+          :tabindex="feedTab.tab === 'hot' ? 0 : -1"
           class="relative px-3 pb-1 text-sm font-medium transition-colors flex items-center"
           :class="feedTab.tab === 'hot' ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
           @click="onTabSwitch('hot')"
+          @keydown="onTabKey($event, 'hot')"
         >
           热门
           <span v-if="feedTab.tab === 'hot'" class="absolute left-3 right-3 bottom-0 h-0.5 rounded-full bg-amber-500"></span>
         </button>
         <button
+          role="tab"
+          data-tab="latest"
+          :aria-selected="feedTab.tab === 'latest'"
+          :tabindex="feedTab.tab === 'latest' ? 0 : -1"
           class="relative px-3 pb-1 text-sm font-medium transition-colors flex items-center"
           :class="feedTab.tab === 'latest' ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
           @click="onTabSwitch('latest')"
+          @keydown="onTabKey($event, 'latest')"
         >
-          <span v-if="!auth.isLoggedIn()" class="mr-1"><svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>最新
+          <span v-if="!auth.isLoggedIn()" class="mr-1"><svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>最新
           <span v-if="feedTab.tab === 'latest'" class="absolute left-3 right-3 bottom-0 h-0.5 rounded-full bg-amber-500"></span>
         </button>
       </div>
@@ -64,7 +75,7 @@
 
         <!-- 未登录：登录按钮 -->
         <template v-if="!auth.isLoggedIn()">
-          <button class="px-4 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90 active:scale-95 transition-all" @click="router.push('/login')">登录</button>
+          <button class="px-4 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90 active:scale-95 transition-[opacity,transform] duration-200" @click="router.push('/login')">登录</button>
         </template>
 
         <!-- 已登录：用户头像（点击展开下拉：用户数据 + 菜单） -->
@@ -169,7 +180,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
-import { useFeedTabStore } from '@/stores/feedTab'
+import { useFeedTabStore, type FeedTab } from '@/stores/feedTab'
 import SkinPanel from '@/components/common/SkinPanel.vue'
 import NotificationPanel from '@/components/common/NotificationPanel.vue'
 import { getMyUserInfo, signIn } from '@/api/userinfo'
@@ -197,14 +208,28 @@ const titleItem = computed(() => {
 const feedTab = useFeedTabStore()
 const isHome = computed(() => route.path === '/home')
 
-function onTabSwitch(t: string): void {
+function onTabSwitch(t: FeedTab): void {
   // 最新 Tab 需要登录
   if (t === 'latest' && !auth.isLoggedIn()) {
     toast.push('请先登录后再查看最新动态', 'info')
     router.push('/login')
     return
   }
+  // 立即更新指示器，再写入 URL（URL 是真源，HomeView 会把它读回 store 并重新拉取）
+  // 用 push 而非 replace：Tab 切换要能被浏览器前进/后退还原
   feedTab.switchTab(t)
+  router.push({ path: '/home', query: { ...route.query, tab: t } })
+}
+
+// Roving tabindex：方向键在 Tab 项间移动焦点（激活仍由点击/Enter/Space 触发）
+const tablistEl = ref<HTMLElement | null>(null)
+function onTabKey(e: KeyboardEvent, current: FeedTab): void {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+  e.preventDefault()
+  const next: FeedTab = current === 'hot' ? 'latest' : 'hot'
+  tablistEl.value?.querySelectorAll<HTMLButtonElement>('[role="tab"]').forEach((b) => {
+    if (b.dataset.tab === next) b.focus()
+  })
 }
 
 const unread = ref(0) // 通知未读数（GET /api/notifications/unread-count）

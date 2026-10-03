@@ -93,7 +93,12 @@
 
       <!-- 主内容 -->
       <main class="flex-1 min-w-0 px-6 py-6 overflow-y-auto h-[calc(100vh-4rem)]">
-        <router-view />
+        <router-view v-slot="{ Component }">
+          <!-- anime.js 驱动的页面过渡：与用户端内容区同一套动效规格 -->
+          <Transition :css="false" mode="out-in" @enter="pageEnter" @leave="pageLeave">
+            <component :is="Component" />
+          </Transition>
+        </router-view>
       </main>
     </div>
   </div>
@@ -106,6 +111,9 @@ import { useThemeStore } from '@/stores/theme'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { getAdminStats } from '@/api/admin'
+import { getMyMenus } from '@/api/menu'
+import { DEFAULT_ADMIN_NAV, resolveMenuIcon, type AdminNavItem } from '@/components/admin/menuIcons'
+import { pageEnter, pageLeave } from '@/utils/pageTransition'
 
 const route = useRoute()
 const router = useRouter()
@@ -118,23 +126,35 @@ const keyword = ref('')
 const pendingCount = ref(0)
 let savedTheme: boolean | null = null
 
-interface AdminNavItem {
-  path: string;
-  label: string;
-  icon: string;
-  match?: string;
-  badge?: string;
+// 侧栏导航由后端菜单接口驱动（当前用户可见 + 启用）；接口失败/为空时回退内置默认项
+const navItems = ref<AdminNavItem[]>(DEFAULT_ADMIN_NAV)
+
+// 菜单树 → 侧栏项：仅取有路由的节点（目录仅作分组，其子项按序展开）
+function mapMenus(nodes: any[], out: AdminNavItem[] = []): AdminNavItem[] {
+  for (const n of nodes) {
+    if (n.url) {
+      out.push({
+        path: n.url,
+        label: n.menuName,
+        icon: resolveMenuIcon(n.icon),
+        badge: n.url === '/admin/announcements' ? 'NEW' : undefined
+      })
+    }
+    if (n.children && n.children.length) mapMenus(n.children, out)
+  }
+  return out
 }
 
-const navItems: AdminNavItem[] = [
-  { path: '/admin', label: '工作台', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>', match: '/admin' },
-  { path: '/admin/users', label: '用户管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' },
-  { path: '/admin/content', label: '内容管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' },
-  { path: '/admin/reports', label: '举报管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>' },
-  { path: '/admin/circles', label: '社区管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
-  { path: '/admin/files', label: '文件管理', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
-  { path: '/admin/announcements', label: '公报', icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>', badge: 'NEW' }
-]
+async function loadMenus(): Promise<void> {
+  try {
+    const res = await getMyMenus()
+    const data: any = res && res.data ? res.data : res
+    const mapped = Array.isArray(data) ? mapMenus(data) : []
+    if (mapped.length) navItems.value = mapped
+  } catch (e) {
+    // 保留 DEFAULT_ADMIN_NAV 兜底，侧栏不为空
+  }
+}
 
 const adminAvatar = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#3b82f6"/><text x="50" y="62" font-size="40" text-anchor="middle" fill="white">管</text></svg>')
 
@@ -154,6 +174,7 @@ function onLogout(): void {
 }
 
 onMounted(async () => {
+  await loadMenus()
   // 管理端默认深色（记录用户原偏好，离开时恢复）
   savedTheme = theme.isDark
   if (!theme.isDark) theme.toggle()

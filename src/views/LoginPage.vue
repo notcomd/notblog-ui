@@ -1,35 +1,33 @@
 <template>
-  <div
-    class="relative min-h-screen overflow-hidden"
-    @mousemove="onMouseMove"
-    @mouseleave="cursorVisible = false"
-  >
+  <div class="relative min-h-screen overflow-hidden">
     <!-- 背景壁纸（fixed inset-0 z-0，内容层 z-10 保证不被盖住） -->
     <BackgroundImage />
 
-    <!-- 可读性遮罩：暗色主题加深 -->
+    <!-- 可读性遮罩：浅色铺一层柔和白纱，让背景更接近奶白并淡化线条；
+         深色加深压暗，保证浮层文字对比度 -->
     <div
       class="absolute inset-0 z-[5] transition-colors duration-300"
-      :class="theme.isDark ? 'bg-black/45' : 'bg-black/15'"
+      :class="theme.isDark ? 'bg-black/65' : 'bg-white/40'"
     ></div>
 
     <!-- ===== 左上角 Logo（与 SideNav 品牌一致） ===== -->
     <router-link
       to="/home"
-      class="fixed top-6 left-6 z-50 flex items-center gap-2.5 group"
+      class="fixed top-6 left-6 z-50 flex items-center gap-2.5"
       title="MonoHub"
     >
       <div
-        class="w-10 h-10 rounded-lg overflow-hidden bg-white border border-white/40 shadow-md"
+        class="w-9 h-9 rounded-lg overflow-hidden bg-white border border-zinc-200/70 dark:border-white/10 shadow-sm"
       >
         <img src="@/assets/monohub-logo.jpg" alt="MonoHub" class="w-full h-full object-cover" />
       </div>
-      <span class="text-xl font-bold tracking-wide font-display text-white drop-shadow">MonoHub</span>
+      <!-- text-zinc-800 在深色主题下由 input.css 统一转纯白，深浅背景均可读 -->
+      <span class="text-lg font-bold tracking-wide font-display text-zinc-800">MonoHub</span>
     </router-link>
 
     <!-- ===== 右上角主题切换 ===== -->
     <button
-      class="fixed top-6 right-6 z-50 w-11 h-11 flex items-center justify-center text-zinc-800 dark:text-zinc-100 hover:scale-105 active:scale-95 transition-all duration-200"
+      class="fixed top-6 right-6 z-50 w-11 h-11 flex items-center justify-center rounded-full text-zinc-800 dark:text-zinc-100 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all duration-200"
       :title="theme.isDark ? '切换到浅色主题' : '切换到深色主题'"
       :aria-label="theme.isDark ? '切换到浅色主题' : '切换到深色主题'"
       @click="theme.toggle()"
@@ -44,23 +42,15 @@
       </svg>
     </button>
 
-    <!-- ===== 中央登入卡片（三屏动画：欢迎 → 登入表单 → 登录成功） ===== -->
+    <!-- ===== 中央登入内容（三屏：欢迎 → 登入表单 → 登录成功；无卡片，直接浮于背景） ===== -->
     <div class="relative z-10 min-h-screen flex items-center justify-center p-6">
-      <LoginFrom class="transition-forment" @success="finishLogin" />
+      <LoginFrom @success="finishLogin" />
     </div>
-
-    <!-- ===== 自定义光标（桌面精细指针；跟随鼠标的柔和圆环） ===== -->
-    <div
-      v-show="cursorVisible"
-      class="custom-cursor"
-      :style="{ transform: `translate3d(${cursor.x}px, ${cursor.y}px, 0)` }"
-      aria-hidden="true"
-    ></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
 import LoginFrom from '@/components/LoginFrom.vue'
@@ -104,64 +94,4 @@ onMounted(async () => {
     }
   }
 })
-
-// ==================== 自定义光标 ====================
-const cursor = reactive({ x: -100, y: -100 })
-const cursorVisible = ref(false)
-// 仅精细指针（鼠标/触控板）启用，触摸屏与「减弱动态」偏好下不显示
-const cursorEnabled = ref(false)
-
-onMounted(() => {
-  if (window.matchMedia('(pointer: fine)').matches
-    && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    cursorEnabled.value = true
-  }
-})
-
-const onMouseMove = (event: MouseEvent): void => {
-  if (!cursorEnabled.value) return
-  cursor.x = event.clientX
-  cursor.y = event.clientY
-  if (!cursorVisible.value) cursorVisible.value = true
-}
 </script>
-
-<style scoped>
-/* 卡片入场：轻微上浮淡入 */
-@keyframes cardIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.transition-forment {
-  animation: cardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-/* 自定义光标：柔和圆环，跟随鼠标（translate3d 由内联样式驱动，性能更好） */
-.custom-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 60;
-  width: 30px;
-  height: 30px;
-  margin: -15px 0 0 -15px;
-  border: 1px solid hsla(0, 0%, 100%, 0.7);
-  border-radius: 50%;
-  background: hsla(0, 0%, 80%, 0.2);
-  pointer-events: none;
-  will-change: transform;
-}
-
-@media (pointer: coarse) {
-  .custom-cursor {
-    display: none;
-  }
-}
-</style>

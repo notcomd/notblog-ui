@@ -184,6 +184,79 @@ html[data-theme="dark"] body::after {
   }
 }
 
+/* 单元素入场：空状态/提示块等一次性出现的内容（复用 qm-item-in 关键帧） */
+.qm-rise {
+  animation: qm-item-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ===== 骨架屏（信息流加载中） ===== */
+/* 微光扫过：比 animate-pulse 更能表达「正在加载」，且只动 transform（合成器友好） */
+.qm-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.qm-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* 不拦截交互：微光层盖在整张卡上，若可命中会挡住下方真实内容的点击 */
+  pointer-events: none;
+  transform: translateX(-100%);
+  /* 20%/80% 处收边，让高光是一道「扫过的带」而不是整块闪白 */
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.75) 50%,
+    transparent 80%
+  );
+  /* 由行内 --qm-shimmer-delay 错开各卡片相位，避免 6 张同步扫动显得机械 */
+  animation: qm-shimmer 1.6s ease-in-out infinite;
+  animation-delay: var(--qm-shimmer-delay, 0s);
+}
+
+@keyframes qm-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+html[data-theme='dark'] .qm-shimmer::after {
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.12) 50%,
+    transparent 80%
+  );
+}
+
+/* 骨架屏淡入：内容清空后铺出骨架，避免硬切 */
+.qm-skel-enter-active {
+  transition: opacity 0.2s ease;
+}
+
+.qm-skel-enter-from {
+  opacity: 0;
+}
+
+/* 骨架屏退场：必须脱离文档流再淡出。
+   否则骨架（6 张整屏卡，约 1377px）与同时挂载的真实卡片会同时占位，
+   页面高度瞬间翻倍后塌陷，滚到下方时会看到明显跳位。
+   脱离流后定位到栅格顶端，与新卡片做一次短暂交叉淡出 */
+.qm-skel-leave-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transition: opacity 0.2s ease;
+  /* 淡出期间不拦截点击，新卡片立即可交互 */
+  pointer-events: none;
+}
+
+.qm-skel-leave-to {
+  opacity: 0;
+}
+
 /* 渐变主按钮扫光（边框高光流过）：登录/发送/发布等主 CTA 使用 */
 .btn-sheen {
   position: relative;
@@ -249,12 +322,20 @@ html[data-theme="dark"] body::after {
   }
   .qm-stagger > *,
   .page-enter,
-  .animate-fade-in,
-  .transition-forment {
+  .qm-rise,
+  .animate-fade-in {
     animation: none !important;
   }
   .btn-sheen::after {
     display: none;
+  }
+  /* 骨架屏微光与交接淡入淡出：减弱动态偏好下直接切换 */
+  .qm-shimmer::after {
+    display: none;
+  }
+  .qm-skel-enter-active,
+  .qm-skel-leave-active {
+    transition: none;
   }
 }
 
