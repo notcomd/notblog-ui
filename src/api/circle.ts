@@ -84,6 +84,7 @@ export function joinCircle(payload: JoinCircleData) {
 
 // 退出社区：DELETE /api/circles/{circleGuid}/members/{userGuid}
 export function leaveCircle(circleGuid: string, userGuid: string) {
+  if (!circleGuid || !userGuid) throw new Error('缺少圈子或用户标识');
   return service.delete(`/api/circles/${circleGuid}/members/${userGuid}`);
 }
 
@@ -94,6 +95,7 @@ export function getCircleMembers(circleGuid: string, params: QueryParams = {}) {
 
 // 设置/取消管理员：POST /api/circles/{circleGuid}/members/{userGuid}/role { role: 'Admin' | 'Member' }（仅圈主）
 export function setCircleMemberRole(circleGuid: string, userGuid: string, role: string) {
+  if (!circleGuid || !userGuid) throw new Error('缺少圈子或用户标识');
   return service.post(`/api/circles/${circleGuid}/members/${userGuid}/role`, { role });
 }
 

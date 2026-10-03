@@ -58,7 +58,7 @@ html[data-theme="dark"] .text-zinc-900 {
 }
 
 
-/* ===== 品牌色板（轻芒 · 兴趣部落）：暖琥珀 → 珊瑚 - 烘焙般的温暖、清透质感 ===== */
+/* ===== 品牌色板（MonoHub）：暖琥珀 → 珊瑚 - 烘焙般的温暖、清透质感 ===== */
 :root {
   --qm-brand: #f59e0b;        /* amber-500  品牌主色 */
   --qm-brand-strong: #ea580c; /* orange-600 强调/渐变 */
@@ -72,7 +72,7 @@ html[data-theme="dark"] {
   --qm-paper: #18181b;
 }
 
-/* 品牌展示字体：标题/品牌处使用软衬线（Fraunces + 中文宋体栈），营造「纸本 + 轻芒」的烘焙暖感；正文仍用系统无衬线 */
+/* 品牌展示字体：标题/品牌处使用软衬线（Fraunces + 中文宋体栈），营造「纸本 + 烘焙暖感」；正文仍用系统无衬线 */
 .font-display {
   font-family: 'Fraunces Variable', 'Songti SC', 'Noto Serif SC', 'STSong', 'SimSun', serif;
   letter-spacing: 0.01em;
@@ -184,6 +184,79 @@ html[data-theme="dark"] body::after {
   }
 }
 
+/* 单元素入场：空状态/提示块等一次性出现的内容（复用 qm-item-in 关键帧） */
+.qm-rise {
+  animation: qm-item-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ===== 骨架屏（信息流加载中） ===== */
+/* 微光扫过：比 animate-pulse 更能表达「正在加载」，且只动 transform（合成器友好） */
+.qm-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.qm-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* 不拦截交互：微光层盖在整张卡上，若可命中会挡住下方真实内容的点击 */
+  pointer-events: none;
+  transform: translateX(-100%);
+  /* 20%/80% 处收边，让高光是一道「扫过的带」而不是整块闪白 */
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.75) 50%,
+    transparent 80%
+  );
+  /* 由行内 --qm-shimmer-delay 错开各卡片相位，避免 6 张同步扫动显得机械 */
+  animation: qm-shimmer 1.6s ease-in-out infinite;
+  animation-delay: var(--qm-shimmer-delay, 0s);
+}
+
+@keyframes qm-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+html[data-theme='dark'] .qm-shimmer::after {
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.12) 50%,
+    transparent 80%
+  );
+}
+
+/* 骨架屏淡入：内容清空后铺出骨架，避免硬切 */
+.qm-skel-enter-active {
+  transition: opacity 0.2s ease;
+}
+
+.qm-skel-enter-from {
+  opacity: 0;
+}
+
+/* 骨架屏退场：必须脱离文档流再淡出。
+   否则骨架（6 张整屏卡，约 1377px）与同时挂载的真实卡片会同时占位，
+   页面高度瞬间翻倍后塌陷，滚到下方时会看到明显跳位。
+   脱离流后定位到栅格顶端，与新卡片做一次短暂交叉淡出 */
+.qm-skel-leave-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transition: opacity 0.2s ease;
+  /* 淡出期间不拦截点击，新卡片立即可交互 */
+  pointer-events: none;
+}
+
+.qm-skel-leave-to {
+  opacity: 0;
+}
+
 /* 渐变主按钮扫光（边框高光流过）：登录/发送/发布等主 CTA 使用 */
 .btn-sheen {
   position: relative;
@@ -249,12 +322,20 @@ html[data-theme="dark"] body::after {
   }
   .qm-stagger > *,
   .page-enter,
-  .animate-fade-in,
-  .transition-forment {
+  .qm-rise,
+  .animate-fade-in {
     animation: none !important;
   }
   .btn-sheen::after {
     display: none;
+  }
+  /* 骨架屏微光与交接淡入淡出：减弱动态偏好下直接切换 */
+  .qm-shimmer::after {
+    display: none;
+  }
+  .qm-skel-enter-active,
+  .qm-skel-leave-active {
+    transition: none;
   }
 }
 
@@ -267,76 +348,27 @@ html[data-theme="dark"] body::after {
 }
 
 /* ============================================================
-   移动端全局适配基础（2026-08 全项目响应式）
-   - 统一使用 lg(1024px) 作为桌面/移动分界：≥lg 显示侧边栏，<lg 走底部 Tab
-   - dynamic viewport：规避 iOS 地址栏导致的 100vh 溢出，改用 100dvh
+   桌面化适配（2026-09）：去除移动端响应式，统一桌面布局
    ============================================================ */
-:root {
-  --app-top: 0px;      /* 顶部安全区（刘海屏 + 状态栏） */
-  --app-bottom: 0px;   /* 底部安全区（Home 指示条） */
-  --tab-h: 0px;        /* 移动端底部 Tab 高度（布局预留用） */
-}
-
-/* 动态视口高度：正文滚动容器用 min-h-svh 保证真机行为一致 */
+/* 动态视口高度（桌面统一 100vh） */
 body {
   min-height: 100vh;
-  min-height: 100dvh;
 }
 
-/* iOS Safari 刘海屏安全区变量 */
-@supports (padding-top: env(safe-area-inset-top)) {
-  :root {
-    --app-top: env(safe-area-inset-top);
-    --app-bottom: env(safe-area-inset-bottom);
-  }
-}
-
-/* 移动端禁止横向滚动（保护类：阻止意外横向溢出） */
+/* 禁止横向滚动：用 clip 而非 hidden —— hidden 会把 html/body 变成滚动容器，
+   导致内部 sticky（功能栏 SideNav、顶部栏 TopBar）相对该容器定位而随滚动移出视口；
+   clip 同样裁掉横向溢出但不建立滚动容器，sticky 恢复相对视口固定 */
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
-/* 移动端点击高亮去除 + 文字缩放钳制（禁用 iOS 双击/聚焦缩放） */
+/* 点击高亮去除 */
 html {
   -webkit-tap-highlight-color: transparent;
 }
-@media (max-width: 1023px) {
-  html {
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-  }
-  /* 移动端隐藏桌面滚动条，保持内容区域可惯性滚动 */
-  body {
-    scrollbar-width: none;
-  }
-  ::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-  }
-}
 
-/* 移动端卡片 hover 上浮在触屏上无意义，弱化为轻触反馈 */
-@media (hover: none) {
-  .card-lift:hover {
-    transform: none;
-    box-shadow: none;
-  }
-  .card-lift:active {
-    transform: scale(0.98);
-  }
-}
-
-/* 底部安全区垫层：给固定底栏（Tab/返回）预留 Home 指示条高度 */
-.mb-safe {
-  padding-bottom: var(--app-bottom);
-}
-.pt-safe {
-  padding-top: var(--app-top);
-}
-
-/* 平滑惯性滚动（移动端内容容器） */
+/* 滚动容器（正文内容区） */
 .scroll-native {
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }

@@ -50,7 +50,7 @@
             <button class="text-xs text-amber-500 hover:text-amber-600 transition-colors" @click="goTab('works')">全部 →</button>
           </header>
           <div class="px-4 pb-4">
-            <div v-if="recentPosts.length" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div v-if="recentPosts.length" class="grid grid-cols-4 gap-3">
               <div v-for="p in recentPosts" :key="p.tweetGuid" class="group cursor-pointer" @click="router.push('/posts/' + p.tweetGuid)">
                 <div class="relative aspect-video rounded-[5%] overflow-hidden bg-zinc-100 dark:bg-zinc-900">
                   <img v-if="postThumb(p)" :src="postThumb(p)" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" @error="hideImg" />
@@ -77,7 +77,7 @@
             <button class="text-xs text-amber-500 hover:text-amber-600 transition-colors" @click="goTab('favorites')">全部 →</button>
           </header>
           <div class="px-4 pb-4">
-            <div v-if="recentFavorites.length" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div v-if="recentFavorites.length" class="grid grid-cols-4 gap-3">
               <div v-for="p in recentFavorites" :key="p.tweetGuid" class="group cursor-pointer" @click="router.push('/posts/' + p.tweetGuid)">
                 <div class="relative aspect-video rounded-[5%] overflow-hidden bg-zinc-100 dark:bg-zinc-900">
                   <img v-if="postThumb(p)" :src="postThumb(p)" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" @error="hideImg" />
@@ -104,7 +104,7 @@
             <button class="text-xs text-amber-500 hover:text-amber-600 transition-colors" @click="goTab('files')">全部 →</button>
           </header>
           <div class="px-4 pb-4">
-            <div v-if="recentFiles.length" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div v-if="recentFiles.length" class="grid grid-cols-4 gap-3">
               <div v-for="f in recentFiles" :key="f.fileId" class="group cursor-pointer" @click="previewFile(f)">
                 <div class="relative aspect-video rounded-[5%] overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
                   <img v-if="f.type === 'image'" :src="f.url" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" @error="hideImg" />
@@ -141,7 +141,7 @@
           </div>
           <span class="text-xs text-zinc-400">{{ isSelf ? '暂无文件' : '暂无公开文件' }}</span>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-3 gap-4">
           <div v-for="f in filteredFiles" :key="f.fileId" class="glass-card overflow-hidden card-lift group">
             <div class="aspect-video bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center overflow-hidden">
               <img v-if="f.type === 'image'" :src="f.url" alt="" class="w-full h-full object-cover" @error="hideImg" />
@@ -164,7 +164,7 @@
       </div>
 
       <!-- 账号与安全（仅自己，私密功能） -->
-      <div v-else-if="activeTab === 'security' && isSelf" class="grid lg:grid-cols-2 gap-5">
+      <div v-else-if="activeTab === 'security' && isSelf" class="grid grid-cols-2 gap-5">
         <!-- 修改密码 -->
         <div class="glass-card p-5">
           <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 mb-4 flex items-center gap-2">
@@ -319,7 +319,8 @@ import { getMyUserInfo } from '@/api/userinfo'
 import { createSession } from '@/api/chat'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
-import { relativeTime } from '@/utils/format'
+import { formatSize, relativeTime } from '@/utils/format'
+import { isVideoPost, pickCoverUrl } from '@/utils/media'
 
 const route = useRoute()
 const router = useRouter()
@@ -367,14 +368,12 @@ const expPercent = computed(() => {
 function goTab(key: string): void {
   router.push({ path: `/users/${userId.value}`, query: { tab: key } })
 }
-// 概览缩略辅助（与 PostCard 同字段约定：mediaUrls[0] 封面 / isVideo 或 URL 后缀）
+// 概览缩略辅助（与 PostCard 同字段约定：封面取首张非视频媒体 / isVideo 判定见 utils/media）
 function postThumb(p: any): string {
-  const urls = p.mediaUrls || []
-  return urls[0] || ''
+  return pickCoverUrl(p.mediaUrls)
 }
 function postIsVideo(p: any): boolean {
-  if (p.isVideo) return true
-  return /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(postThumb(p))
+  return isVideoPost(p)
 }
 function postTitle(p: any): string {
   const t: string = (p.content || '').replace(/[#*`>~-]/g, '').trim()
@@ -721,18 +720,14 @@ function previewFile(f: any): void {
   toast.push(`预览 ${f.name} 功能开发中`, 'info')
 }
 
-function formatSize(bytes: number): string {
-  if (!bytes) return '0 B'
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / 1024 / 1024).toFixed(1) + ' MB'
-}
-
 function hideImg(e: Event) {
   (e.target as HTMLElement).style.visibility = 'hidden'
 }
 
-watch(() => route.params.id, () => {
+watch(() => route.params.id, (id) => {
+  // keep-alive 缓存下组件未激活时路由也会变化（如切到 /chat 时本路由的 params.id 消失为 undefined）——
+  // 无 id 时跳过，避免误请求 /api/tweets/user/undefined
+  if (!id) return
   loadUser()
   loadOverview()
   loadSafety()

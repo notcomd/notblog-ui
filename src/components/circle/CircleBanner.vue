@@ -1,50 +1,58 @@
 <template>
-  <!-- 社区 Banner 卡片：封面/头像/信息/操作按钮 + 分类 tab（公告·主页·资源·成员） -->
+  <!-- 社区头图卡：沉浸式封面（大图/视频铺满 + 底部渐变压暗）+ 悬浮信息条 + 上浮玻璃分类 tab -->
   <div>
-    <div class="glass-card overflow-hidden">
-      <!-- Banner 头图 -->
-      <div class="h-40 relative bg-gradient-to-r from-amber-200/70 via-orange-200/60 to-emerald-200/70 dark:from-amber-500/20 dark:via-orange-500/15 dark:to-emerald-500/20">
-        <img v-if="coverUrl && !coverIsVideo" :src="coverUrl" alt="" class="absolute inset-0 w-full h-full object-cover opacity-25" @error="hideImg" />
-        <video v-else-if="coverUrl" :src="coverUrl" autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-25"></video>
-        <img v-else-if="avatarUrl" :src="avatarUrl" alt="" class="absolute inset-0 w-full h-full object-cover opacity-25" @error="hideImg" />
-        <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-      </div>
+    <div class="relative rounded-[10px] overflow-hidden border border-white/50 dark:border-white/10 shadow-lg shadow-black/10">
+      <!-- 封面层：图片/视频铺满；无封面时回退渐变 + SVG 山形装饰 -->
+      <div class="relative h-64 bg-gradient-to-br from-amber-300 via-orange-300 to-emerald-300 dark:from-amber-600/40 dark:via-orange-600/35 dark:to-emerald-600/35">
+        <img v-if="coverUrl && !coverIsVideo" :src="coverUrl" alt="" class="absolute inset-0 w-full h-full object-cover" @error="hideImg" />
+        <video v-else-if="coverUrl" :src="coverUrl" autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+        <svg v-else class="absolute inset-0 w-full h-full" viewBox="0 0 1200 320" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 246 L210 118 L356 208 L556 68 L756 198 L938 108 L1200 246 L1200 320 L0 320 Z" fill="rgba(255,255,255,0.26)" />
+          <path d="M0 284 L178 198 L378 262 L600 172 L820 258 L1002 188 L1200 284 L1200 320 L0 320 Z" fill="rgba(255,255,255,0.2)" />
+        </svg>
 
-      <!-- 信息行 -->
-      <div class="flex items-center gap-3 px-4 py-3">
-        <img :src="avatarUrl || fallback" alt="" class="w-12 h-12 rounded-[5%] object-cover border border-white/60 dark:border-white/10 shrink-0" @error="hideImg" />
-        <div class="flex-1 min-w-0">
-          <div class="text-lg font-bold text-zinc-800 dark:text-zinc-100 truncate">
-            {{ name }}
-          </div>
-          <div class="text-xs text-zinc-500 dark:text-zinc-300 truncate mt-0.5">{{ description }}</div>
-          <div class="text-[11px] text-zinc-400 mt-1 flex items-center gap-3">
-            <span class="inline-flex items-center gap-1"><svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>{{ memberCount }} 成员</span>
-            <span>{{ roleText }}</span>
+        <!-- 底部渐变压暗：保证白色文字在任意封面上可读 -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/5"></div>
+
+        <!-- 右上操作区（悬浮玻璃按钮） -->
+        <div class="absolute top-4 right-4 flex items-center gap-2">
+          <button v-if="canManageUsers && !confirmingLeave" class="h-9 px-3 rounded-full text-xs font-medium text-white bg-white/20 hover:bg-white/30 border border-white/30 backdrop-blur-md transition-colors inline-flex items-center gap-1.5" @click="$emit('manage')"><svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg> 社区管理</button>
+          <button v-if="!canManageUsers && !confirmingLeave && joinMode !== 'private'" class="h-9 px-3 rounded-full text-xs font-medium text-white bg-white/20 hover:bg-white/30 border border-white/30 backdrop-blur-md transition-colors inline-flex items-center gap-1.5" @click="genMemberInvite"><svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> 邀请</button>
+          <button v-if="!canManageUsers && !confirmingLeave" class="h-9 px-3 rounded-full text-xs font-medium text-white/85 hover:text-white hover:bg-white/15 transition-colors" @click="confirmingLeave = true">退出社区</button>
+          <div v-else-if="!canManageUsers && confirmingLeave" class="h-9 px-3 rounded-full flex items-center gap-2 bg-black/40 border border-white/25 backdrop-blur-md">
+            <span class="text-xs text-white/85">确定退出？</span>
+            <button class="h-6 px-2.5 rounded-full text-[11px] font-medium bg-red-500 text-white hover:bg-red-600 active:scale-95 transition-all" @click="$emit('leave')">确定</button>
+            <button class="h-6 px-2.5 rounded-full text-[11px] font-medium text-white/85 hover:bg-white/15 transition-colors" @click="confirmingLeave = false">取消</button>
           </div>
         </div>
-        <!-- 右上操作：创建者/管理者=社区管理（改信息仅创建者）；普通成员=邀请（邀请码）+ 退出；私密模式仅创建者可邀请 -->
-        <button v-if="canManageUsers && !confirmingLeave" class="px-3 h-8 rounded-[5%] text-xs font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:brightness-110 active:scale-95 transition-all inline-flex items-center gap-1" @click="$emit('manage')"><svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg> 社区管理</button>
-        <button v-if="!canManageUsers && !confirmingLeave && joinMode !== 'private'" class="px-3 h-8 rounded-[5%] text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors inline-flex items-center gap-1" @click="genMemberInvite"><svg aria-hidden="true" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> 邀请</button>
-        <button v-if="!canManageUsers && !confirmingLeave" class="px-3 h-8 rounded-[5%] text-xs font-medium text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" @click="confirmingLeave = true">退出社区</button>
-        <div v-else-if="!canManageUsers && confirmingLeave" class="flex items-center gap-2 shrink-0">
-          <span class="text-xs text-zinc-500 dark:text-zinc-400">确定退出？</span>
-          <button class="px-3 h-8 rounded-[5%] text-xs font-medium bg-red-500 text-white hover:bg-red-600 active:scale-95 transition-all" @click="$emit('leave')">确定</button>
-          <button class="px-3 h-8 rounded-[5%] text-xs font-medium text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" @click="confirmingLeave = false">取消</button>
+
+        <!-- 悬浮信息条：头像 + 名称 + 简介 + 成员/角色胶囊 -->
+        <div class="absolute inset-x-0 bottom-0 px-5 pb-8 pt-16 flex items-end gap-4">
+          <img :src="avatarUrl || fallback" alt="" class="w-20 h-20 rounded-[10px] object-cover border-2 border-white/70 bg-white/20 shrink-0" @error="hideImg" />
+          <div class="flex-1 min-w-0 pb-1">
+            <h1 class="text-2xl font-bold text-white truncate">{{ name }}</h1>
+            <p class="text-xs text-white/80 truncate mt-0.5">{{ description }}</p>
+            <div class="mt-2 flex items-center gap-2">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] text-white bg-white/20 border border-white/25 backdrop-blur-md">
+                <svg aria-hidden="true" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>{{ memberCount }} 成员
+              </span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] text-white bg-white/20 border border-white/25 backdrop-blur-md">{{ roleText }}</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- 社区分类 tab（卡片内底部） -->
-      <div class="flex items-center border-t border-zinc-200/60 dark:border-zinc-700/60 px-2">
+      <!-- 分类 tab：玻璃条上浮压住头图下沿，选中态为琥珀下划线（与顶栏「热门/最新」同构） -->
+      <div class="relative -mt-5 px-3 flex items-center bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl">
         <button
           v-for="t in CIRCLE_TABS"
           :key="t.key"
-          class="relative px-3 py-2 text-sm transition-colors inline-flex items-center gap-1"
+          class="relative h-12 px-3.5 text-sm transition-colors inline-flex items-center gap-1.5"
           :class="circleTab === t.key ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'"
           @click="$emit('switch-tab', t.key)"
         >
           <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="t.icon"></svg>{{ t.label }}
-          <span v-if="circleTab === t.key" class="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-amber-500"></span>
+          <span v-if="circleTab === t.key" class="absolute left-3.5 right-3.5 bottom-2 h-px rounded-full bg-amber-500"></span>
         </button>
       </div>
     </div>
@@ -75,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-// 社区 Banner：封面（图片/视频/头像兜底）+ 信息行 + 权限操作（管理/邀请/退出）+ 分类 tab
+// 社区 Banner：沉浸式封面（图片/视频/渐变兜底）+ 悬浮操作与信息 + 分类 tab（公告·主页·资源·成员·聊天）
 import { computed, ref } from 'vue'
 import { generateCircleInvitation } from '@/api/circle'
 import { useToastStore } from '@/stores/toast'

@@ -3,31 +3,31 @@
     <!-- 背景壁纸（fixed inset-0 z-0，内容层 z-10 保证不被盖住） -->
     <BackgroundImage />
 
-    <!-- 可读性遮罩：暗色主题加深 -->
+    <!-- 可读性遮罩：浅色铺一层柔和白纱，让背景更接近奶白并淡化线条；
+         深色加深压暗，保证浮层文字对比度 -->
     <div
       class="absolute inset-0 z-[5] transition-colors duration-300"
-      :class="theme.isDark ? 'bg-black/45' : 'bg-black/15'"
+      :class="theme.isDark ? 'bg-black/65' : 'bg-white/40'"
     ></div>
 
-    <!-- ===== 左上角 Logo（与 TopBar 品牌一致） ===== -->
+    <!-- ===== 左上角 Logo（与 SideNav 品牌一致） ===== -->
     <router-link
       to="/home"
-      class="fixed top-6 left-6 z-50 flex items-center gap-2.5 group"
-      title="轻芒 · 兴趣部落"
+      class="fixed top-6 left-6 z-50 flex items-center gap-2.5"
+      title="MonoHub"
     >
       <div
-        class="w-10 h-10 flex items-center justify-center text-zinc-800 dark:text-zinc-100"
+        class="w-9 h-9 rounded-lg overflow-hidden bg-white border border-zinc-200/70 dark:border-white/10 shadow-sm"
       >
-        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 3l7 4v5c0 4.4-3 7.9-7 9-4-1.1-7-4.6-7-9V7l7-4z" />
-        </svg>
+        <img src="@/assets/monohub-logo.jpg" alt="MonoHub" class="w-full h-full object-cover" />
       </div>
-      <span class="text-xl font-bold tracking-wide font-display text-white">轻芒 · 兴趣部落</span>
+      <!-- text-zinc-800 在深色主题下由 input.css 统一转纯白，深浅背景均可读 -->
+      <span class="text-lg font-bold tracking-wide font-display text-zinc-800">MonoHub</span>
     </router-link>
 
     <!-- ===== 右上角主题切换 ===== -->
     <button
-      class="fixed top-6 right-6 z-50 w-11 h-11 flex items-center justify-center text-zinc-800 dark:text-zinc-100 hover:scale-105 active:scale-95 transition-all duration-200"
+      class="fixed top-6 right-6 z-50 w-11 h-11 flex items-center justify-center rounded-full text-zinc-800 dark:text-zinc-100 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all duration-200"
       :title="theme.isDark ? '切换到浅色主题' : '切换到深色主题'"
       :aria-label="theme.isDark ? '切换到浅色主题' : '切换到深色主题'"
       @click="theme.toggle()"
@@ -42,11 +42,9 @@
       </svg>
     </button>
 
-    <!-- ===== 中央登录卡片（单表单双通道：密码登入 / 验证码登入） ===== -->
-    <div class="relative z-10 min-h-screen flex items-center justify-center p-4 sm:p-6">
-      <div class="w-full max-w-md glass-card p-6 sm:p-8">
-        <LoginFrom class="transition-forment" />
-      </div>
+    <!-- ===== 中央登入内容（三屏：欢迎 → 登入表单 → 登录成功；无卡片，直接浮于背景） ===== -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center p-6">
+      <LoginFrom @success="finishLogin" />
     </div>
   </div>
 </template>
@@ -58,12 +56,29 @@ import { useThemeStore } from '@/stores/theme'
 import LoginFrom from '@/components/LoginFrom.vue'
 import BackgroundImage from '@/components/BackgroundImage.vue'
 import { oauthCallback, saveLoginResult } from '@/api/auth'
+import type { TokenResult } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
 const theme = useThemeStore()
 
-// OAuth 提供方授权完成后回跳到 /login?code=xxx&state=xxx，在此换取 Token
+// ==================== 登录收尾（表单登录 / OAuth 回调共用） ====================
+// 凭证落盘后按 ?redirect 回跳原页面（由 main.ts 会话失效装配写入），无则回首页
+const finishLogin = (payload: TokenResult): void => {
+  if (!saveLoginResult(payload)) {
+    console.error('登录失败：响应缺少 accessToken', payload)
+    return
+  }
+  const redirect = route.query.redirect
+  router.replace(
+    typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
+      ? redirect
+      : '/home'
+  )
+}
+
+// ==================== OAuth 回调 ====================
+// 提供方授权完成后回跳到 /login?code=xxx&state=xxx，在此换取 Token
 onMounted(async () => {
   const { code, state } = route.query
   const provider = sessionStorage.getItem('oauth_provider')
@@ -73,29 +88,10 @@ onMounted(async () => {
       // axios 拦截器未解包，业务数据在 res.data
       const res = await oauthCallback(provider, code as string, state as string, window.location.origin + '/login')
       const data = res && (res as any).data ? (res as any).data : (res as any)
-      if (saveLoginResult(data)) {
-        router.replace('/home')
-      } else {
-        console.error('OAuth 登录失败：响应缺少 accessToken', data)
-      }
+      finishLogin(data as TokenResult)
     } catch (err) {
       console.error('OAuth 回调换取 Token 失败:', err)
     }
   }
 })
 </script>
-
-<style scoped>
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.transition-forment { animation: fadeIn 0.5s ease-out }
-</style>

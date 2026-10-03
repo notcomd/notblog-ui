@@ -1,6 +1,6 @@
 <template>
-  <!-- 群聊创建/搜索面板：由 ChatConversation 按 mode 切换显示 -->
-  <div class="flex-1 min-w-0 glass-card flex flex-col min-h-0">
+  <!-- 群聊创建/搜索面板：由 ChatConversation 按 mode 切换显示（扁平容器，与侧栏同构） -->
+  <div class="flex-1 min-w-0 flex flex-col min-h-0">
     <!-- 创建群聊 -->
     <template v-if="mode === 'create'">
       <div class="flex items-center gap-3 px-5 py-3 border-b border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
@@ -9,7 +9,7 @@
       </div>
       <div class="flex-1 overflow-y-auto px-6 py-5 min-h-0 space-y-5">
         <div class="flex flex-col items-center gap-2.5">
-          <div class="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center shrink-0 border border-zinc-200/70 dark:border-zinc-700/60">
+          <div class="w-20 h-20 rounded-[10px] overflow-hidden flex items-center justify-center shrink-0 border border-zinc-200/70 dark:border-zinc-700/60">
             <img v-if="groupAvatarPreview" :src="groupAvatarPreview" alt="" class="w-full h-full object-cover" />
             <span v-else class="w-full h-full flex items-center justify-center text-2xl font-bold text-white" style="background-color: #6366f1">{{ (groupName.trim() || '群').charAt(0) }}</span>
           </div>
@@ -36,7 +36,7 @@
       </div>
       <div class="px-5 py-3.5 border-t border-zinc-200/60 dark:border-zinc-700/60 flex justify-end gap-2 shrink-0">
         <button class="h-10 px-4 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-300 hover:bg-white/60 dark:hover:bg-zinc-800/60" @click="$emit('close')">取消</button>
-        <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium" :disabled="groupSending || !groupName.trim()" @click="doCreateGroup">{{ groupSending ? '创建中...' : '创建群聊' }}</button>
+        <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium" :disabled="groupSending || !groupName.trim()" @click="doCreateGroup">{{ groupSending ? '创建中…' : '创建群聊' }}</button>
       </div>
     </template>
 
@@ -64,13 +64,13 @@
 
 <script setup lang="ts">
 // 群聊创建/搜索面板：处理群头像上传、建群、搜索公开群、打开已有群会话
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useChatStore } from '@/stores/chat'
 import { useToastStore } from '@/stores/toast'
 import { createGroup, createGroupSession, searchGroups } from '@/api/chat'
 import { uploadImage } from '@/api/publish'
-import { getMyUserInfo } from '@/api/userinfo'
+import { unwrap } from '@/utils/response'
 import { validateImageFile, compressImage, blobToDataUri } from '@/utils/image'
 
 defineProps<{
@@ -90,18 +90,12 @@ const groupPublic = ref(false)
 const groupMembers = ref<string[]>([])
 const groupSending = ref(false)
 const groupAvatarPreview = ref('')
-const groupAvatarValue = ref('')
 const groupAvatarUpdating = ref(false)
-const myLevel = ref(1)
 
 const groupKeyword = ref('')
 const groupResults = ref<any[]>([])
 const groupSearching = ref(false)
 const groupSearched = ref(false)
-
-function groupAvatarKey(groupId: string): string {
-  return 'notblog-group-avatar-' + groupId
-}
 
 async function onGroupAvatarChange(e: Event) {
   const input = e.target as HTMLInputElement
@@ -116,16 +110,14 @@ async function onGroupAvatarChange(e: Event) {
     const upFile = new File([blob], 'group-avatar.webp', { type: 'image/webp' })
     try {
       const res = await uploadImage(upFile, 'group-avatar')
-      const d = res && res.data ? res.data : res
-      const uri = d && (d.fileUri || d.url)
+      const d = unwrap(res) || {}
+      const uri = d.fileUri || d.url
       if (!uri) throw new Error('no fileUri')
       groupAvatarPreview.value = uri
-      groupAvatarValue.value = uri
     } catch (err) {
-      const uri = await blobToDataUri(blob)
-      groupAvatarPreview.value = uri
-      groupAvatarValue.value = uri
-      toast.push('头像已本地保存（后端未就绪）', 'info')
+      // 上传失败时退化为本地预览（群头像当前不随建群请求提交，故仅作预览）
+      groupAvatarPreview.value = await blobToDataUri(blob)
+      toast.push('头像上传失败，已改用本地预览', 'info')
     }
   } catch (err) {
     toast.push('头像处理失败，请重试', 'error')
@@ -145,24 +137,20 @@ async function doCreateGroup() {
       isPublic: groupPublic.value,
       initialMembers: groupMembers.value.length ? groupMembers.value : undefined
     })
-    const d = res && res.data ? res.data : res
+    const d = unwrap(res)
     const groupId = typeof d === 'string' ? d : (d && (d.groupId || d.id)) || ''
     if (!groupId) throw new Error('no groupId')
-    if (groupAvatarValue.value) {
-      try { localStorage.setItem(groupAvatarKey(groupId), groupAvatarValue.value) } catch (err) { /* 忽略 */ }
-    }
     toast.push('群聊创建成功', 'success')
     groupName.value = ''
     groupDesc.value = ''
     groupPublic.value = false
     groupMembers.value = []
     groupAvatarPreview.value = ''
-    groupAvatarValue.value = ''
     chat.loadGroups()
     chat.loadSessions()
     try {
       const sres = await createGroupSession(groupId, name)
-      const sd = sres && sres.data ? sres.data : sres
+      const sd = unwrap(sres)
       const sessionId = typeof sd === 'string' ? sd : (sd && (sd.sessionId || sd.id)) || ''
       if (sessionId) {
         await chat.loadSessions()
@@ -182,12 +170,11 @@ async function doGroupSearch() {
   groupSearching.value = true
   groupSearched.value = true
   try {
-    const res = await searchGroups({ searchTerm: kw, page: 1, pageSize: 20 })
-    const data = res && res.data ? res.data : res
+    const data = unwrap(await searchGroups({ searchTerm: kw, page: 1, pageSize: 20 }))
     groupResults.value = (data && (data.items || data.list || data)) || []
   } catch (e) {
     groupResults.value = []
-    toast.push('搜索失败（后端未就绪）', 'error')
+    toast.push('搜索失败，请稍后重试', 'error')
   } finally {
     groupSearching.value = false
   }
@@ -206,10 +193,4 @@ function onGroupResultClick(g: any) {
   if (s) router.push('/chat/' + s.sessionId)
   else toast.push('暂无可打开的群会话', 'info')
 }
-
-watch(() => myLevel.value, () => {})
-getMyUserInfo().then(u => {
-  const d = u && u.data ? u.data : u
-  if (d && d.level) myLevel.value = d.level
-}).catch(() => {})
 </script>

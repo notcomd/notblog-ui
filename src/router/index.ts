@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router';
 
 import { getToken } from '@/utils/auth';
 
-// 部落主应用（轻芒·兴趣部落）
+// MonoHub 主应用
 import AppLayout from '@/layout/AppLayout.vue';
 import HomeView from '@/views/HomeView.vue';
 import CirclePage from '@/views/CirclePage.vue';
@@ -24,6 +24,7 @@ import AdminReportsView from '@/views/admin/AdminReportsView.vue';
 import AdminCirclesView from '@/views/admin/AdminCirclesView.vue';
 import AdminFilesView from '@/views/admin/AdminFilesView.vue';
 import AdminAnnouncementsView from '@/views/admin/AdminAnnouncementsView.vue';
+import AdminMenusView from '@/views/admin/AdminMenusView.vue';
 
 // 旧版页面（保留但退出主导航）
 import LoginPage from '@/views/LoginPage.vue';
@@ -92,7 +93,8 @@ const routes: RouteRecordRaw[] = [
       { path: 'reports', name: 'AdminReports', component: AdminReportsView },
       { path: 'circles', name: 'AdminCircles', component: AdminCirclesView },
       { path: 'files', name: 'AdminFiles', component: AdminFilesView },
-      { path: 'announcements', name: 'AdminAnnouncements', component: AdminAnnouncementsView }
+      { path: 'announcements', name: 'AdminAnnouncements', component: AdminAnnouncementsView },
+      { path: 'menus', name: 'AdminMenus', component: AdminMenusView }
     ]
   },
   // ===== 认证 =====

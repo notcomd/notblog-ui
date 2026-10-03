@@ -16,7 +16,7 @@
         <p class="text-xs font-medium text-zinc-400 mb-2">基本信息</p>
         <div class="space-y-2.5" :class="!isOwner ? 'pointer-events-none opacity-60' : ''">
           <div class="flex items-center gap-3">
-            <img :src="avatarPreview || avatarUrl || fallback" alt="" class="w-12 h-12 rounded-[5%] object-cover shrink-0" />
+            <img :src="avatarPreview || avatarUrl || fallback" alt="" class="w-12 h-12 rounded-[10px] object-cover shrink-0" />
             <div class="flex gap-2">
               <button class="h-8 px-3 rounded-[5%] text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors" @click="pickAvatar">更换头像</button>
               <button class="h-8 px-3 rounded-[5%] text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors" @click="pickCover">更换封面</button>
@@ -60,7 +60,7 @@
         <div v-if="joinRequests.length === 0" class="text-xs text-zinc-400 py-6 text-center bg-white/40 dark:bg-zinc-800/40 rounded-[5%]">暂无待审核申请</div>
         <div v-else class="space-y-1">
           <div v-for="r in joinRequests" :key="r.userGuid" class="flex items-center gap-3 px-2 py-2 rounded-[5%] hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors">
-            <img :src="themeAvatar((r.userName || '友').charAt(0))" alt="" class="w-9 h-9 rounded-[5%] object-cover shrink-0" />
+            <img :src="themeAvatar((r.userName || '友').charAt(0))" alt="" class="w-9 h-9 rounded-[10px] object-cover shrink-0" />
             <span class="flex-1 min-w-0">
               <span class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ r.userName }}</span>
               <span class="block text-xs text-zinc-400">{{ new Date(r.time).toLocaleString() }}</span>

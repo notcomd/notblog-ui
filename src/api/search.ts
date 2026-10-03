@@ -1,7 +1,7 @@
-import service from '@/axios';
 import { getDiscoverCircles } from '@/api/circle';
 import { searchFriends } from '@/api/chat';
 import { searchVideo } from '@/api/video';
+import { searchMarkdownDocs } from '@/api/markdown';
 import { unwrap } from '@/utils/response';
 
 // ============================================================
@@ -19,13 +19,11 @@ export interface SearchItem {
   raw: unknown;          // 原始 DTO，供自定义渲染
 }
 
-// ---------- 文章（Markdown）：GET /api/markdown/search?keyword&skip&take -> List<MarkdownSummaryResponse> ----------
+// ---------- 文章（Markdown）：复用 api/markdown.ts 的 searchMarkdownDocs（GET /api/markdown/search -> List<MarkdownSummaryResponse>） ----------
 export async function searchArticles(keyword: string, take = 20): Promise<SearchItem[]> {
   if (!keyword.trim()) return [];
   try {
-    const res = await service.get('/api/markdown/search', {
-      params: { keyword: keyword.trim(), skip: 0, take }
-    });
+    const res = await searchMarkdownDocs({ keyword: keyword.trim(), skip: 0, take });
     const data = unwrap(res) as any[];
     const list = Array.isArray(data) ? data : [];
     return list.map((m: any) => ({

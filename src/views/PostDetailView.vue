@@ -18,10 +18,10 @@
 
     <!-- 举报弹窗 -->
     <div v-if="reportOpen" class="fixed inset-0 z-[85] flex items-center justify-center bg-black/40" @click.self="reportOpen = false">
-      <div class="glass-card p-4 sm:p-6 w-[min(440px,92vw)] max-h-[90vh] overflow-y-auto overscroll-contain">
+      <div class="glass-card p-6 w-[min(440px,92vw)] max-h-[90vh] overflow-y-auto overscroll-contain">
         <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 mb-1">举报内容</h3>
         <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">请选择举报类型，我们会尽快核实处理</p>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+        <div class="grid grid-cols-3 gap-2 mb-4">
           <button v-for="(c, i) in REPORT_CATEGORIES" :key="i" type="button" :aria-pressed="reportCategory === i" class="py-2.5 rounded-xl text-sm font-medium transition-all"
             :class="reportCategory === i ? 'bg-gradient-to-r from-red-400 to-rose-500 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
             @click="reportCategory = i">{{ c }}</button>
@@ -35,8 +35,8 @@
     </div>
 
     <!-- 加载骨架 -->
-    <div v-if="loading" class="grid grid-cols-1 lg:grid-cols-5 gap-6" role="status">
-      <div class="lg:col-span-3 space-y-4 animate-pulse">
+    <div v-if="loading" class="grid grid-cols-5 gap-6" role="status">
+      <div class="col-span-3 space-y-4 animate-pulse">
         <div class="aspect-[4/3] rounded-[5%] bg-zinc-200/70 dark:bg-zinc-800/70"></div>
         <div class="h-6 w-3/4 rounded bg-zinc-200/70 dark:bg-zinc-800/70"></div>
         <div class="space-y-2">
@@ -45,7 +45,7 @@
           <div class="h-3 w-2/3 rounded bg-zinc-200/70 dark:bg-zinc-800/70"></div>
         </div>
       </div>
-      <div class="lg:col-span-2">
+      <div class="col-span-2">
         <div class="glass-card p-4 space-y-3 animate-pulse">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70"></div>
@@ -57,12 +57,12 @@
     </div>
 
     <!-- 主体：6:4 分栏 -->
-    <div v-else-if="tweet" class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <div v-else-if="tweet" class="grid grid-cols-5 gap-6">
       <!-- ===== 左侧 60%：内容展示区 ===== -->
-      <div class="lg:col-span-3 min-w-0">
+      <div class="col-span-3 min-w-0">
         <div class="glass-card overflow-hidden">
           <!-- 媒体：视频模式 -> 播放器（含弹幕系统）；图文模式 -> 轮播 -->
-          <VideoPlayer v-if="isVideo && mediaUrls.length" :src="mediaUrls[0]" :video-guid="tweet.tweetGuid" class="p-3" />
+          <VideoPlayer v-if="isVideo && videoUrl" :src="videoUrl" :video-guid="tweet.tweetGuid" class="p-3" />
           <div v-else-if="mediaUrls.length" class="relative bg-zinc-100 dark:bg-zinc-900">
             <div class="relative overflow-hidden aspect-[4/3]">
               <transition name="fade">
@@ -82,9 +82,9 @@
             </div>
           </div>
 
-          <div class="p-4 sm:p-6">
+          <div class="p-6">
             <!-- 标题 -->
-            <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 leading-snug">{{ tweet.content }}</h1>
+            <h1 class="text-2xl font-bold text-zinc-900 dark:text-zinc-50 leading-snug">{{ tweet.content }}</h1>
 
             <!-- 元数据 -->
             <div class="flex flex-wrap items-center gap-3 mt-4 text-sm text-zinc-400">
@@ -122,7 +122,7 @@
       </div>
 
       <!-- ===== 右侧 40%：互动与社交区（固定不滚动） ===== -->
-      <div class="lg:col-span-2 min-w-0 flex flex-col gap-4 h-fit lg:sticky lg:top-20">
+      <div class="col-span-2 min-w-0 flex flex-col gap-4 h-fit sticky top-20">
         <!-- 发布者信息卡片 -->
         <div class="glass-card p-5">
           <div class="flex items-center gap-3">
@@ -215,6 +215,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { submitReport } from '@/api/report'
 import { renderMarkdown, looksLikeMarkdown } from '@/utils/markdown'
+import { isVideoPost, pickVideoUrl } from '@/utils/media'
 import { compactNumber, relativeTime } from '@/utils/format'
 
 const route = useRoute()
@@ -258,8 +259,11 @@ const activeMedia = ref(0)
 const commentSection = ref<any>(null)
 const mediaFailed = ref(false)
 
-const isVideo = computed(() => !!tweet.value && !!tweet.value.isVideo)
-const mediaUrls = computed(() => (tweet.value && tweet.value.mediaUrls) || [])
+const mediaUrls = computed<string[]>(() => (tweet.value && tweet.value.mediaUrls) || [])
+// 视频判定：优先后端 isVideo，兜底按媒体地址后缀识别（后端 TweetDto 暂无该字段，曾因此让视频帖走图文轮播而无法播放）
+const isVideo = computed(() => isVideoPost(tweet.value))
+// 播放地址：取媒体里第一个视频地址，兜底用首图（避免封面排在 videos 前时取错）
+const videoUrl = computed(() => pickVideoUrl(mediaUrls.value) || mediaUrls.value[0] || '')
 const authorName = computed(() => {
   const a = tweet.value && tweet.value.author
   return a ? (a.userName || a.name || a.nickname || '用户') : '用户'
@@ -310,10 +314,12 @@ async function load(): Promise<void> {
       isFavorited: !!(data.isFavorited !== undefined ? data.isFavorited : tweet.value.isFavorited),
       isCoined: !!data.isCoined
     }
-    // 记录浏览
-    if (tweet.value && tweet.value.tweetGuid) recordView(tweet.value.tweetGuid)
-    // 关注状态：拉取我关注的人列表比对（后端暂无 is-following 端点）
-    if (authorId.value) {
+    // 记录浏览：需登录。访客访问不发送，避免必然 401 的无效请求（且原先无 catch 会产生未处理拒绝）
+    if (auth.isLoggedIn() && tweet.value?.tweetGuid) {
+      recordView(tweet.value.tweetGuid).catch(() => { /* 浏览计数失败不影响阅读 */ })
+    }
+    // 关注状态：拉取我关注的人列表比对（后端暂无 is-following 端点）；需登录，访客跳过
+    if (auth.isLoggedIn() && authorId.value) {
       try {
         const f = await getFollowing({ page: 1, pageSize: 100 })
         const list = (f.data && (f.data.items || f.data.list)) || []

@@ -1,53 +1,14 @@
 <template>
   <div class="bg-container">
-    <img v-if="imageUrl" :src="imageUrl" alt="" aria-hidden="true" class="bg-image" @error="onImageError" />
+    <img v-if="imageUrl" :src="imageUrl" alt="" aria-hidden="true" class="bg-image" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-// 兜底壁纸：打包进前端，官方接口不可达时也能保证登录页有背景
-import fallbackImg from '@/assets/images/120498537_p0_master1200.jpg'
+import { ref } from 'vue'
 
-const imageUrl = ref('')
-
-// 主源：cn.bing.com 官方每日壁纸接口（中国区可达；idx 随机取最近 8 天，图片更丰富）
-const fetchFromBing = async (): Promise<void> => {
-  const resp = await fetch(
-    `https://cn.bing.com/HPImageArchive.aspx?format=js&idx=${Math.floor(Math.random() * 8)}&n=1&mkt=zh-CN`,
-    { signal: AbortSignal.timeout(8000) }
-  )
-  const data = await resp.json()
-  const url = data && data.images && data.images[0] && data.images[0].url
-  if (!url) throw new Error('Bing 接口返回异常')
-  imageUrl.value = 'https://cn.bing.com' + url
-}
-
-// 次源：第三方聚合（原实现；官方接口失败时尝试）
-const fetchFromImgRun = async (): Promise<void> => {
-  imageUrl.value = 'https://bing.img.run/rand_uhd.php'
-}
-
-onMounted(async () => {
-  try {
-    await fetchFromBing()
-  } catch (e) {
-    console.warn('Bing 官方壁纸获取失败，切换备用源:', e)
-    try {
-      await fetchFromImgRun()
-    } catch (e2) {
-      // 两层都失败 → 用打包的本地图（组件加载时即设置，<img> 一定能显示）
-      imageUrl.value = fallbackImg
-    }
-  }
-})
-
-// <img> 实际加载失败（网络抖动/图片 404）→ 本地兜底图
-const onImageError = (): void => {
-  if (imageUrl.value !== fallbackImg) {
-    imageUrl.value = fallbackImg
-  }
-}
+// 登录页背景：使用 public 目录下的静态资源，以根路径引用（构建后原样拷贝，无需打包处理）
+const imageUrl = ref('/favicon.png')
 </script>
 
 <style scoped>
@@ -68,5 +29,7 @@ const onImageError = (): void => {
   height: 100%;
   object-fit: cover;
   object-position: center;
+  /* 柔化：降低对比度把黑线压成浅灰，再提亮还原白底，整体观感更柔和 */
+  filter: contrast(0.42) brightness(1.28);
 }
 </style>

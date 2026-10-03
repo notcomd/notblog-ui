@@ -15,7 +15,7 @@
     </div>
 
     <!-- 文件网格（4列） -->
-    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div class="grid grid-cols-4 gap-4">
       <div v-for="f in files" :key="f.fileId" class="glass-card overflow-hidden card-lift group">
         <div class="aspect-video bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center overflow-hidden relative">
           <img v-if="f.type === 'image'" :src="f.url" alt="" class="w-full h-full object-cover" @error="hideImg" />
@@ -86,7 +86,7 @@ import AdminModal from '@/components/admin/AdminModal.vue'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 import { getAdminFiles, deleteAdminFile } from '@/api/admin'
 import { useToastStore } from '@/stores/toast'
-import { relativeTime } from '@/utils/format'
+import { formatSize, relativeTime } from '@/utils/format'
 
 const toast = useToastStore()
 
@@ -140,13 +140,6 @@ async function doDelete(reason: string): Promise<void> {
   } catch (e) {
     toast.push('删除失败', 'error')
   }
-}
-
-function formatSize(bytes: number): string {
-  if (!bytes) return '0 B'
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / 1024 / 1024).toFixed(1) + ' MB'
 }
 
 function hideImg(e: any): void {

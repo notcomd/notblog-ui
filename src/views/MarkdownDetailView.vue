@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
+  <div class="max-w-[1400px] mx-auto px-6 py-6">
     <!-- 加载态 -->
     <div v-if="loading" class="glass-card p-12 text-center text-sm text-zinc-400">加载中...</div>
 
@@ -10,7 +10,7 @@
     </div>
 
     <!-- 文章主体 -->
-    <article v-else class="glass-card p-4 sm:p-8">
+    <article v-else class="glass-card p-8">
       <button
         class="mb-6 text-sm text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1"
         @click="router.back()"
@@ -20,7 +20,7 @@
       </button>
 
       <!-- 标题 -->
-      <h1 class="text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-snug">{{ doc.name }}</h1>
+      <h1 class="text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-snug">{{ doc.name }}</h1>
 
       <!-- 元数据 -->
       <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-zinc-400">
@@ -108,6 +108,9 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToastStore()
 
+/** 当前文档 Guid（vue-router 的 params 值类型为 string | string[]，统一归一化为字符串） */
+const docGuid = computed(() => String(route.params.guid ?? ''))
+
 const doc = ref<any>(null)
 
 // 评论配置（通用评论组件，Markdown 后端：全量 + 图片评论 + 子评论接口）
@@ -121,13 +124,13 @@ const commentCfg: any = {
   images: true,
   sortable: false,
   replyMode: 'direct',
-  loader: () => getMarkdownReviews(route.params.guid),
-  creator: (payload) => addMarkdownReview(route.params.guid, payload),
-  remove: (id) => deleteMarkdownReview(route.params.guid, id),
-  replyLoader: (parentId) => getMarkdownReviewChildren(route.params.guid, parentId),
-  replier: (parentId, payload) => replyMarkdownReview(route.params.guid, parentId, payload),
-  like: (id) => likeMarkdownReview(route.params.guid, id),
-  unlike: (id) => unlikeMarkdownReview(route.params.guid, id),
+  loader: () => getMarkdownReviews(docGuid.value),
+  creator: (payload) => addMarkdownReview(docGuid.value, payload),
+  remove: (id) => deleteMarkdownReview(docGuid.value, id),
+  replyLoader: (parentId) => getMarkdownReviewChildren(docGuid.value, parentId),
+  replier: (parentId, payload) => replyMarkdownReview(docGuid.value, parentId, payload),
+  like: (id) => likeMarkdownReview(docGuid.value, id),
+  unlike: (id) => unlikeMarkdownReview(docGuid.value, id),
   authorName: (r) => (r.userId ? '用户 ' + String(r.userId).slice(0, 8) : '用户'),
   authorId: (r) => r.userId
 }
@@ -148,15 +151,15 @@ async function load(): Promise<void> {
   favorited.value = false
   try {
     const [docRes, contentRes] = await Promise.all([
-      getMarkdownDoc(route.params.guid),
-      getMarkdownContent(route.params.guid)
+      getMarkdownDoc(docGuid.value),
+      getMarkdownContent(docGuid.value)
     ])
     const d = unwrap(docRes)
     if (!d || !d.markDownGuid) return
     doc.value = d
     content.value = unwrap(contentRes) || ''
     // 浏览 +1（尽力而为，失败不影响展示）
-    viewMarkdown(route.params.guid)
+    viewMarkdown(docGuid.value)
       .then((r) => {
         const v = unwrap(r)
         if (typeof v === 'number' && doc.value) {
@@ -177,7 +180,7 @@ async function checkFavorite(): Promise<void> {
   try {
     const res = await getMyFavorites({ page: 1, pageSize: 50 })
     const items = unwrap(res) || []
-    favorited.value = items.some((i: any) => String(i.markDownGuid) === String(route.params.guid))
+    favorited.value = items.some((i: any) => String(i.markDownGuid) === docGuid.value)
   } catch (e) {
     favorited.value = false
   }
@@ -187,8 +190,8 @@ async function toggleLike(): Promise<void> {
   if (!doc.value) return
   try {
     const res = liked.value
-      ? await unlikeMarkdown(route.params.guid)
-      : await likeMarkdown(route.params.guid)
+      ? await unlikeMarkdown(docGuid.value)
+      : await likeMarkdown(docGuid.value)
     const v = unwrap(res)
     if (typeof v === 'number') doc.value.quote = { ...doc.value.quote, LoveCount: v }
     liked.value = !liked.value
@@ -202,10 +205,10 @@ async function toggleFavorite(): Promise<void> {
   if (!doc.value) return
   try {
     if (favorited.value) {
-      await unfavoriteMarkdown(route.params.guid)
+      await unfavoriteMarkdown(docGuid.value)
       doc.value.quote = { ...doc.value.quote, FavoriteCount: Math.max(0, (doc.value.quote.FavoriteCount || 0) - 1) }
     } else {
-      await favoriteMarkdown({ markDownGuid: route.params.guid })
+      await favoriteMarkdown(docGuid.value)
       doc.value.quote = { ...doc.value.quote, FavoriteCount: (doc.value.quote.FavoriteCount || 0) + 1 }
     }
     favorited.value = !favorited.value
@@ -219,5 +222,5 @@ function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidde
 
 onMounted(load)
 // keep-alive 缓存内切换文档时重新加载
-watch(() => route.params.guid, () => { load() })
+watch(docGuid, () => { load() })
 </script>

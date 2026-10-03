@@ -1,6 +1,6 @@
 <template>
-  <!-- 社区页容器：左侧社区列表 + 右侧主视窗（数据加载与状态协调） -->
-  <div class="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-5 h-auto lg:h-[calc(100vh-7.5rem)]">
+  <!-- 社区页容器：左侧社区栏与右侧主视窗同高对齐（数据加载与状态协调） -->
+  <div class="max-w-[1400px] mx-auto flex flex-row gap-5 h-[calc(100vh-7.5rem)]">
     <CircleSidebar
       :circles="circles"
       :current="current"
@@ -45,8 +45,10 @@ import CircleWorkspace from '@/components/circle/CircleWorkspace.vue'
 import CircleJoinDialog from '@/components/circle/CircleJoinDialog.vue'
 import { getMyCircles, getCircle, joinCircle, leaveCircle, getMyCircleInvitations, acceptCircleInvitation, rejectCircleInvitation } from '@/api/circle'
 import { useToastStore } from '@/stores/toast'
+import { useAuthStore } from '@/stores/auth'
 
 const toast = useToastStore()
+const auth = useAuthStore()
 
 const circles = ref<any[]>([])
 const current = ref<any>(null)
@@ -93,10 +95,16 @@ async function onCreated(guid: string): Promise<void> {
   }
 }
 
+// 退出社区：以当前登录用户 Guid 作为被移除者（成员主动退出走同一端点）
 async function doLeave(): Promise<void> {
   if (!current.value) return
+  const myGuid = String(auth.user?.id || '')
+  if (!myGuid) {
+    toast.push('未获取到当前用户信息，请重新登录', 'error')
+    return
+  }
   try {
-    await leaveCircle(current.value.circleGuid)
+    await leaveCircle(current.value.circleGuid, myGuid)
     toast.push('已退出社区', 'success')
     await loadCircles()
   } catch (e) {

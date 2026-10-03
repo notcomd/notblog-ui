@@ -21,9 +21,13 @@
         />
 
         <!-- 主页：社区动态流 -->
-        <div v-if="circleTab === 'home'" class="mt-4">
-          <div class="flex items-center gap-2 mb-4">
-            <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-400/15 text-amber-600 dark:text-amber-400">当前所在社区：{{ current.name }}</span>
+        <div v-if="circleTab === 'home'" class="mt-5">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+              <svg aria-hidden="true" class="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.7 1.8L21.5 17.5l-1.8.7L19 20l-.7-1.8L16.5 17.5l1.8-.7z"/></svg>
+              社区动态
+            </span>
+            <span class="flex-1 h-px bg-gradient-to-r from-amber-300/70 via-amber-200/40 to-transparent"></span>
           </div>
           <PostGrid :loader="circleLoader" :key="current.circleGuid + '-' + gridKey" empty-text="社区里还没有内容，快来发布第一条动态吧" />
         </div>

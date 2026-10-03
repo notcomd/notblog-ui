@@ -29,11 +29,11 @@
 
     <!-- 内容列表 -->
     <div class="space-y-3">
-      <div v-for="t in items" :key="t.tweetGuid" class="glass-card p-4 flex flex-wrap items-center gap-3 sm:gap-4 transition-all hover:"
+      <div v-for="t in items" :key="t.tweetGuid" class="glass-card p-4 flex flex-wrap items-center gap-4 transition-all hover:"
         :class="(t.reportCount || 0) > 0 ? 'ring-2 ring-red-400/40' : ''">
         <!-- 封面缩略图 -->
         <div class="w-20 h-24 rounded-[5%] overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-          <img v-if="t.mediaUrls && t.mediaUrls[0]" :src="t.mediaUrls[0]" alt="" class="w-full h-full object-cover" @error="hideImg" />
+          <img v-if="thumbOf(t)" :src="thumbOf(t)" alt="" class="w-full h-full object-cover" @error="hideImg" />
           <span v-if="t.isVideo" class="text-2xl"><svg class="w-6 h-6 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg></span><span v-else class="text-2xl"><svg class="w-6 h-6 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
         </div>
         <!-- 信息 -->
@@ -71,8 +71,8 @@
     <!-- 审核弹窗 -->
     <AdminModal v-if="auditTarget" :title="'内容审核：' + auditTarget.content.slice(0, 30)" width="w-[720px]" @close="auditTarget = null">
       <div class="space-y-4">
-        <div class="flex flex-col sm:flex-row gap-4">
-          <img v-if="auditTarget.mediaUrls && auditTarget.mediaUrls[0]" :src="auditTarget.mediaUrls[0]" alt="" class="w-44 h-56 rounded-[5%] object-cover" @error="hideImg" />
+        <div class="flex flex-row gap-4">
+          <img v-if="thumbOf(auditTarget)" :src="thumbOf(auditTarget)" alt="" class="w-44 h-56 rounded-[5%] object-cover" @error="hideImg" />
           <div class="flex-1 space-y-2">
             <div class="text-base font-semibold text-zinc-800 dark:text-zinc-100">{{ auditTarget.content }}</div>
             <div class="text-xs text-zinc-400">作者：{{ auditTarget.authorName }} · 发布时间：{{ relativeTime(auditTarget.createTime) }}</div>
@@ -132,6 +132,7 @@ import { getMarkdownDocs, approveMarkdown, rejectMarkdown } from '@/api/markdown
 
 import { useToastStore } from '@/stores/toast'
 import { relativeTime } from '@/utils/format'
+import { pickCoverUrl } from '@/utils/media'
 
 const toast = useToastStore()
 
@@ -180,13 +181,25 @@ async function load(p: number): Promise<void> {
   loading.value = true
   page.value = p || 1
   try {
-    // 博客 Tab：Markdown 服务审核（真实端点 /api/markdown/list + approve/reject）
-    const res = tab.value === 'blog'
+    // 博客 Tab：Markdown 服务审核（真实端点 GET /api/markdown + approve/reject）
+    // 图文/视频 Tab：AuditApi 待审推文（GET /api/audit/tweets/pending，后端仅接收 page/pageSize；
+    // 状态/排序/类型为本地展示控制，不参与服务端查询）
+    const res = await (tab.value === 'blog'
       ? getMarkdownDocs({ page: page.value, pageSize, keyword: keyword.value })
-      : getPendingTweets({ page: page.value, pageSize, status: status.value, sortBy: sortBy.value, keyword: keyword.value, type: tab.value })
+      : getPendingTweets({ page: page.value, pageSize }))
     const data = res && res.data ? res.data : res
-    // 客户端排序（最多举报）
-    let list = data.items || data.list || []
+    // 博客 Tab 返回裸数组（List<MarkdownSummaryResponse>）；图文/视频 Tab 返回 PagedResult{items,totalCount}
+    let list = Array.isArray(data) ? data : (data.items || data.list || [])
+    if (tab.value === 'blog') {
+      // 博客 DTO 字段名与推文不同，统一映射为表格/审核弹窗使用的字段
+      list = list.map((m: any) => ({
+        ...m,
+        tweetGuid: m.markDownGuid,
+        content: m.name,
+        createTime: m.createAt,
+        tweetStatus: m.status
+      }))
+    }
     if (sortBy.value === 'reports') list = [...list].sort((a, b) => (b.reportCount || 0) - (a.reportCount || 0))
     items.value = list
     total.value = data.totalCount !== undefined ? data.totalCount : (data.total || items.value.length)
@@ -265,6 +278,11 @@ async function doDelete(reason: string): Promise<void> {
 
 function hideImg(e: any): void {
   e.target.style.visibility = 'hidden'
+}
+
+/** 列表缩略图：取第一张非视频媒体（视频作品 mediaUrls[0] 是视频本身，不能当封面） */
+function thumbOf(t: any): string {
+  return pickCoverUrl(t && t.mediaUrls)
 }
 
 onMounted(() => load(1))

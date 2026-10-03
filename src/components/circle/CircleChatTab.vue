@@ -12,6 +12,7 @@
 import { onBeforeUnmount, ref, watch } from 'vue'
 import ChatConversation from '@/components/chat/ChatConversation.vue'
 import { getCircleSession } from '@/api/circle'
+import { unwrap } from '@/utils/response'
 import { useChatStore } from '@/stores/chat'
 
 const props = defineProps<{
@@ -32,17 +33,15 @@ async function activate() {
   ready.value = false
   try {
     const res = await getCircleSession(circleGuid)
-    const data = res && res.data ? res.data : res
+    const data = unwrap(res)
     const body = data && data.data ? data.data : data
     const session = body || {}
     if (!session.sessionId) throw new Error('社区聊天会话不存在')
 
     // 注入会话列表（不存在则追加），避免 ChatConversation 找不到会话
-    if (!chat.sessions.some((s) => s.sessionId === session.sessionId)) {
-      chat.sessions.push(session)
-    }
+    chat.upsertSession(session)
     activatedId = session.sessionId
-    await chat.openSession(activatedId)
+    await chat.activateSession(activatedId)
     ready.value = true
   } catch (e: any) {
     error.value = (e && e.message) || '社区聊天加载失败'

@@ -1,6 +1,9 @@
 // 轻量 Markdown 渲染器（工作台用）
 // 安全策略：所有文本节点先 HTML 转义再包标签，杜绝 XSS；
-// 仅支持写作常用语法：标题/粗体/斜体/删除线/行内代码/代码块/引用/列表/链接/图片/表格/分隔线。
+// 仅支持写作常用语法：标题/粗体/斜体/删除线/高亮/行内代码/代码块/引用/列表/任务列表/
+// 链接/图片/视频/表格/分隔线/公式块/折叠块/mermaid 流程图。
+
+import { renderMermaidSvg } from './mermaid'
 
 function escapeHtml(s: string): string {
   return String(s)
@@ -11,9 +14,13 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
-// 行内语法：**粗体** *斜体* ~~删除线~~ `代码` [链接](url) ![图片](url)
+// 行内语法：**粗体** *斜体* ~~删除线~~ ==高亮== `代码` [链接](url) ![图片](url) ![video](url)
 function renderInline(text: string): string {
   let t = escapeHtml(text);
+  // 视频（写在图片之前，避免被图片规则抢走）
+  t = t.replace(/!\[video\]\(([^)\s]+)\)/gi, (m, url) =>
+    `<video src="${url}" controls preload="metadata" class="my-2 w-full max-h-[420px] rounded-[5%] bg-black/80"></video>`
+  );
   // 图片
   t = t.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g, (m, alt, url, title) => {
     const ttl = title ? ` title="${title}"` : '';
@@ -30,6 +37,11 @@ function renderInline(text: string): string {
   t = t.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
   // 删除线
   t = t.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+  // 高亮
+  t = t.replace(
+    /==([^=]+)==/g,
+    '<mark class="px-0.5 rounded-[5%] bg-amber-300/60 dark:bg-amber-400/30 text-inherit">$1</mark>'
+  );
   // 行内代码
   t = t.replace(
     /`([^`]+)`/g,
@@ -76,7 +88,7 @@ export function renderMarkdown(md: string | null | undefined): string {
       continue;
     }
 
-    // 代码块
+    // 代码块（mermaid 语言块渲染为流程图，其余为普通代码块）
     if (/^```/.test(line.trim())) {
       const lang = line.trim().slice(3).trim();
       const buf: string[] = [];
@@ -86,8 +98,61 @@ export function renderMarkdown(md: string | null | undefined): string {
         i++;
       }
       i++; // 跳过结尾 ```
+      const code = buf.join('\n');
+      if (lang.toLowerCase() === 'mermaid') {
+        const svg = renderMermaidSvg(code);
+        if (svg) {
+          out.push(
+            `<div class="my-3 p-3 rounded-[5%] bg-white/50 dark:bg-zinc-900/40 border border-zinc-200/70 dark:border-zinc-700/60 overflow-x-auto text-zinc-700 dark:text-zinc-200" data-block="mermaid">${svg}</div>`
+          );
+          continue;
+        }
+      }
       out.push(
-        `<pre class="my-2 px-4 py-3 rounded-[5%] bg-zinc-900 dark:bg-zinc-950 text-zinc-100 text-[13px] leading-relaxed overflow-x-auto font-mono"><code${lang ? ` class="language-${escapeHtml(lang)}"` : ''}>${escapeHtml(buf.join('\n'))}</code></pre>`
+        `<pre class="my-2 px-4 py-3 rounded-[5%] bg-zinc-900 dark:bg-zinc-950 text-zinc-100 text-[13px] leading-relaxed overflow-x-auto font-mono"><code${lang ? ` class="language-${escapeHtml(lang)}"` : ''}>${escapeHtml(code)}</code></pre>`
+      );
+      continue;
+    }
+
+    // 公式块（$$ ... $$，独占一行或多行）
+    if (/^\s*\$\$/.test(line)) {
+      const sameLine = line.trim().replace(/^\$\$/, '').replace(/\$\$$/, '').trim();
+      const closedInLine = /^\s*\$\$.+\$\$\s*$/.test(line);
+      const buf: string[] = sameLine && closedInLine ? [sameLine] : [];
+      i++;
+      if (!closedInLine) {
+        if (sameLine) buf.push(sameLine);
+        while (i < lines.length && !/\$\$\s*$/.test(lines[i])) {
+          buf.push(lines[i]);
+          i++;
+        }
+        if (i < lines.length) {
+          buf.push(lines[i].replace(/\$\$\s*$/, ''));
+          i++;
+        }
+      }
+      out.push(
+        `<div class="my-3 px-4 py-3 rounded-[5%] bg-zinc-100/70 dark:bg-zinc-800/50 border border-zinc-200/70 dark:border-zinc-700/60 text-center font-serif italic text-[15px] text-zinc-700 dark:text-zinc-200 overflow-x-auto" data-block="formula">${escapeHtml(buf.join('\n')).replace(/\n/g, '<br>')}</div>`
+      );
+      continue;
+    }
+
+    // 折叠块（:::details 标题 ... :::）
+    const details = line.match(/^:::\s*details\s*(.*)$/i);
+    if (details) {
+      const summary = details[1].trim() || '详情';
+      const buf: string[] = [];
+      i++;
+      while (i < lines.length && !/^:::\s*$/.test(lines[i].trim())) {
+        buf.push(lines[i]);
+        i++;
+      }
+      i++; // 跳过结尾 :::
+      out.push(
+        `<details class="my-3 rounded-[5%] border border-zinc-200/70 dark:border-zinc-700/60 bg-white/40 dark:bg-zinc-900/30 overflow-hidden">` +
+          `<summary class="cursor-pointer px-4 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-200 select-none">${escapeHtml(summary)}</summary>` +
+          `<div class="px-4 pb-3 border-t border-zinc-200/60 dark:border-zinc-700/50">${renderMarkdown(buf.join('\n'))}</div>` +
+          `</details>`
       );
       continue;
     }
@@ -154,6 +219,28 @@ export function renderMarkdown(md: string | null | undefined): string {
       continue;
     }
 
+    // 任务列表（必须在无序列表之前判断：- [ ] 也匹配无序列表规则）
+    if (/^\s*[-*+]\s+\[[ xX]\]\s+/.test(line)) {
+      const items: { done: boolean; text: string }[] = [];
+      while (i < lines.length && /^\s*[-*+]\s+\[[ xX]\]\s+/.test(lines[i])) {
+        const m = lines[i].match(/^\s*[-*+]\s+\[([ xX])\]\s+(.*)$/);
+        if (m) items.push({ done: m[1].toLowerCase() === 'x', text: m[2] });
+        i++;
+      }
+      out.push(
+        `<ul class="my-2 space-y-1.5 pl-0 list-none">${items
+          .map(
+            (it) =>
+              `<li class="flex items-start gap-2 text-zinc-700 dark:text-zinc-200">` +
+              `<span class="mt-[3px] shrink-0 w-4 h-4 rounded-[4px] border flex items-center justify-center ${it.done ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-zinc-300 dark:border-zinc-600'}">` +
+              `${it.done ? '<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' : ''}</span>` +
+              `<span class="${it.done ? 'line-through opacity-60' : ''}">${renderInline(it.text)}</span></li>`
+          )
+          .join('')}</ul>`
+      );
+      continue;
+    }
+
     // 无序列表（连续项）
     if (/^\s*[-*+]\s+/.test(line)) {
       const buf: string[] = [];
@@ -189,7 +276,9 @@ export function renderMarkdown(md: string | null | undefined): string {
       !/^(#{1,6})\s/.test(lines[i]) &&
       !/^\s*>/.test(lines[i]) &&
       !/^\s*[-*+]\s+/.test(lines[i]) &&
-      !/^\s*\d+\.\s+/.test(lines[i])
+      !/^\s*\d+\.\s+/.test(lines[i]) &&
+      !/^\s*\$\$/.test(lines[i]) &&
+      !/^:::\s*details/i.test(lines[i].trim())
     ) {
       buf.push(lines[i]);
       i++;
@@ -204,7 +293,7 @@ export function renderMarkdown(md: string | null | undefined): string {
 // 检测文本是否含 Markdown 标记（详情页据此选择渲染方式）
 export function looksLikeMarkdown(text: string | null | undefined): boolean {
   if (!text) return false;
-  return /(^|\n)\s{0,3}(#{1,6}\s|```|>\s|[-*+]\s|\d+\.\s)|\*\*|~~|`[^`]+`|\|\s*[-:]+\s*\|/.test(
+  return /(^|\n)\s{0,3}(#{1,6}\s|```|>\s|[-*+]\s|\d+\.\s)|\*\*|~~|`[^`]+`|\|\s*[-:]+\s*\||\$\$|^:::\s*details|\[[ xX]\]\s/m.test(
     text
   );
 }

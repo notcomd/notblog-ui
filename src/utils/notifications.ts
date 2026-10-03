@@ -1,5 +1,5 @@
 // 通知类型 → 展示元数据（头像位图标 + 底色 + 来源名称）
-// 后端 NotificationDto 无通知者头像/名称字段：系统类显示「轻芒系统」，
+// 后端 NotificationDto 无通知者头像/名称字段：系统类显示「MonoHub」，
 // 用户互动类显示「互动通知」，圈子/群组类显示对应来源名称
 
 export interface NotificationMeta {
@@ -12,25 +12,25 @@ export interface NotificationMeta {
 const TYPE_META: Record<string, NotificationMeta> = {
   // —— 系统类 ——
   TweetApproved: {
-    name: '轻芒系统',
+    name: 'MonoHub',
     icon: '<path d="M20 6L9 17l-5-5" />',
     bg: 'bg-emerald-100 dark:bg-emerald-500/20',
     fg: 'text-emerald-600 dark:text-emerald-300'
   },
   TweetRejected: {
-    name: '轻芒系统',
+    name: 'MonoHub',
     icon: '<path d="M18 6L6 18M6 6l12 12" />',
     bg: 'bg-red-100 dark:bg-red-500/20',
     fg: 'text-red-600 dark:text-red-300'
   },
   ReportResolved_Removed: {
-    name: '轻芒系统',
+    name: 'MonoHub',
     icon: '<path d="M4 21V4a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-4 4z" /><path d="M20 4v13" />',
     bg: 'bg-red-100 dark:bg-red-500/20',
     fg: 'text-red-600 dark:text-red-300'
   },
   ReportResolved_Rejected: {
-    name: '轻芒系统',
+    name: 'MonoHub',
     icon: '<path d="M4 21V4a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-4 4z" /><path d="M20 4v13" />',
     bg: 'bg-zinc-100 dark:bg-zinc-500/20',
     fg: 'text-zinc-500 dark:text-zinc-300'
@@ -72,6 +72,12 @@ const TYPE_META: Record<string, NotificationMeta> = {
     bg: 'bg-sky-100 dark:bg-sky-500/20',
     fg: 'text-sky-600 dark:text-sky-300'
   },
+  FriendRequestReceived: {
+    name: '好友通知',
+    icon: '<circle cx="9" cy="8" r="3.5" /><path d="M3 20v-1a6 6 0 0 1 6-6 6 6 0 0 1 6 6v1" /><path d="M18 8v6M15 11h6" />',
+    bg: 'bg-emerald-100 dark:bg-emerald-500/20',
+    fg: 'text-emerald-600 dark:text-emerald-300'
+  },
   // —— 圈子 / 群组类 ——
   CircleInvited: {
     name: '圈子通知',
@@ -107,7 +113,7 @@ const TYPE_META: Record<string, NotificationMeta> = {
 
 // 兜底（未知类型）
 const FALLBACK_META: NotificationMeta = {
-  name: '轻芒系统',
+  name: 'MonoHub',
   icon: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" />',
   bg: 'bg-amber-100 dark:bg-amber-500/20',
   fg: 'text-amber-600 dark:text-amber-300'

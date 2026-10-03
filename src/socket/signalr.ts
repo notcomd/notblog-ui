@@ -8,8 +8,9 @@ export function getSignalRConnection(): signalR.HubConnection {
   if (connection) return connection;
   connection = new signalR.HubConnectionBuilder()
     .withUrl('/MessageHub', {
-      accessTokenFactory: () => getToken(),
-      transport: signalR.HttpTransportType.WebSockets
+      accessTokenFactory: () => getToken()
+      // 不显式指定 transport：默认 WebSockets 优先，失败自动降级 SSE/LongPolling。
+      // 本地 vite→YARP 双层代理下 WS 偶发握手失败，HTTP 类传输（与 negotiate 同路径）更稳。
     })
     .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
     .configureLogging(signalR.LogLevel.Warning)

@@ -1,58 +1,61 @@
 <template>
   <div class="flex flex-col flex-1">
-    <!-- 图片（置顶，九宫格展示；第一张作为封面） -->
-    <div class="mb-4">
-      <div class="flex items-center justify-between mb-1.5">
-        <label class="text-xs text-zinc-400 block">图片（可选 · 第一张作为封面）</label>
-        <button type="button" class="text-[11px] px-2.5 h-7 rounded-lg bg-amber-400/15 text-amber-600 dark:text-amber-400 hover:bg-amber-400/25 transition-colors flex items-center gap-1 disabled:opacity-50" :disabled="splitting" @click="pickSplitImage">
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M12 8v8M8 12h8" /></svg>
-          <span v-if="!splitting" class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>切九宫格</span><span v-else>切分中…</span>
-        </button>
-      </div>
-      <!-- 无图：大虚线区点击上传 -->
-      <div
-        v-if="images.length === 0"
-        class="max-w-[480px] rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-100/60 dark:bg-zinc-900/60 cursor-pointer group transition-colors hover:border-amber-400 dark:hover:border-amber-400 flex-1 min-h-[10rem] flex flex-col items-center justify-center gap-2 text-zinc-400"
-        tabindex="0"
-        @click="pickImage"
-        @keydown.enter.prevent="pickImage"
-        @keydown.space.prevent="pickImage"
-      >
-        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
-        <span class="text-xs">{{ uploading ? '上传中…' : '点击上传图片（最多 9 张）' }}</span>
-      </div>
-      <!-- 九宫格网格 -->
-      <div v-else class="grid grid-cols-3 gap-2 max-w-[480px]">
-        <div v-for="(img, i) in images" :key="i" class="relative aspect-square rounded-xl overflow-hidden border border-white/60 dark:border-white/10 group">
-          <img :src="img.preview" alt="" class="w-full h-full object-cover cursor-pointer" @click="openCrop(i)" />
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <button type="button" class="w-7 h-7 rounded-full bg-white/90 text-zinc-700 flex items-center justify-center hover:bg-white transition-colors" title="裁剪" aria-label="裁剪" @click.stop="openCrop(i)">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14" /><path d="M18 22V8a2 2 0 0 0-2-2H2" /></svg>
-            </button>
-            <button type="button" class="w-7 h-7 rounded-full bg-white/90 text-red-500 flex items-center justify-center hover:bg-white transition-colors" title="删除" aria-label="删除" @click.stop="removeImage(i)">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
-            </button>
+    <!-- 图片 + 正文：左右两列并排（左图片卡 / 右正文编辑），等高统一 -->
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <!-- 左列：图片卡（第一张作为封面） -->
+      <div class="flex flex-col">
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-xs text-zinc-400 block">图片（可选 · 第一张作为封面）</label>
+          <button type="button" class="text-[11px] px-2.5 h-7 rounded-lg bg-amber-400/15 text-amber-600 dark:text-amber-400 hover:bg-amber-400/25 transition-colors flex items-center gap-1 disabled:opacity-50" :disabled="splitting" @click="pickSplitImage">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M12 8v8M8 12h8" /></svg>
+            <span v-if="!splitting" class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>切九宫格</span><span v-else>切分中…</span>
+          </button>
+        </div>
+        <!-- 无图：大虚线区点击上传 -->
+        <div
+          v-if="images.length === 0"
+          class="flex-1 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-100/60 dark:bg-zinc-900/60 cursor-pointer group transition-colors hover:border-amber-400 dark:hover:border-amber-400 min-h-[10rem] flex flex-col items-center justify-center gap-2 text-zinc-400"
+          tabindex="0"
+          @click="pickImage"
+          @keydown.enter.prevent="pickImage"
+          @keydown.space.prevent="pickImage"
+        >
+          <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+          <span class="text-xs">{{ uploading ? '上传中…' : '点击上传图片（最多 9 张）' }}</span>
+        </div>
+        <!-- 九宫格网格 -->
+        <div v-else class="grid grid-cols-3 gap-2">
+          <div v-for="(img, i) in images" :key="i" class="relative aspect-square rounded-xl overflow-hidden border border-white/60 dark:border-white/10 group">
+            <img :src="img.preview" alt="" class="w-full h-full object-cover cursor-pointer" @click="openCrop(i)" />
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <button type="button" class="w-7 h-7 rounded-full bg-white/90 text-zinc-700 flex items-center justify-center hover:bg-white transition-colors" title="裁剪" aria-label="裁剪" @click.stop="openCrop(i)">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14" /><path d="M18 22V8a2 2 0 0 0-2-2H2" /></svg>
+              </button>
+              <button type="button" class="w-7 h-7 rounded-full bg-white/90 text-red-500 flex items-center justify-center hover:bg-white transition-colors" title="删除" aria-label="删除" @click.stop="removeImage(i)">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+              </button>
+            </div>
+          </div>
+          <div v-if="images.length < 9" class="aspect-square rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:text-amber-500 transition-colors text-zinc-400" tabindex="0" @click="pickImage" @keydown.enter.prevent="pickImage" @keydown.space.prevent="pickImage">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            <span class="text-[11px]">{{ uploading ? '上传中…' : '添加' }}</span>
           </div>
         </div>
-        <div v-if="images.length < 9" class="aspect-square rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:text-amber-500 transition-colors text-zinc-400" tabindex="0" @click="pickImage" @keydown.enter.prevent="pickImage" @keydown.space.prevent="pickImage">
-          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-          <span class="text-[11px]">{{ uploading ? '上传中…' : '添加' }}</span>
-        </div>
+        <input ref="imageInput" type="file" accept="image/*" class="hidden" :disabled="uploading" @change="onPickImage" />
+        <input ref="splitInput" type="file" accept="image/*" class="hidden" @change="onSplitPick" />
+        <p class="text-[11px] text-zinc-400 mt-2">图片 ≤10MB（后端：POST /api/files/upload-image → FileDev 存储）</p>
       </div>
-      <input ref="imageInput" type="file" accept="image/*" class="hidden" :disabled="uploading" @change="onPickImage" />
-      <input ref="splitInput" type="file" accept="image/*" class="hidden" @change="onSplitPick" />
-      <p class="text-[11px] text-zinc-400 mt-2">图片 ≤10MB（后端：POST /api/files/upload-image → FileDev 存储）</p>
-    </div>
 
-    <!-- 正文 -->
-    <textarea
-      v-model="content"
-      name="content"
-      aria-label="正文"
-      rows="8"
-      class="w-full resize-none rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
-      placeholder="分享你的想法、故事或见闻…（支持 @提及）"
-    ></textarea>
+      <!-- 右列：正文编辑（随左列等高） -->
+      <textarea
+        v-model="content"
+        name="content"
+        aria-label="正文"
+        rows="8"
+        class="w-full h-full min-h-[12rem] resize-none rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
+        placeholder="分享你的想法、故事或见闻…（支持 @提及）"
+      ></textarea>
+    </div>
 
     <!-- 发布到社区（可选） -->
     <div class="mt-4">
@@ -72,11 +75,11 @@
     </div>
 
     <!-- 底部按钮：右对齐，固定宽度 -->
-    <div class="mt-5 flex flex-col sm:flex-row justify-end gap-3">
-      <button class="w-full sm:w-44 h-11 rounded-2xl bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="savingDraft" @click="saveAsDraft">
+    <div class="mt-4 flex flex-row justify-end gap-3">
+      <button class="w-44 h-11 rounded-2xl bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="savingDraft" @click="saveAsDraft">
         <span v-if="!savingDraft" class="inline-flex items-center gap-1.5"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>存草稿</span><span v-else>保存中…</span>
       </button>
-      <button class="w-full sm:w-44 h-11 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="publishing || !content.trim()" @click="publish">
+      <button class="w-44 h-11 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="publishing || !content.trim()" @click="publish">
         {{ publishing ? '发布中…' : '发布' }}
       </button>
     </div>

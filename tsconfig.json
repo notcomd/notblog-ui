@@ -3,7 +3,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "baseUrl": ".",
+    "rootDir": ".",
     "strict": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -13,7 +13,7 @@
     "useDefineForClassFields": true,
     "noEmit": true,
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "types": ["node"],
     "lib": ["ESNext", "DOM", "DOM.Iterable", "ESNext.Disposable"]

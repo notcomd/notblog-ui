@@ -29,7 +29,7 @@
           <p class="text-xs">未找到相关成员</p>
         </div>
         <div v-for="m in filteredMembers" :key="m.userGuid" class="flex items-center gap-3 px-2 py-2 rounded-[5%] hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors">
-          <img :src="themeAvatar((m.nickname || '友').charAt(0))" alt="" class="w-9 h-9 rounded-[5%] object-cover shrink-0" />
+          <img :src="themeAvatar((m.nickname || '友').charAt(0))" alt="" class="w-9 h-9 rounded-[10px] object-cover shrink-0" />
           <span class="flex-1 min-w-0">
             <span class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">
               {{ m.nickname || '成员' }}
@@ -49,7 +49,7 @@
         <div v-for="(group, gk) in memberGroups" :key="gk">
           <div v-if="group.length" class="text-xs font-medium text-zinc-400 mb-2">{{ gk }}（{{ group.length }}）</div>
           <div v-for="m in group" :key="m.userGuid" class="flex items-center gap-3 px-2 py-2 rounded-[5%] hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors">
-            <img :src="themeAvatar((m.nickname || '友').charAt(0))" alt="" class="w-9 h-9 rounded-[5%] object-cover shrink-0" />
+            <img :src="themeAvatar((m.nickname || '友').charAt(0))" alt="" class="w-9 h-9 rounded-[10px] object-cover shrink-0" />
             <span class="flex-1 min-w-0">
               <span class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">
                 {{ m.nickname || '成员' }}
