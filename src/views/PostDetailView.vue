@@ -314,10 +314,12 @@ async function load(): Promise<void> {
       isFavorited: !!(data.isFavorited !== undefined ? data.isFavorited : tweet.value.isFavorited),
       isCoined: !!data.isCoined
     }
-    // 记录浏览
-    if (tweet.value && tweet.value.tweetGuid) recordView(tweet.value.tweetGuid)
-    // 关注状态：拉取我关注的人列表比对（后端暂无 is-following 端点）
-    if (authorId.value) {
+    // 记录浏览：需登录。访客访问不发送，避免必然 401 的无效请求（且原先无 catch 会产生未处理拒绝）
+    if (auth.isLoggedIn() && tweet.value?.tweetGuid) {
+      recordView(tweet.value.tweetGuid).catch(() => { /* 浏览计数失败不影响阅读 */ })
+    }
+    // 关注状态：拉取我关注的人列表比对（后端暂无 is-following 端点）；需登录，访客跳过
+    if (auth.isLoggedIn() && authorId.value) {
       try {
         const f = await getFollowing({ page: 1, pageSize: 100 })
         const list = (f.data && (f.data.items || f.data.list)) || []

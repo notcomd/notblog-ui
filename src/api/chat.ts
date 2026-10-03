@@ -47,11 +47,6 @@ export function markRead(messageId: string) {
   return service.put(`/api/messages/${messageId}/read`);
 }
 
-// 未读总数：GET /api/sessions/unread-count
-export function getUnreadCount() {
-  return service.get('/api/sessions/unread-count');
-}
-
 // ==================== 好友 / 群 ====================
 
 // 好友列表：GET /api/friends

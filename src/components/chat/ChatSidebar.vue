@@ -159,14 +159,12 @@
         删除会话
       </button>
     </div>
-
-    <!-- 好友弹窗（添加 / 搜索）已拆分为独立组件 -->
-    <ChatFriendDialogs v-if="friendDialog" :mode="friendDialog" @close="friendDialog = ''" />
   </div>
 </template>
 
 <script setup lang="ts">
-// 会话侧边栏：会话/好友/群聊列表、通知列表、会话操作；好友弹窗与列表加载已抽离
+// 会话侧边栏：会话/好友/群聊列表、通知列表、会话操作。
+// 添加/搜索好友与创建/搜索群聊都在右侧栏以面板呈现（按路由 query 切换），本组件只负责入口跳转。
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { charAvatar } from '@/utils/avatar'
 import { clockTime } from '@/utils/format'
@@ -179,7 +177,6 @@ import {
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '@/api/notification'
 import { unwrap } from '@/utils/response'
 import { notificationMeta } from '@/utils/notifications'
-import ChatFriendDialogs from '@/components/chat/ChatFriendDialogs.vue'
 
 /** 列表项：会话 + 系统通知的并集（通知以 notifyGuid 区分） */
 type SessionItem = SessionDto & {
@@ -211,7 +208,6 @@ const notifItems = ref<SessionItem[]>([])
 const sessionMenuTarget = ref<string | null>(null)
 const ctxMenu = ref<CtxMenuData | null>(null)
 const allReadBusy = ref(false)
-const friendDialog = ref<'' | 'add' | 'search'>('')
 
 // 空态图标：按页签存 path 数组，由模板统一渲染（原先是把整段 svg 拼成字符串再 v-html）
 const EMPTY_ICON_PATHS: Record<string, string[]> = {
@@ -270,6 +266,9 @@ function canMarkRead(s: SessionItem): boolean {
   return isNotify(s) ? !s.isRead : rowUnread(s) > 0
 }
 
+/** 列表右上角的功能入口 → 右侧面板的路由 action（入口 key 即 action 名） */
+const PANEL_ACTIONS = new Set(['createGroup', 'searchGroup', 'addFriend', 'searchFriend'])
+
 const listMoreActions = computed(() => {
   if (tab.value === 'groups') {
     return [
@@ -300,10 +299,8 @@ const listMoreActions = computed(() => {
 })
 
 function onListMoreAction(key: string) {
-  if (key === 'addFriend') friendDialog.value = 'add'
-  else if (key === 'searchFriend') friendDialog.value = 'search'
-  else if (key === 'createGroup') router.push({ path: '/chat', query: { action: 'createGroup' } })
-  else if (key === 'searchGroup') router.push({ path: '/chat', query: { action: 'searchGroup' } })
+  // 四个入口统一在右侧会话栏内以面板呈现（不再弹窗），与群聊创建/搜索同构
+  if (PANEL_ACTIONS.has(key)) router.push({ path: '/chat', query: { action: key } })
 }
 
 function onItemClick(s: SessionItem) {
@@ -349,12 +346,10 @@ async function markOneRead(s: SessionItem) {
   ctxMenu.value = null
   if (isNotify(s)) {
     await markNotifyRead(s)
-    chat.loadUnread()
     return
   }
   await chat.markUnreadRead(s.sessionId)
   if (s.unreadCount) s.unreadCount = 0
-  chat.loadUnread()
   toast.push('已设为已读', 'success')
 }
 
@@ -366,7 +361,6 @@ async function markAllRead() {
     try { await markAllNotificationsRead() } catch (e) { /* 忽略 */ }
     chat.sessions.forEach((s) => { s.unreadCount = 0 })
     notifItems.value.forEach((n) => { n.isRead = true })
-    await chat.loadUnread()
     toast.push('已全部标为已读', 'success')
   } finally {
     allReadBusy.value = false
@@ -439,7 +433,6 @@ function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     ctxMenu.value = null
     sessionMenuTarget.value = null
-    friendDialog.value = ''
   }
 }
 

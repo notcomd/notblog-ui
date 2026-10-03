@@ -1,7 +1,17 @@
 <template>
   <!-- 会话主视窗：消息列表 + 输入区；容器扁平（仅发丝分隔线），与左侧列表及全站风格一致 -->
   <div class="flex-1 min-w-0 flex flex-col min-h-0">
-    <ChatGroupDialogs v-if="groupMode" :mode="groupMode" @close="emit('close-group')" />
+    <!-- 功能面板：与消息视图共用右侧栏位（由 ChatPage 按路由 query 下发 panelMode） -->
+    <ChatGroupPanel
+      v-if="panel.startsWith('group-')"
+      :mode="panel === 'group-create' ? 'create' : 'search'"
+      @close="emit('close-panel')"
+    />
+    <ChatFriendPanel
+      v-else-if="panel.startsWith('friend-')"
+      :mode="panel === 'friend-add' ? 'add' : 'search'"
+      @close="emit('close-panel')"
+    />
 
     <template v-else>
       <!-- 会话头部 -->
@@ -150,15 +160,20 @@ import { charAvatar } from '@/utils/avatar'
 import { useChatStore, type MessageDto } from '@/stores/chat'
 import { useCallStore, type CallPayload } from '@/stores/call'
 import { groupMessages } from '@/utils/chatMessages'
-import ChatGroupDialogs from '@/components/chat/ChatGroupDialogs.vue'
+import ChatGroupPanel from '@/components/chat/ChatGroupPanel.vue'
+import ChatFriendPanel from '@/components/chat/ChatFriendPanel.vue'
 import ChatMessageItem from '@/components/chat/ChatMessageItem.vue'
 import ChatComposer from '@/components/chat/ChatComposer.vue'
 import CallInviteDialog from '@/components/chat/CallInviteDialog.vue'
 import RoomJoinDialog from '@/components/chat/RoomJoinDialog.vue'
 
-// 群聊创建/搜索面板开关由页面按路由下发；本组件不依赖路由（社区页内嵌时同样可用）
-defineProps<{ groupMode?: string }>()
-const emit = defineEmits<{ (e: 'close-group'): void }>()
+// panelMode：右侧栏位的模式（'' = 会话；group-*/friend-* = 功能面板），由页面按路由下发。
+// 本组件不依赖路由（社区页内嵌时不会传该 prop，自然走会话视图）。
+const props = defineProps<{ panelMode?: string }>()
+const emit = defineEmits<{ (e: 'close-panel'): void }>()
+
+/** 归一为字符串，避免内嵌场景未传 prop 时对 undefined 调 startsWith */
+const panel = computed(() => props.panelMode || '')
 
 const chat = useChatStore()
 const call = useCallStore()

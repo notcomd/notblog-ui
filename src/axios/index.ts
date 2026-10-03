@@ -146,6 +146,13 @@ async function handleUnauthorized(
     return Promise.reject(error)
   }
 
+  // 游客（从未登录）：401 只代表「该资源需要登录」，不是会话过期。
+  // 不能广播 session-expired —— 那会清空凭证并把访客从公开页面（如首页）强行跳到登录页，
+  // 还会弹出对访客毫无意义的「登录状态已过期」。此处直接拒绝，由页面自行决定是否引导登录。
+  if (!getToken() && !getRefreshToken()) {
+    return Promise.reject(error)
+  }
+
   // 已重放过一次仍 401：会话确实失效
   if (config._retried) {
     emitSessionExpired(SESSION_EXPIRED_MESSAGE)

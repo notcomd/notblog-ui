@@ -1,10 +1,10 @@
 <template>
-  <!-- 会话页容器：桌面化，「左列表 + 右会话」并排常显 -->
+  <!-- 会话页容器：桌面化，「左列表 + 右会话/功能面板」并排常显 -->
   <div class="max-w-[1400px] mx-auto flex flex-row gap-5 h-[calc(100vh-7.5rem)]">
     <!-- 会话列表：常显 -->
     <ChatSidebar class="flex" />
-    <!-- 会话主视窗：与列表并排（群聊面板的开关由本页按路由 query 决定） -->
-    <ChatConversation class="flex-1" :group-mode="groupMode" @close-group="closeGroupMode" />
+    <!-- 右侧主视窗：默认是会话，也可切换为群聊/好友的功能面板（由本页按路由 query 决定） -->
+    <ChatConversation class="flex-1" :panel-mode="panelMode" @close-panel="closePanel" />
   </div>
 </template>
 
@@ -25,10 +25,21 @@ const route = useRoute()
 const router = useRouter()
 const chat = useChatStore()
 
-// 群聊创建/搜索面板由 ?action= 决定（面板渲染在 ChatConversation 内，开关由本页下发）
-const groupMode = computed<string>(() => {
+/**
+ * 右侧主视窗的模式：空串 = 会话；其余为功能面板。
+ * 四种查询参数归一为前缀化的模式标识（群聊与好友各有一个 search，需可区分），
+ * 面板组件只认模式标识，不再关心 URL 长什么样。
+ */
+const PANEL_MODES: Record<string, string> = {
+  createGroup: 'group-create',
+  searchGroup: 'group-search',
+  addFriend: 'friend-add',
+  searchFriend: 'friend-search'
+}
+
+const panelMode = computed<string>(() => {
   const a = route.query.action
-  return a === 'createGroup' ? 'create' : a === 'searchGroup' ? 'search' : ''
+  return (typeof a === 'string' && PANEL_MODES[a]) || ''
 })
 
 // 唯一的「路由 → 会话」入口。
@@ -38,7 +49,8 @@ watch(() => route.params.sessionId, (id) => {
   if (typeof id === 'string' && id) void chat.activateSession(id)
 }, { immediate: true })
 
-function closeGroupMode(): void {
+/** 关闭功能面板：清掉 action，回到普通会话视图 */
+function closePanel(): void {
   router.replace({ path: '/chat' })
 }
 </script>

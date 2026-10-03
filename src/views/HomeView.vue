@@ -50,12 +50,14 @@ watch(() => route.query.tab, (raw) => feedTab.syncFromQuery(raw), { immediate: t
 // 强行 remount 会跳过退场动画（内容瞬间清空），也会丢掉无限滚动的已加载页
 const loader = computed(() => (feedTab.tab === 'latest' ? getTimeline : getTrending))
 
+// 空态文案：访客看的是公开的「热门」，无需登录即可浏览，
+// 因此不再把「登录」说成看内容的前提（登录只解锁互动与关注流）。
 const emptyTitle = computed<string>(() =>
-  auth.isLoggedIn() ? '这里还很安静' : '登录后开启你的广场'
+  auth.isLoggedIn() ? '这里还很安静' : '暂时还没有热门内容'
 )
 
 const emptyText = computed<string>(() => {
-  if (!auth.isLoggedIn()) return '登录即可看到关注的最新动态，以及点赞、收藏等全部互动内容。'
+  if (!auth.isLoggedIn()) return '稍后再来看看，或登录后查看你关注的人的最新动态。'
   return feedTab.tab === 'latest'
     ? '你关注的人还没有发布内容。去热门看看大家都在聊什么吧。'
     : '暂时还没有热门内容，稍后再来看看。'

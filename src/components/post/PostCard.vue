@@ -20,7 +20,7 @@
       <a
         :href="href"
         class="block scroll-mt-20"
-        @click="onOpen($event, navigate)"
+        @click="navigate"
       >
         <!-- 封面区：图文 9:16 竖图 / 视频 1:1 -->
         <div class="relative w-full overflow-hidden" :class="isVideo ? 'aspect-square' : 'aspect-[9/16]'">
@@ -183,18 +183,8 @@ function onCoverError() {
   coverFailed.value = true
 }
 
-// 打开详情：未登录先拦截并引导登录；已登录交给 router-link 的 navigate
+// 打开详情：详情页对访客公开，卡片链接直接交给 router-link 的 navigate
 // （navigate 内部会放行 Cmd/Ctrl/中键等修饰点击，让浏览器按 href 新开标签）
-function onOpen(event: MouseEvent, navigate: (e?: MouseEvent) => void): void {
-  if (!auth.isLoggedIn()) {
-    event.preventDefault()
-    toast.push('请先登录后查看内容详情', 'info')
-    router.push('/login')
-    return
-  }
-  void navigate(event)
-}
-
 /** 点赞成功的心跳反馈：只动 transform，走合成器 */
 function popLike(): void {
   if (!likeIcon.value) return

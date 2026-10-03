@@ -90,7 +90,6 @@ const groupPublic = ref(false)
 const groupMembers = ref<string[]>([])
 const groupSending = ref(false)
 const groupAvatarPreview = ref('')
-const groupAvatarValue = ref('')
 const groupAvatarUpdating = ref(false)
 
 const groupKeyword = ref('')
@@ -115,12 +114,10 @@ async function onGroupAvatarChange(e: Event) {
       const uri = d.fileUri || d.url
       if (!uri) throw new Error('no fileUri')
       groupAvatarPreview.value = uri
-      groupAvatarValue.value = uri
     } catch (err) {
-      const uri = await blobToDataUri(blob)
-      groupAvatarPreview.value = uri
-      groupAvatarValue.value = uri
-      toast.push('头像已本地保存（后端未就绪）', 'info')
+      // 上传失败时退化为本地预览（群头像当前不随建群请求提交，故仅作预览）
+      groupAvatarPreview.value = await blobToDataUri(blob)
+      toast.push('头像上传失败，已改用本地预览', 'info')
     }
   } catch (err) {
     toast.push('头像处理失败，请重试', 'error')
@@ -149,7 +146,6 @@ async function doCreateGroup() {
     groupPublic.value = false
     groupMembers.value = []
     groupAvatarPreview.value = ''
-    groupAvatarValue.value = ''
     chat.loadGroups()
     chat.loadSessions()
     try {

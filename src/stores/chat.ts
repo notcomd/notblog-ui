@@ -5,7 +5,6 @@ import {
   getMessages,
   getFriends,
   getGroups,
-  getUnreadCount,
   getUnreadMessages,
   getUserProfile,
   markRead,
@@ -88,7 +87,6 @@ export const useChatStore = defineStore('chat', () => {
   const groups = ref<any[]>([]); // 群列表
   const messages = ref<Record<string, MessageDto[]>>({}); // { sessionId: [MessageDto] }
   const activeSessionId = ref<string>('');
-  const unreadTotal = ref<number>(0); // 铃铛未读数
   const onlineUsers = ref<Record<string, boolean>>({}); // { userId: true/false } 在线状态（SignalR 事件驱动）
   const typing = ref<Record<string, string>>({}); // { sessionId: userId } 正在输入
   const connected = ref<boolean>(false);
@@ -142,17 +140,8 @@ export const useChatStore = defineStore('chat', () => {
     await loadList(getGroups, (list) => { groups.value = list }, '群组');
   }
 
-  async function loadUnread(): Promise<void> {
-    try {
-      const data = unwrap(await getUnreadCount()) || {};
-      unreadTotal.value = (data && (data.total !== undefined ? data.total : data.unreadCount)) || 0;
-    } catch (e) {
-      /* 静默 */
-    }
-  }
-
   /**
-   * 首屏数据单次加载（会话/好友/群/未读）。
+   * 首屏数据单次加载（会话/好友/群）。
    * 侧栏与主视窗原本各写一份相同的 Promise.all，同一页面会重复请求两遍；
    * 此处做单飞（in-flight 复用）+ 单次（成功后不再重复），供两处共用。
    * initialLoaded 供侧栏区分「首次加载中」与「真的没有会话」，避免空态闪错。
@@ -163,7 +152,7 @@ export const useChatStore = defineStore('chat', () => {
   function ensureLoaded(): Promise<void> {
     if (initialLoaded.value) return Promise.resolve();
     if (!initialLoading) {
-      initialLoading = Promise.all([loadSessions(), loadFriends(), loadGroups(), loadUnread()])
+      initialLoading = Promise.all([loadSessions(), loadFriends(), loadGroups()])
         .then(() => {
           initialLoaded.value = true;
           // 深链冷启动时 activateSession 早于本节执行，clearUnread 当时查不到会话而空转，
@@ -629,7 +618,6 @@ export const useChatStore = defineStore('chat', () => {
     if (s && s.unreadCount) {
       s.unreadCount = 0;
       sessions.value = sortSessions(sessions.value);
-      loadUnread();
     }
   }
 
@@ -650,7 +638,6 @@ export const useChatStore = defineStore('chat', () => {
             s.unreadCount = (s.unreadCount || 0) + 1;
             sessions.value = sortSessions(sessions.value);
           }
-          loadUnread();
         }
       });
 
@@ -681,7 +668,6 @@ export const useChatStore = defineStore('chat', () => {
       conn.on('UnreadCountUpdated', (sessionId: string, count: number) => {
         const s = sessions.value.find((x) => x.sessionId === sessionId);
         if (s) s.unreadCount = count;
-        loadUnread();
       });
 
       connected.value = true;
@@ -703,7 +689,6 @@ export const useChatStore = defineStore('chat', () => {
     groups,
     messages,
     activeSessionId,
-    unreadTotal,
     onlineUsers,
     typing,
     messageLoading,
@@ -714,7 +699,6 @@ export const useChatStore = defineStore('chat', () => {
     loadSessions,
     loadFriends,
     loadGroups,
-    loadUnread,
     loadProfiles,
     upsertSession,
     activateSession,

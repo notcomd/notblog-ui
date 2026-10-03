@@ -1,16 +1,21 @@
 <template>
-  <!-- 好友弹窗：添加好友 / 搜索好友（与 ChatGroupDialogs 同为 mode 驱动的双面板） -->
-  <div
-    class="fixed inset-0 z-[70] flex items-center justify-center bg-black/30"
-    role="dialog"
-    aria-modal="true"
-    :aria-label="mode === 'add' ? '添加好友' : '搜索好友'"
-    @click.self="emit('close')"
-  >
+  <!-- 好友面板：添加好友 / 搜索好友（在右侧会话栏内呈现，与 ChatGroupPanel 同为 mode 驱动的双面板） -->
+  <div class="flex-1 min-w-0 flex flex-col min-h-0">
+    <header class="flex items-center gap-3 px-5 py-3 border-b border-zinc-200/60 dark:border-zinc-700/60 shrink-0">
+      <button
+        class="w-9 h-9 rounded-[5%] flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60"
+        type="button"
+        aria-label="返回会话"
+        @click="emit('close')"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <h2 class="text-sm font-semibold text-zinc-800 dark:text-zinc-100 font-display">{{ mode === 'add' ? '添加好友' : '搜索好友' }}</h2>
+    </header>
+
     <!-- 添加好友 -->
-    <div v-if="mode === 'add'" class="glass-card p-6 w-[min(26rem,92vw)]">
-      <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-1">添加好友</h3>
-      <p class="text-xs text-zinc-400 mb-4">输入对方邮箱或昵称查找用户并发起好友请求</p>
+    <div v-if="mode === 'add'" class="flex-1 overflow-y-auto px-6 py-5 min-h-0 space-y-4">
+      <p class="text-xs text-zinc-400">输入对方邮箱或昵称查找用户并发起好友请求</p>
       <div class="flex gap-2">
         <input
           v-model="addKeyword"
@@ -23,22 +28,30 @@
         />
         <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium disabled:opacity-50" type="button" :disabled="addLoading || !addKeyword.trim()" @click="lookupUser">查找</button>
       </div>
-      <div class="mt-4">
-        <div v-if="addLoading" class="py-8 text-center text-xs text-zinc-400" role="status">查找中…</div>
-        <div v-else-if="addNotFound" class="py-8 text-center text-xs text-zinc-400" role="status">未找到该用户，请确认邮箱或昵称是否正确</div>
-        <div v-else-if="addUser" class="flex items-center gap-3 p-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60">
-          <img :src="addUser.imageCover || charAvatar((addUser.userName || '友').charAt(0), '#a1a1aa')" alt="" width="48" height="48" class="w-12 h-12 rounded-[10px] object-cover" @error="onAvatarError" />
-          <span class="flex-1 min-w-0 text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate">{{ addUser.userName || '未命名用户' }}</span>
-          <span v-if="addUserIsSelf" class="shrink-0 text-xs px-2 py-1 rounded-[5%] bg-zinc-100 dark:bg-zinc-800 text-zinc-500">不能添加自己</span>
-          <span v-else-if="addUserIsFriend" class="shrink-0 text-xs px-2 py-1 rounded-[5%] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">已是好友</span>
-          <button v-else class="h-9 px-3.5 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-medium disabled:opacity-50" type="button" :disabled="addSending" @click="sendAddRequest">发送好友请求</button>
+
+      <div v-if="addLoading" class="py-10 text-center text-xs text-zinc-400" role="status">查找中…</div>
+      <div v-else-if="addNotFound" class="py-10 text-center text-xs text-zinc-400" role="status">未找到该用户，请确认邮箱或昵称是否正确</div>
+      <div v-else-if="addUser" class="flex items-center gap-3 p-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60">
+        <img :src="addUser.imageCover || charAvatar((addUser.userName || '友').charAt(0), '#a1a1aa')" alt="" width="48" height="48" class="w-12 h-12 rounded-[10px] object-cover" @error="onAvatarError" />
+        <span class="flex-1 min-w-0 text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate">{{ addUser.userName || '未命名用户' }}</span>
+        <span v-if="addUserIsSelf" class="shrink-0 text-xs px-2 py-1 rounded-[5%] bg-zinc-100 dark:bg-zinc-800 text-zinc-500">不能添加自己</span>
+        <span v-else-if="addUserIsFriend" class="shrink-0 text-xs px-2 py-1 rounded-[5%] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">已是好友</span>
+        <button v-else class="h-9 px-3.5 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-medium disabled:opacity-50" type="button" :disabled="addSending" @click="sendAddRequest">发送好友请求</button>
+      </div>
+      <div v-else class="py-10 flex flex-col items-center text-center gap-3">
+        <div class="w-14 h-14 rounded-full bg-amber-400/12 dark:bg-amber-400/10 flex items-center justify-center">
+          <svg class="w-7 h-7 text-amber-400/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <path d="M5 7a4 4 0 1 0 8 0a4 4 0 1 0-8 0" />
+            <path d="M19 8v6M22 11h-6" />
+          </svg>
         </div>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 max-w-[28ch] leading-relaxed">输入对方的邮箱或昵称后点「查找」，即可发送好友请求</p>
       </div>
     </div>
 
     <!-- 搜索好友 -->
-    <div v-else class="glass-card p-6 w-[min(26rem,92vw)] max-h-[85vh] flex flex-col">
-      <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-3">搜索好友</h3>
+    <div v-else class="flex-1 overflow-y-auto overscroll-contain px-6 py-5 min-h-0 space-y-3">
       <div class="flex gap-2">
         <input
           v-model="friendKeyword"
@@ -50,27 +63,35 @@
         />
         <button class="h-10 px-4 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium disabled:opacity-50" type="button" :disabled="friendSearching || !friendKeyword.trim()" @click="doFriendSearch">搜索</button>
       </div>
-      <div class="mt-4 flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-1">
-        <div v-if="friendSearching" class="py-8 text-center text-xs text-zinc-400" role="status">搜索中…</div>
-        <div v-else-if="friendSearched && friendResults.length === 0" class="py-8 text-center text-xs text-zinc-400" role="status">未找到匹配的好友</div>
-        <button
-          v-for="f in friendResults"
-          :key="f.friendshipId || f.friendId"
-          type="button"
-          class="w-full flex items-center gap-3 px-3 py-2 rounded-[5%] transition-colors text-left hover:bg-white/60 dark:hover:bg-zinc-800/60"
-          @click="openFriendChat(f)"
-        >
-          <img :src="f.friendAvatar || charAvatar('友', '#a1a1aa')" alt="" width="40" height="40" class="w-10 h-10 rounded-[10px] object-cover" @error="onAvatarError" />
-          <span class="flex-1 min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ friendDisplayName(f) }}</span>
-        </button>
+
+      <div v-if="friendSearching" class="py-10 text-center text-xs text-zinc-400" role="status">搜索中…</div>
+      <div v-else-if="friendSearched && friendResults.length === 0" class="py-10 text-center text-xs text-zinc-400" role="status">未找到匹配的好友</div>
+      <button
+        v-for="f in friendResults"
+        :key="f.friendshipId || f.friendId"
+        type="button"
+        class="w-full flex items-center gap-3 px-3 py-2 rounded-[5%] transition-colors text-left hover:bg-white/60 dark:hover:bg-zinc-800/60"
+        @click="openFriendChat(f)"
+      >
+        <img :src="f.friendAvatar || charAvatar('友', '#a1a1aa')" alt="" width="40" height="40" class="w-10 h-10 rounded-[10px] object-cover" @error="onAvatarError" />
+        <span class="flex-1 min-w-0 text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ friendDisplayName(f) }}</span>
+      </button>
+      <div v-if="!friendSearching && !friendSearched" class="py-10 flex flex-col items-center text-center gap-3">
+        <div class="w-14 h-14 rounded-full bg-amber-400/12 dark:bg-amber-400/10 flex items-center justify-center">
+          <svg class="w-7 h-7 text-amber-400/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 11a8 8 0 1 0 16 0a8 8 0 1 0-16 0" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+        </div>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 max-w-[28ch] leading-relaxed">输入好友备注后点「搜索」，可直接打开会话</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// 好友相关弹窗：查找用户并发起好友请求 / 按备注搜索好友并打开会话。
-// 从 ChatSidebar 拆出（该文件已 500+ 行），与 ChatGroupDialogs 的 mode 约定保持一致。
+// 好友面板：在右侧会话栏内呈现（原为弹窗，改为面板后与群聊创建/搜索同构，
+// 由 ChatPage 按 ?action= 下发开关）。处理查找用户、发起好友请求、搜索好友并打开会话。
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { createSession, lookupUsers, searchFriends, sendFriendRequest } from '@/api/chat'
@@ -193,8 +214,9 @@ async function openFriendChat(f: FriendRow): Promise<void> {
     const sessionId = typeof d === 'string' ? d : (d && (d.sessionId || d.id)) || ''
     if (!sessionId) throw new Error('no sessionId')
     await chat.loadSessions()
+    // 关面板并进入新会话（用 replace，避免返回时又落回面板）
     emit('close')
-    router.push('/chat/' + sessionId)
+    router.replace('/chat/' + sessionId)
   } catch (e) {
     toast.push('无法发起会话，请稍后重试', 'error')
   }
@@ -207,7 +229,7 @@ function onAvatarError(e: Event): void {
   if (el.src !== fallback) el.src = fallback
 }
 
-// Escape 关闭（弹窗可键盘退出）
+// Escape 返回会话（面板不等于弹窗，仅作键盘快捷退出口）
 function onKeydown(e: KeyboardEvent): void {
   if (e.key === 'Escape') emit('close')
 }
