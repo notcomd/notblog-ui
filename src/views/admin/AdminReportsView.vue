@@ -45,7 +45,7 @@
 
     <!-- 详情侧滑面板 -->
     <div v-if="viewing" class="fixed inset-0 z-[75] bg-black/40" @click="viewing = null">
-      <div class="absolute right-0 top-0 bottom-0 w-[480px] glass-card rounded-l-[5%] rounded-r-none flex flex-col">
+      <div class="absolute right-0 top-0 bottom-0 w-[480px] bg-white dark:bg-zinc-800 border-l border-zinc-200/70 dark:border-white/10 shadow-2xl rounded-l-[5%] rounded-r-none flex flex-col">
         <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-200/60 dark:border-zinc-700/60">
           <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100">举报详情 #{{ viewing.reportGuid }}</h3>
           <button class="w-8 h-8 rounded-[5%] flex items-center justify-center text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" @click="viewing = null" aria-label="关闭举报详情"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>

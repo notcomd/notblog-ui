@@ -2,7 +2,7 @@
   <div class="max-w-[1200px] mx-auto">
     <!-- 顶部导航条（详情页专用） -->
     <div class="flex items-center justify-between mb-5">
-      <button class="flex items-center gap-1.5 px-3.5 py-2 rounded-[5%] glass-card text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:opacity-90 active:scale-95 transition-all" type="button" @click="goBack">
+      <button class="flex items-center gap-1.5 px-3.5 py-2 rounded-[5%] qm-surface text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:opacity-90 active:scale-95 transition-all" type="button" @click="goBack">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
         返回
       </button>
@@ -10,7 +10,7 @@
         <span class="px-3 py-1.5 rounded-full text-xs font-medium bg-gradient-to-r from-amber-400/15 to-orange-400/10 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-500/20">
           {{ isVideo ? '# 视频' : '# 图文博客' }}
         </span>
-        <button class="w-9 h-9 rounded-[5%] glass-card flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:opacity-90 active:scale-95 transition-all" type="button" title="更多操作" aria-label="更多操作" @click="onMore">
+        <button class="w-9 h-9 rounded-[5%] qm-surface flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:opacity-90 active:scale-95 transition-all" type="button" title="更多操作" aria-label="更多操作" @click="onMore">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
         </button>
       </div>
@@ -18,7 +18,7 @@
 
     <!-- 举报弹窗 -->
     <div v-if="reportOpen" class="fixed inset-0 z-[85] flex items-center justify-center bg-black/40" @click.self="reportOpen = false">
-      <div class="glass-card p-6 w-[min(440px,92vw)] max-h-[90vh] overflow-y-auto overscroll-contain">
+      <div class="qm-surface p-6 w-[min(440px,92vw)] max-h-[90vh] overflow-y-auto overscroll-contain">
         <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 mb-1">举报内容</h3>
         <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">请选择举报类型，我们会尽快核实处理</p>
         <div class="grid grid-cols-3 gap-2 mb-4">
@@ -46,7 +46,7 @@
         </div>
       </div>
       <div class="col-span-2">
-        <div class="glass-card p-4 space-y-3 animate-pulse">
+        <div class="p-4 space-y-3 animate-pulse">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70"></div>
             <div class="flex-1 space-y-2"><div class="h-3 w-20 rounded bg-zinc-200/70 dark:bg-zinc-800/70"></div><div class="h-2 w-28 rounded bg-zinc-200/70 dark:bg-zinc-800/70"></div></div>
@@ -198,7 +198,7 @@
     <div v-else class="py-24 flex flex-col items-center gap-4">
       <div class="text-6xl"><svg class="w-14 h-14 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
       <p class="text-zinc-500 dark:text-zinc-400">内容不存在或已被删除</p>
-      <button class="px-4 py-2 rounded-[5%] glass-card text-sm text-zinc-600 dark:text-zinc-300 hover:opacity-90 transition-all" type="button" @click="goBack">返回</button>
+      <button class="px-4 py-2 rounded-[5%] qm-surface text-sm text-zinc-600 dark:text-zinc-300 hover:opacity-90 transition-all" type="button" @click="goBack">返回</button>
     </div>
   </div>
 </template>

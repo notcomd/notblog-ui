@@ -33,6 +33,25 @@ export interface CurrentUser {
   email: string;
   name: string;
   role: string;
+  /** 头像地址：来自 Message /api/user-info/me 的 avatarUrl（经本地缓存），JWT 本身不含该信息 */
+  avatar?: string;
+}
+
+/** 用户资料（Message GET /api/user-info/me 的下发内容） */
+export interface UserInfo {
+  userId?: string;
+  /** 昵称 */
+  nickName?: string;
+  email?: string;
+  level?: number;
+  coins?: number;
+  experience?: number;
+  signedInToday?: boolean;
+  backgroundCoverUrl?: string;
+  /** 头像地址 */
+  avatarUrl?: string;
+  bio?: string;
+  updateTime?: string;
 }
 
 /** OAuth 提供商信息 */

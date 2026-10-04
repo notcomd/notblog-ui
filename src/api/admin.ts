@@ -46,8 +46,9 @@ export function deleteAdminUser() {
 }
 
 export function getAdminOnlineUsers() {
-  // 后端暂未提供该端点，先返回空态
-  return Promise.resolve({ data: [] });
+  // 后端暂未提供该端点：显式标记 available=false，避免界面把「数据源未接入」
+  // 当成「当前无人在线」汇报给管理员
+  return Promise.resolve({ data: { available: false, items: [] } });
 }
 
 // ==================== 内容审核（后端完整：AuditApi） ====================

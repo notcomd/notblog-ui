@@ -17,7 +17,7 @@
         aria-label="关闭表情面板"
         @click="emojiOpen = false"
       ></button>
-      <div v-if="emojiOpen" class="absolute bottom-full left-0 mb-2 w-[272px] glass-card p-2 grid grid-cols-8 gap-0.5 z-[70]">
+      <div v-if="emojiOpen" class="absolute bottom-full left-0 mb-2 w-[272px] qm-surface p-2 grid grid-cols-8 gap-0.5 z-[70]">
         <button v-for="e in EMOJIS" :key="e" class="h-8 rounded-[5%] text-lg leading-none hover:bg-white/70 dark:hover:bg-zinc-800/70 transition-colors" type="button" @click="insertEmoji(e)">{{ e }}</button>
       </div>
     </div>

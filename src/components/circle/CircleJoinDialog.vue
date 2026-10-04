@@ -1,30 +1,30 @@
 <template>
   <!-- 加入社区弹窗：邀请码/链接 + 审核制申请加入 + 收到的直邀（真实端点 accept/reject） -->
   <div class="fixed inset-0 z-[70] flex items-center justify-center bg-black/30" @click.self="$emit('close')">
-    <div class="glass-card p-6 w-96 max-h-[85vh] overflow-y-auto overscroll-contain">
+    <div class="qm-surface p-6 w-96 max-h-[85vh] overflow-y-auto overscroll-contain">
       <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100 mb-4">加入社区</h3>
       <p class="text-xs text-zinc-400 mb-3">输入社区邀请码即可加入</p>
       <input
         v-model="joinInput"
-        class="w-full h-11 px-4 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
+        class="w-full h-11 px-4 rounded-[5%] border border-zinc-200/70 dark:border-zinc-800 bg-transparent text-sm text-zinc-700 dark:text-zinc-200 outline-none focus:ring-2 focus:ring-amber-400/40 transition-all"
         placeholder="请输入社区邀请码"
         name="joinInput"
         aria-label="社区邀请码"
         @keyup.enter="$emit('join-submit', joinInput)"
       />
       <div class="flex justify-end gap-2 mt-4">
-        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" @click="$emit('close')">取消</button>
-        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:brightness-110 active:scale-95 transition-all" :disabled="joining" @click="$emit('join-submit', joinInput)">
+        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors" @click="$emit('close')">取消</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90 active:scale-95 transition-all" :disabled="joining" @click="$emit('join-submit', joinInput)">
           {{ joining ? '加入中…' : '加入社区' }}
         </button>
       </div>
 
       <!-- 收到的直邀（真实端点：GET /invitations/my + accept/reject） -->
-      <div class="mt-4 pt-4 border-t border-zinc-200/60 dark:border-zinc-700/60">
+      <div class="mt-4 pt-4 border-t border-zinc-200/60 dark:border-zinc-800/60">
         <p class="text-xs text-zinc-400 mb-2">收到的社区邀请</p>
-        <div v-if="myInvites.length === 0" class="text-xs text-zinc-400 py-3 text-center bg-white/40 dark:bg-zinc-800/40 rounded-[5%]">暂无邀请</div>
-        <div v-else class="space-y-1.5 max-h-44 overflow-y-auto overscroll-contain pr-0.5">
-          <div v-for="inv in myInvites" :key="inv.inviteGuid" class="flex items-center gap-2 px-3 py-2 rounded-[5%] bg-white/40 dark:bg-zinc-800/40">
+        <div v-if="myInvites.length === 0" class="rounded-[5%] border border-dashed border-zinc-200 py-4 text-center text-xs text-zinc-400 dark:border-zinc-800">暂无邀请</div>
+        <div v-else class="max-h-44 overflow-y-auto overscroll-contain">
+          <div v-for="inv in myInvites" :key="inv.inviteGuid" class="flex items-center gap-2 px-3 py-2.5">
             <span class="flex-1 min-w-0">
               <span class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ inv.circleName || '社区邀请' }}</span>
               <span class="block text-[10px] text-zinc-400">{{ statusText(inv) }}</span>

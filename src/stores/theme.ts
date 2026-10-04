@@ -12,6 +12,9 @@ const LIGHT_THEME_COLOR = '#fdfaf3';
 // 状态变更写属性（apply），属性被外部改写则拉回（lockAttr）。
 // 若只单向写，外部脚本改写属性后会出现「CSS 已跟随属性变色、JS 仍按 isDark 渲染」的
 // 半深半浅页面（遮罩、切换图标等由 isDark 驱动的元素不跟随）。
+//
+// 主题全局唯一：管理端不强制深色，与用户端共用同一个用户偏好，
+// 因此不存在「路由级覆盖」层。任何地方都不得旁路本 store 直接改 data-theme。
 export const useThemeStore = defineStore('theme', () => {
   const isDark = ref(localStorage.getItem(THEME_KEY) === 'dark');
 

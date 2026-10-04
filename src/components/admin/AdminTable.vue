@@ -19,7 +19,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, ri) in rows" :key="rowKey(row, ri)" class="border-b border-zinc-100/80 dark:border-zinc-800/60 hover:bg-white/50 dark:hover:bg-zinc-800/40 transition-colors">
+          <tr v-for="(row, ri) in rows" :key="rowKey(row, ri)" class="border-b border-zinc-100/80 dark:border-zinc-800/60 hover:bg-black/[0.03] dark:hover:bg-white/[0.045] transition-colors">
             <td v-if="selectable" class="px-4 py-3">
               <input type="checkbox" class="accent-amber-500" aria-label="选择该行" :checked="isSelected(rowKey(row, ri))" @change="toggleRow(rowKey(row, ri))" />
             </td>

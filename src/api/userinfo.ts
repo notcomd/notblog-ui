@@ -10,6 +10,13 @@ export function getMyUserInfo() {
   return service.get('/api/user-info/me');
 }
 
+// 我的签到日期（签到热力图）：GET /api/user-info/me/sign-in-dates?from=&to=
+// -> ApiResponse<SignInDatesDto { dates: string[]（yyyy-MM-dd，升序）, totalDays: number }>
+// from/to 省略时后端默认近 365 天；totalDays 为全部历史累计签到天数
+export function getMySignInDates(from?: string, to?: string) {
+  return service.get('/api/user-info/me/sign-in-dates', { params: { from, to } });
+}
+
 // 更新背景封面：PUT /api/user-info/me/background { backgroundCoverUrl }（空串 = 清除）
 export function updateBackgroundCover(url: string) {
   return service.put('/api/user-info/me/background', { backgroundCoverUrl: url });

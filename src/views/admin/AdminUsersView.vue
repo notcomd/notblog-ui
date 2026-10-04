@@ -30,7 +30,7 @@
           <option value="Banned">已封禁</option>
           <option value="Online">在线中</option>
         </select>
-        <button class="h-10 px-3 rounded-[5%] text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="load(1)">搜索</button>
+        <button class="h-10 px-3 rounded-[5%] border border-white/50 bg-white/60 text-sm text-zinc-600 transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-700/70" @click="load(1)">搜索</button>
         <div v-if="selected.length" class="flex items-center gap-2 ml-2">
           <span class="text-xs text-zinc-400">已选 {{ selected.length }} 项</span>
           <button disabled title="功能暂不可用" class="h-8 px-3 rounded-[5%] text-xs bg-red-500/10 text-red-500/50 cursor-not-allowed transition-colors" @click="batchBan">批量封禁</button>

@@ -38,7 +38,7 @@
               <img :src="adminAvatar" alt="" class="w-9 h-9 rounded-full object-cover border-2 border-white/60 dark:border-white/10" />
               <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ auth.user?.name || '管理员' }}</span>
             </button>
-            <div class="absolute right-0 top-full mt-2 w-44 glass-card p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+            <div class="absolute right-0 top-full mt-2 w-44 qm-surface p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
               <button class="w-full flex items-center gap-2 px-3 py-2 rounded-[5%] text-sm text-zinc-700 dark:text-zinc-200 hover:bg-amber-100 dark:hover:bg-zinc-800 transition-colors" @click="toast.push('个人中心开发中', 'info')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                 个人中心
@@ -92,10 +92,15 @@
       </aside>
 
       <!-- 主内容 -->
-      <main class="flex-1 min-w-0 px-6 py-6 overflow-y-auto h-[calc(100vh-4rem)]">
+      <main class="relative flex-1 min-w-0 px-6 py-6 overflow-y-auto h-[calc(100vh-4rem)]">
         <router-view v-slot="{ Component }">
-          <!-- anime.js 驱动的页面过渡：与用户端内容区同一套动效规格 -->
-          <Transition :css="false" mode="out-in" @enter="pageEnter" @leave="pageLeave">
+          <!-- 页面过渡：与用户端内容区同一套规格（不用 mode="out-in"，详见 input.css） -->
+          <Transition
+            enter-active-class="qm-page-enter-active"
+            enter-from-class="qm-page-enter-from"
+            leave-active-class="qm-page-leave-active"
+            leave-to-class="qm-page-leave-to"
+          >
             <component :is="Component" />
           </Transition>
         </router-view>
@@ -105,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
 import { useAuthStore } from '@/stores/auth'
@@ -113,7 +118,6 @@ import { useToastStore } from '@/stores/toast'
 import { getAdminStats } from '@/api/admin'
 import { getMyMenus } from '@/api/menu'
 import { DEFAULT_ADMIN_NAV, resolveMenuIcon, type AdminNavItem } from '@/components/admin/menuIcons'
-import { pageEnter, pageLeave } from '@/utils/pageTransition'
 
 const route = useRoute()
 const router = useRouter()
@@ -124,7 +128,6 @@ const toast = useToastStore()
 const collapsed = ref(false)
 const keyword = ref('')
 const pendingCount = ref(0)
-let savedTheme: boolean | null = null
 
 // 侧栏导航由后端菜单接口驱动（当前用户可见 + 启用）；接口失败/为空时回退内置默认项
 const navItems = ref<AdminNavItem[]>(DEFAULT_ADMIN_NAV)
@@ -175,18 +178,10 @@ function onLogout(): void {
 
 onMounted(async () => {
   await loadMenus()
-  // 管理端默认深色（记录用户原偏好，离开时恢复）
-  savedTheme = theme.isDark
-  if (!theme.isDark) theme.toggle()
   try {
     const res = await getAdminStats()
     const data = res && res.data ? res.data : res
     pendingCount.value = (data && (data.pendingTweets || 0)) + (data && (data.pendingReports || 0))
   } catch (e) { /* 忽略 */ }
-})
-
-onUnmounted(() => {
-  // 离开管理端恢复用户原主题偏好
-  if (savedTheme === false && theme.isDark) theme.toggle()
 })
 </script>

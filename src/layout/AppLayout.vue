@@ -8,15 +8,24 @@
       <SideNav v-if="!focus.focusMode" class="flex" />
       <!-- 右侧：顶栏 + 内容区（顶栏不再横跨全屏，Logo 已移至左侧功能栏） -->
       <div class="flex-1 min-w-0 flex flex-col">
-        <TopBar v-if="!focus.focusMode" />
+        <!-- 个人主页 Hero：封面要顶到窗口顶端，故让顶栏不占布局高度（-mb-16）浮在封面上；
+             其余页面顶栏照常占位 -->
+        <TopBar v-if="!focus.focusMode" :class="heroUnderTopBar ? '-mb-16' : ''" />
         <main
           ref="mainBox"
-          class="flex-1 min-h-0 overflow-y-auto scroll-native"
+          class="relative flex-1 min-h-0 overflow-y-auto scroll-native"
           :class="focus.focusMode ? 'p-3' : 'px-6 py-6'"
         >
           <router-view v-slot="{ Component }">
-            <!-- anime.js 驱动的页面过渡：先退场再入场，避免两页内容叠加错位 -->
-            <Transition :css="false" mode="out-in" @enter="pageEnter" @leave="pageLeave">
+            <!-- 页面过渡：CSS 类驱动。刻意不使用 mode="out-in"：
+                 out-in 会把主内容区闩死（切换两次后渲染空占位、只能刷新恢复），
+                 详见 input.css 中该过渡的说明。 -->
+            <Transition
+              enter-active-class="qm-page-enter-active"
+              enter-from-class="qm-page-enter-from"
+              leave-active-class="qm-page-leave-active"
+              leave-to-class="qm-page-leave-to"
+            >
               <keep-alive :include="cachedViews">
                 <component :is="Component" />
               </keep-alive>
@@ -44,17 +53,21 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import TopBar from '@/layout/TopBar.vue'
 import SideNav from '@/layout/SideNav.vue'
 import BackgroundLayer from '@/components/common/BackgroundLayer.vue'
 import CallPanel from '@/components/chat/CallPanel.vue'
 import { useFocusStore } from '@/stores/focus'
-import { pageEnter, pageLeave } from '@/utils/pageTransition'
 
 const route = useRoute()
 const focus = useFocusStore()
+
+// 个人主页 Hero（?tab=home）：封面要顶到窗口顶端，顶栏改为浮在封面上（不占布局高度）
+const heroUnderTopBar = computed(() =>
+  route.path.startsWith('/users/') && ((route.query.tab as string) || 'home') === 'home'
+)
 
 // 兜底：离开发布页时确保退出专注模式（防止组件异常卸载后框架长期隐藏）
 watch(() => route.path, (p) => {

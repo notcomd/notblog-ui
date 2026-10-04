@@ -1,6 +1,7 @@
 <template>
   <!-- 社区聊天 tab：拉取社区 Channel 会话并激活，内嵌通用聊天组件 -->
-  <div class="mt-4 flex-1 min-h-0 flex flex-col">
+  <!-- 高度由调用方（CircleWorkspace）给定，此处占满即可（滚动容器非 flex，flex-1 无效） -->
+  <div class="flex h-full min-h-0 flex-col">
     <div v-if="loading" class="py-12 text-center text-xs text-zinc-400">加载社区聊天…</div>
     <div v-else-if="error" class="py-12 text-center text-xs text-zinc-400">{{ error }}</div>
     <ChatConversation v-else-if="ready" class="flex-1 min-h-0" />

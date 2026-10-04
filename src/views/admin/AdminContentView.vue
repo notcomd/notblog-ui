@@ -1,13 +1,13 @@
 <template>
   <div class="max-w-[1400px] mx-auto space-y-5">
     <div>
-      <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">内容管理</h1>
-      <p class="text-sm text-zinc-400 mt-1">图文 / 视频 / 博客审核（后端 AuditApi：待审核队列 + 通过/驳回）</p>
+      <h1 class="font-display text-2xl font-bold text-zinc-800 dark:text-zinc-100">内容管理</h1>
+      <p class="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">图文 / 视频 / 博客审核（后端 AuditApi：待审核队列 + 通过/驳回）</p>
     </div>
 
     <!-- Tab：图文 | 视频 | 博客 -->
     <div class="flex gap-1 glass p-1 rounded-[5%] w-fit">
-      <button v-for="t in tabs" :key="t.key" class="px-5 py-2 rounded-[5%] text-sm font-medium transition-all" :class="tab === t.key ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="switchTab(t.key)">{{ t.label }}</button>
+      <button v-for="t in tabs" :key="t.key" class="px-5 py-2 rounded-[5%] text-sm font-medium transition-all" :class="tab === t.key ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 dark:hover:text-white'" @click="switchTab(t.key)">{{ t.label }}</button>
     </div>
 
     <!-- 筛选栏 -->
@@ -23,26 +23,33 @@
         <option value="reports">最多举报</option>
       </select>
       <input v-model="keyword" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="按内容标题 / 作者昵称检索" @keyup.enter="load(1)" />
-      <button class="h-10 px-4 rounded-[5%] text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: transition-all" @click="load(1)">筛选</button>
+      <button class="h-10 px-4 rounded-[5%] border border-white/50 bg-white/60 text-sm text-zinc-600 transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-700/70" @click="load(1)">筛选</button>
       <span class="text-xs text-zinc-400 ml-auto">高举报内容自动置顶（红色警示边框）</span>
     </div>
 
     <!-- 内容列表 -->
-    <div class="space-y-3">
-      <div v-for="t in items" :key="t.tweetGuid" class="glass-card p-4 flex flex-wrap items-center gap-4 transition-all hover:"
-        :class="(t.reportCount || 0) > 0 ? 'ring-2 ring-red-400/40' : ''">
+    <div>
+      <div
+        v-for="t in items"
+        :key="t.tweetGuid"
+        class="flex flex-wrap items-center gap-4 border-b border-zinc-200/60 p-4 transition-colors hover:bg-black/[0.03] dark:border-zinc-800/60 dark:hover:bg-white/[0.045]"
+        :class="(t.reportCount || 0) > 0 ? 'ring-1 ring-inset ring-red-400/50' : ''"
+      >
         <!-- 封面缩略图 -->
-        <div class="w-20 h-24 rounded-[5%] overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-          <img v-if="thumbOf(t)" :src="thumbOf(t)" alt="" class="w-full h-full object-cover" @error="hideImg" />
-          <span v-if="t.isVideo" class="text-2xl"><svg class="w-6 h-6 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg></span><span v-else class="text-2xl"><svg class="w-6 h-6 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+        <div class="flex h-24 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[5%] bg-zinc-100 dark:bg-zinc-900">
+          <img v-if="thumbOf(t)" :src="thumbOf(t)" alt="" class="h-full w-full object-cover" @error="onThumbError(t)" />
+          <template v-else>
+            <svg v-if="t.isVideo" class="w-6 h-6 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+            <svg v-else class="w-6 h-6 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </template>
         </div>
         <!-- 信息 -->
         <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 truncate">{{ t.content }}</span>
+          <div class="flex min-w-0 items-center gap-2">
+            <span class="min-w-0 truncate text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ t.content }}</span>
             <span v-if="(t.reportCount || 0) > 0" class="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-500 shrink-0"><svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> {{ t.reportCount }} 举报</span>
           </div>
-          <div class="text-xs text-zinc-400 mt-1 flex items-center gap-3">
+          <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400">
             <span>作者：{{ t.authorName }}</span>
             <span>{{ relativeTime(t.createTime) }}</span>
             <span>浏览 {{ t.viewCount }} · 赞 {{ t.likeCount }} · 评 {{ t.commentCount }}</span>
@@ -52,14 +59,15 @@
         <span class="text-xs px-2.5 py-1 rounded-full font-medium shrink-0" :class="statusClass(t.tweetStatus)">{{ statusText(t.tweetStatus) }}</span>
         <!-- 操作 -->
         <div class="flex gap-1.5 shrink-0">
-          <button class="px-3 h-9 rounded-[5%] text-xs font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover: active:scale-95 transition-all" @click="openAudit(t)">审核</button>
-          <button class="px-3 h-9 rounded-[5%] text-xs bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: active:scale-95 transition-all" @click="openBlock(t)">屏蔽</button>
-          <button class="px-3 h-9 rounded-[5%] text-xs bg-red-500/10 text-red-500 hover:bg-red-500/20 active:scale-95 transition-all" @click="openDelete(t)">删除</button>
+          <button class="h-9 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 px-3 text-xs font-medium text-white transition-all hover:opacity-90 active:scale-95" @click="openAudit(t)">审核</button>
+          <button class="h-9 rounded-[5%] bg-white/60 px-3 text-xs text-zinc-600 transition-colors hover:bg-white/80 active:scale-95 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-700/70" @click="openBlock(t)">屏蔽</button>
+          <button class="h-9 rounded-[5%] bg-red-500/10 px-3 text-xs text-red-500 transition-colors hover:bg-red-500/20 active:scale-95" @click="openDelete(t)">删除</button>
         </div>
       </div>
       <div v-if="loading" class="py-10 text-center text-sm text-zinc-400">加载中…</div>
       <div v-else-if="items.length === 0" class="py-16 text-center text-zinc-400">
-        <div class="text-5xl mb-3"><svg class="w-12 h-12 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>暂无符合条件的内容
+        <svg class="mx-auto mb-3 w-12 h-12 text-zinc-300 dark:text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        暂无符合条件的内容
       </div>
       <div class="flex items-center justify-center gap-2 pt-2">
         <button class="px-4 h-9 rounded-[5%] text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 disabled:opacity-30 transition-all" :disabled="page <= 1" @click="load(page - 1)">上一页</button>
@@ -72,14 +80,14 @@
     <AdminModal v-if="auditTarget" :title="'内容审核：' + auditTarget.content.slice(0, 30)" width="w-[720px]" @close="auditTarget = null">
       <div class="space-y-4">
         <div class="flex flex-row gap-4">
-          <img v-if="thumbOf(auditTarget)" :src="thumbOf(auditTarget)" alt="" class="w-44 h-56 rounded-[5%] object-cover" @error="hideImg" />
+          <img v-if="thumbOf(auditTarget)" :src="thumbOf(auditTarget)" alt="" class="w-44 h-56 shrink-0 rounded-[5%] object-cover" @error="onThumbError(auditTarget)" />
           <div class="flex-1 space-y-2">
             <div class="text-base font-semibold text-zinc-800 dark:text-zinc-100">{{ auditTarget.content }}</div>
             <div class="text-xs text-zinc-400">作者：{{ auditTarget.authorName }} · 发布时间：{{ relativeTime(auditTarget.createTime) }}</div>
             <div class="flex gap-2 pt-1">
               <span class="text-xs px-2 py-1 rounded-full bg-zinc-400/15 text-zinc-500 dark:text-zinc-400"><svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> {{ auditTarget.viewCount }}</span>
               <span class="text-xs px-2 py-1 rounded-full bg-red-400/15 text-red-500"><svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> {{ auditTarget.likeCount }}</span>
-              <span class="text-xs px-2 py-1 rounded-full bg-blue-400/15 text-amber-600"><svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> {{ auditTarget.commentCount }}</span>
+              <span class="text-xs px-2 py-1 rounded-full bg-amber-400/15 text-amber-600 dark:text-amber-400"><svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> {{ auditTarget.commentCount }}</span>
               <span v-if="(auditTarget.reportCount || 0) > 0" class="text-xs px-2 py-1 rounded-full bg-red-500/15 text-red-500"><svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> {{ auditTarget.reportCount }} 次举报</span>
             </div>
             <!-- 驳回理由 -->
@@ -124,7 +132,7 @@ export default { name: 'AdminContentView' }
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import AdminModal from '@/components/admin/AdminModal.vue'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 import { getPendingTweets, approveTweet, rejectTweet, blockTweet, deleteTweet } from '@/api/admin'
@@ -276,13 +284,17 @@ async function doDelete(reason: string): Promise<void> {
   }
 }
 
-function hideImg(e: any): void {
-  e.target.style.visibility = 'hidden'
+/** 缩略图加载失败的内容：记下 guid，模板据此回退到占位图标（审核弹窗则隐藏预览图） */
+const brokenThumbs = reactive(new Set<string>())
+
+function onThumbError(t: any): void {
+  if (t && t.tweetGuid) brokenThumbs.add(t.tweetGuid)
 }
 
 /** 列表缩略图：取第一张非视频媒体（视频作品 mediaUrls[0] 是视频本身，不能当封面） */
 function thumbOf(t: any): string {
-  return pickCoverUrl(t && t.mediaUrls)
+  if (!t || !t.tweetGuid || brokenThumbs.has(t.tweetGuid)) return ''
+  return pickCoverUrl(t.mediaUrls)
 }
 
 onMounted(() => load(1))

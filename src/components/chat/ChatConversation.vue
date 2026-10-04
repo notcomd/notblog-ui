@@ -140,7 +140,7 @@
         <!-- 回到最新：不在底部时出现 -->
         <button
           v-if="active && !atBottom"
-          class="absolute bottom-4 right-5 w-9 h-9 rounded-full glass-card flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 shadow-lg transition-colors"
+          class="absolute bottom-4 right-5 w-9 h-9 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200/70 dark:border-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 shadow-lg transition-colors"
           type="button" title="回到最新" aria-label="回到最新" @click="scrollToBottom(true)">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7" /></svg>
         </button>

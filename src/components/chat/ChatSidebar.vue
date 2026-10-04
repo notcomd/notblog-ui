@@ -105,7 +105,7 @@
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
           </button>
-          <div v-if="sessionMenuTarget === s.sessionId" class="absolute right-0 top-full mt-1 w-36 glass-card p-1.5 z-50">
+          <div v-if="sessionMenuTarget === s.sessionId" class="absolute right-0 top-full mt-1 w-36 qm-surface p-1.5 z-50">
             <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" type="button" @click="togglePin(s)">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg>
               {{ s.isPinned ? '取消置顶' : '置顶' }}
@@ -145,7 +145,7 @@
 
     <!-- 右键菜单（关闭：点击遮罩 / Escape） -->
     <div v-if="ctxMenu" class="fixed inset-0 z-40" @click="ctxMenu = null" @contextmenu.prevent="ctxMenu = null"></div>
-    <div v-if="ctxMenu" class="fixed z-50 w-40 glass-card p-1.5" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }">
+    <div v-if="ctxMenu" class="fixed z-50 w-40 qm-surface p-1.5" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }">
       <button v-if="canMarkRead(ctxMenu.s)" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" type="button" @click="markOneRead(ctxMenu.s)">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
         设为已读

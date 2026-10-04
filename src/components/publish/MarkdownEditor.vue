@@ -1,9 +1,9 @@
 <template>
   <!-- 全屏 Markdown 编辑器：顶部工具栏承载「格式 / 插入 / 文稿操作」全部操作（含保存与发布），
        编辑区撑满剩余高度并各自内部滚动，避免整页滚动 -->
-  <div class="flex flex-col h-full min-h-0 rounded-3xl overflow-hidden backdrop-blur-2xl bg-white/60 dark:bg-zinc-900/55 border border-white/50 dark:border-white/10 shadow-lg shadow-black/[0.04]">
+  <div class="flex flex-col h-full min-h-0">
     <!-- ==================== 顶部工具栏 ==================== -->
-    <div class="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-white/40 dark:border-white/10 bg-white/40 dark:bg-zinc-900/40">
+    <div class="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-zinc-200/70 dark:border-white/10">
       <!-- 左：文稿标题 + 可滚动的工具组 -->
       <div class="flex-1 min-w-0 flex items-center gap-1 overflow-x-auto">
         <span class="shrink-0 max-w-[160px] truncate text-xs font-semibold text-zinc-500 dark:text-zinc-300 mr-1" :title="docTitle">{{ docTitle }}</span>
@@ -14,7 +14,7 @@
           v-for="t in formatTools"
           :key="t.key"
           type="button"
-          class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-[13px] font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-emerald-400/15 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+          class="shrink-0 w-8 h-8 rounded-[5%] flex items-center justify-center text-[13px] font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-amber-400/15 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
           :title="t.tip"
           :aria-label="t.tip"
           @click="t.run()"
@@ -29,7 +29,7 @@
           v-for="t in insertTools"
           :key="t.key"
           type="button"
-          class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-emerald-400/15 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+          class="shrink-0 w-8 h-8 rounded-[5%] flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-amber-400/15 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
           :title="t.tip"
           :aria-label="t.tip"
           :disabled="uploading || videoUploading"
@@ -46,8 +46,8 @@
         <!-- 段落大纲开关：解析文档标题段落，点击可快速定位（默认不显示） -->
         <button
           type="button"
-          class="h-8 px-3 rounded-lg text-xs font-medium transition-all inline-flex items-center gap-1.5"
-          :class="outlineOpen ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
+          class="h-8 px-3 rounded-[5%] text-xs font-medium transition-colors inline-flex items-center gap-1.5"
+          :class="outlineOpen ? 'bg-amber-400/15 text-amber-600 dark:text-amber-400' : 'text-zinc-500 hover:bg-black/[0.04] hover:text-zinc-700 dark:hover:bg-white/[0.06] dark:hover:text-zinc-200'"
           :aria-pressed="outlineOpen"
           :title="outlineOpen ? '隐藏段落大纲' : '显示段落大纲'"
           @click="outlineOpen = !outlineOpen"
@@ -61,8 +61,8 @@
         <!-- 专注模式开关：隐藏左侧功能栏与顶部栏，编辑器独占整屏 -->
         <button
           type="button"
-          class="h-8 px-3 rounded-lg text-xs font-medium transition-all inline-flex items-center gap-1.5"
-          :class="focus.focusMode ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
+          class="h-8 px-3 rounded-[5%] text-xs font-medium transition-colors inline-flex items-center gap-1.5"
+          :class="focus.focusMode ? 'bg-amber-400/15 text-amber-600 dark:text-amber-400' : 'text-zinc-500 hover:bg-black/[0.04] hover:text-zinc-700 dark:hover:bg-white/[0.06] dark:hover:text-zinc-200'"
           :aria-pressed="focus.focusMode"
           :title="focus.focusMode ? '退出专注模式（恢复功能栏）' : '进入专注模式（隐藏功能栏与顶栏）'"
           @click="focus.setFocusMode(!focus.focusMode)"
@@ -77,8 +77,8 @@
         <!-- 预览开关：关闭后编辑区铺满整行 -->
         <button
           type="button"
-          class="h-8 px-3 rounded-lg text-xs font-medium transition-all inline-flex items-center gap-1.5"
-          :class="showPreview ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
+          class="h-8 px-3 rounded-[5%] text-xs font-medium transition-colors inline-flex items-center gap-1.5"
+          :class="showPreview ? 'bg-amber-400/15 text-amber-600 dark:text-amber-400' : 'text-zinc-500 hover:bg-black/[0.04] hover:text-zinc-700 dark:hover:bg-white/[0.06] dark:hover:text-zinc-200'"
           :aria-pressed="showPreview"
           :title="showPreview ? '关闭预览' : '开启预览'"
           @click="showPreview = !showPreview"
@@ -97,7 +97,7 @@
         <!-- 存草稿 -->
         <button
           type="button"
-          class="h-8 px-3 rounded-lg text-xs font-medium bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:opacity-90 transition-all disabled:opacity-50 inline-flex items-center gap-1.5"
+          class="h-8 px-3 rounded-[5%] text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
           :disabled="saving"
           @click="emit('save-draft')"
         >
@@ -108,7 +108,7 @@
         <!-- 发布 -->
         <button
           type="button"
-          class="h-8 px-4 rounded-lg text-xs font-semibold bg-gradient-to-r from-emerald-400 to-teal-500 text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          class="btn-sheen h-8 px-4 rounded-[5%] text-xs font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="publishing || !canPublish"
           @click="emit('publish')"
         >
@@ -119,7 +119,7 @@
 
     <!-- 表格行列选择浮层（点击工具栏「表格」按钮展开） -->
     <div v-if="tableOpen" class="relative shrink-0">
-      <div class="absolute left-3 top-0 z-30 p-2.5 rounded-2xl glass-card shadow-xl" @mouseleave="tableOpen = false">
+      <div class="absolute left-3 top-0 z-30 p-2.5 qm-surface" @mouseleave="tableOpen = false">
         <div class="text-[10px] text-zinc-400 mb-1.5 font-numeric">{{ tableRows }} × {{ tableCols }}</div>
         <div class="grid grid-cols-8 gap-0.5">
           <button
@@ -127,7 +127,7 @@
             :key="c"
             type="button"
             class="w-4 h-4 rounded-[3px] border transition-colors"
-            :class="isPicked(c) ? 'bg-emerald-400/70 border-emerald-500' : 'bg-white/50 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-700'"
+            :class="isPicked(c) ? 'bg-amber-400/70 border-amber-500' : 'bg-white/50 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-700'"
             :aria-label="`${Math.ceil(c / 8)} 行 ${((c - 1) % 8) + 1} 列`"
             @mouseenter="pickTable(c)"
             @click="insertTable()"
@@ -141,13 +141,13 @@
       <!-- 段落大纲：解析文档中的 # 标题，点击定位到对应段落（默认隐藏） -->
       <div
         v-if="outlineOpen"
-        class="w-[212px] shrink-0 h-full overflow-y-auto border-r border-zinc-200/60 dark:border-zinc-700/60 bg-white/30 dark:bg-zinc-900/30 py-3 px-2"
+        class="w-[212px] shrink-0 h-full overflow-y-auto border-r border-zinc-200/70 dark:border-white/10 py-3 px-2"
       >
         <div class="flex items-center justify-between px-1.5 mb-2">
           <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-300">段落大纲</span>
           <button
             type="button"
-            class="w-6 h-6 rounded-md flex items-center justify-center text-zinc-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+            class="w-6 h-6 rounded-[5%] flex items-center justify-center text-zinc-400 hover:bg-black/[0.05] dark:hover:bg-white/[0.08] hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
             title="收起段落大纲"
             aria-label="收起段落大纲"
             @click="outlineOpen = false"
@@ -164,10 +164,10 @@
           <li v-for="(o, i) in outline" :key="i">
             <button
               type="button"
-              class="w-full text-left rounded-md py-1 pr-1.5 text-xs truncate transition-colors"
+              class="w-full text-left rounded-[5%] py-1 pr-1.5 text-xs truncate transition-colors"
               :class="o.level <= 2
-                ? 'text-zinc-700 dark:text-zinc-200 hover:bg-emerald-400/10 hover:text-emerald-600 dark:hover:text-emerald-400'
-                : 'text-zinc-500 dark:text-zinc-400 hover:bg-emerald-400/10 hover:text-emerald-600 dark:hover:text-emerald-400'"
+                ? 'text-zinc-700 dark:text-zinc-200 hover:bg-amber-400/10 hover:text-amber-600 dark:hover:text-amber-400'
+                : 'text-zinc-500 dark:text-zinc-400 hover:bg-amber-400/10 hover:text-amber-600 dark:hover:text-amber-400'"
               :style="{ paddingLeft: 6 + (o.level - 1) * 10 + 'px' }"
               :title="o.text"
               @click="jumpTo(o, i)"
@@ -183,8 +183,8 @@
         :value="modelValue"
         name="markdownContent"
         aria-label="Markdown 编辑器"
-        class="h-full resize-none outline-none p-5 text-sm leading-relaxed bg-white/40 dark:bg-zinc-900/40 font-mono text-zinc-700 dark:text-zinc-200 transition-all"
-        :class="showPreview ? 'flex-1 min-w-0 border-r border-zinc-200/60 dark:border-zinc-700/60' : 'w-full'"
+        class="h-full resize-none outline-none p-5 text-sm leading-relaxed bg-transparent font-mono text-zinc-700 dark:text-zinc-200 transition-all"
+        :class="showPreview ? 'flex-1 min-w-0 border-r border-zinc-200/70 dark:border-white/10' : 'w-full'"
         :placeholder="placeholderText"
         spellcheck="false"
         @input="onInput"
@@ -195,7 +195,7 @@
       <div
         v-if="showPreview"
         ref="previewRef"
-        class="flex-1 min-w-0 h-full overflow-y-auto p-5 bg-white/20 dark:bg-zinc-900/20"
+        class="flex-1 min-w-0 h-full overflow-y-auto p-5"
       >
         <div v-if="modelValue.trim()" class="markdown-body" v-html="rendered"></div>
         <div v-else class="h-full flex flex-col items-center justify-center gap-2 text-zinc-400">
@@ -207,12 +207,12 @@
     </div>
 
     <!-- ==================== 底部状态栏 ==================== -->
-    <div class="shrink-0 flex items-center justify-between px-4 py-1.5 border-t border-white/40 dark:border-white/10 text-[11px] text-zinc-400">
+    <div class="shrink-0 flex items-center justify-between px-4 py-1.5 border-t border-zinc-200/70 dark:border-white/10 text-[11px] text-zinc-400">
       <span class="font-numeric">{{ modelValue.length }} 字 · {{ wordCount }} 词</span>
       <span class="flex items-center gap-3">
-        <span v-if="uploading || videoUploading" class="text-emerald-500">{{ videoUploading ? '视频上传中…' : '图片上传中…' }}</span>
+        <span v-if="uploading || videoUploading" class="text-amber-500">{{ videoUploading ? '视频上传中…' : '图片上传中…' }}</span>
         <span class="flex items-center gap-1">
-          <span class="w-1.5 h-1.5 rounded-full" :class="modelValue.trim() ? 'bg-emerald-400' : 'bg-zinc-300 dark:bg-zinc-600'"></span>
+          <span class="w-1.5 h-1.5 rounded-full" :class="modelValue.trim() ? 'bg-amber-400' : 'bg-zinc-300 dark:bg-zinc-600'"></span>
           {{ modelValue.trim() ? '内容就绪' : '等待输入' }}
         </span>
       </span>

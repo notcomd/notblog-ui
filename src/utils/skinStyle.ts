@@ -2,13 +2,12 @@
 // 深色皮肤蒙层偏向深色吸光；浅色皮肤叠加柔光（白 + 黑微压）。
 import type { CSSProperties } from 'vue'
 
-export function bgImageStyle(url: string, blur: number): CSSProperties {
+export function bgImageStyle(url: string): CSSProperties {
   if (!url) return {};
   return {
     backgroundImage: `url("${url}")`,
     backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    filter: `blur(${blur}px)`
+    backgroundPosition: 'center'
   };
 }
 

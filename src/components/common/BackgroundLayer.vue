@@ -1,6 +1,6 @@
 <template>
   <!-- 背景图系统：基底（body 纯色）→ 图片层 → 渐变压暗层 → 蒙层；无背景图时整体不渲染 -->
-  <div v-if="skin.wallpaper" class="skin-bg-layer" aria-hidden="true">
+  <div v-if="skin.hasWallpaper" class="skin-bg-layer" aria-hidden="true">
     <div class="absolute inset-0 skin-bg-img" :style="img"></div>
     <div class="absolute inset-0" :style="vignette"></div>
     <div class="absolute inset-0" :style="mask"></div>
@@ -16,9 +16,9 @@ import { bgImageStyle, vignetteStyle, maskStyle } from '@/utils/skinStyle'
 const skin = useSkinStore()
 const theme = useThemeStore()
 
-const img = computed(() => bgImageStyle(skin.wallpaperUrl, skin.blur))
+const img = computed(() => bgImageStyle(skin.wallpaperUrl))
 const vignette = computed(() => vignetteStyle())
-const mask = computed(() => maskStyle(skin.effectiveMask, theme.isDark))
+const mask = computed(() => maskStyle(skin.maskPercent, theme.isDark))
 </script>
 
 <style scoped>

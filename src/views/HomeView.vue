@@ -4,7 +4,7 @@
     <h1 class="sr-only">广场动态</h1>
 
     <!-- 未登录引导条：图标 + 两行说明 + 主 CTA，比单行渐变横幅更聚焦 -->
-    <div v-if="!auth.isLoggedIn()" class="qm-rise mb-5 glass-card px-4 py-3.5 flex items-center gap-3.5">
+    <div v-if="!auth.isLoggedIn()" class="qm-rise mb-6 pl-4 py-1 border-l-2 border-amber-400/70 flex items-center gap-3.5">
       <span class="shrink-0 w-10 h-10 rounded-[5%] bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />

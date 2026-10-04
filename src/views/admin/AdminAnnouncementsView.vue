@@ -33,7 +33,7 @@
             @click="form.type = t.value">{{ t.label }}</button>
         </div>
       </div>
-      <button class="w-full h-11 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="!form.title.trim() || !form.content.trim() || sending" @click="send">
+      <button class="w-full h-11 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50" :disabled="!form.title.trim() || !form.content.trim() || sending" @click="send">
         {{ sending ? '发送中...' : '发送公报' }}
       </button>
     </div>

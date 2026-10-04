@@ -1,7 +1,7 @@
 <template>
   <!-- 发起群组语音/视频房间：选择被邀请成员 + 可选入会密码 -->
   <div class="fixed inset-0 z-[75] flex items-center justify-center bg-zinc-950/70" @click.self="close">
-    <div class="w-[360px] max-h-[80vh] glass-card p-5 flex flex-col gap-4">
+    <div class="w-[360px] max-h-[80vh] qm-surface p-5 flex flex-col gap-4">
       <div class="flex items-center justify-between shrink-0">
         <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">发起{{ type === 'Video' ? '视频' : '语音' }}房间</h3>
         <button class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60" aria-label="关闭" @click="close">

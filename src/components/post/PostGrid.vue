@@ -18,7 +18,7 @@
         <span class="sr-only">正在加载内容…</span>
         <div v-for="i in 6" :key="i" class="break-inside-avoid mb-5" aria-hidden="true">
           <!-- 逐张错开微光相位（--qm-shimmer-delay 由 .qm-shimmer::after 读取） -->
-          <div class="glass-card overflow-hidden qm-shimmer" :style="{ '--qm-shimmer-delay': `${(i - 1) * 0.12}s` }">
+          <div class="overflow-hidden qm-shimmer" :style="{ '--qm-shimmer-delay': `${(i - 1) * 0.12}s` }">
             <div class="bg-zinc-200/70 dark:bg-zinc-800/70" :class="i % 4 === 3 ? 'aspect-square' : 'aspect-[9/16]'"></div>
             <div class="p-4 space-y-2">
               <div class="flex items-center gap-2">

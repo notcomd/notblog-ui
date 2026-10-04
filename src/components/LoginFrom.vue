@@ -161,9 +161,18 @@
 
         <div class="form__submit">
           <button type="submit" class="btn-form btn-sheen" :disabled="loading || submitted">
-            <span class="btn-form__label">{{ loading ? '处理中' : mode === 'password' ? '登入' : '登入 / 注册' }}</span>
+            <span class="btn-form__stack">
+              <span class="btn-form__label">{{ loading ? '处理中…' : mode === 'password' ? '登入' : '登入 / 注册' }}</span>
+              <span class="btn-form__done" aria-hidden="true">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                已登入
+              </span>
+            </span>
           </button>
-          <div class="form__success" aria-live="polite">成功</div>
+          <!-- 成功状态由实时区播报（可见反馈在按钮内与第三屏，不再重复「成功」文案） -->
+          <div class="sr-only" aria-live="polite">{{ submitted ? '已登入，正在进入' : '' }}</div>
         </div>
       </form>
 
@@ -207,7 +216,14 @@
       :inert="screen !== 'welcome' ? true : undefined"
       :aria-hidden="screen !== 'welcome'"
     >
-      <div class="done-mark" aria-hidden="true">✓</div>
+      <div class="done-badge">
+        <span class="done-ping" aria-hidden="true"></span>
+        <div class="done-mark" aria-hidden="true">
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+        </div>
+      </div>
       <h2 class="display font-display">欢迎回来</h2>
       <p class="lede">{{ successText }}</p>
     </section>
@@ -417,12 +433,14 @@ const playBackToIntro = (): void => {
   running = [tl]
 }
 
-/** 第二屏 → 第三屏：表单退场，勾选标记弹性放大，文案依次跟进 */
+/** 第二屏 → 第三屏：表单上移退场 → 勾号弹性落位 + 成功波环 → 文案依次跟进。
+    整段约 770ms 落定，之后留一小段稳定停留再交回父级跳转（否则刚播完就被切走）。 */
 const playToWelcome = (): void => {
   const form = pick('.screen--form')
   const done = pick('.screen--done')
   if (!form || !done) return
   const mark = pick('.screen--done .done-mark')
+  const ping = pick('.screen--done .done-ping')
   const title = pick('.screen--done .display')
   const lede = pick('.screen--done .lede')
 
@@ -433,18 +451,22 @@ const playToWelcome = (): void => {
       mark.style.opacity = '1'
       mark.style.transform = 'none'
     }
+    if (ping) ping.style.opacity = '0'
     resetItems([title, lede].filter((n): n is HTMLElement => !!n))
     return
   }
 
   stopRunning()
-  hideItems([mark, title, lede].filter((n): n is HTMLElement => !!n))
+  hideItems([mark, ping, title, lede].filter((n): n is HTMLElement => !!n))
   const tl = createTimeline({ defaults: { ease: 'outQuart' } })
-  tl.add(form, { opacity: [1, 0], translateY: [0, -24], duration: 300, ease: 'inQuad' }, 0)
-    .add(done, { opacity: [0, 1], translateY: [18, 0], duration: 300 }, 150)
-  if (mark) tl.add(mark, { opacity: [0, 1], scale: [0.5, 1], duration: 720, ease: 'outBack' }, 210)
-  if (title) tl.add(title, { opacity: [0, 1], translateY: [18, 0], duration: 480 }, 320)
-  if (lede) tl.add(lede, { opacity: [0, 1], translateY: [14, 0], duration: 480 }, 410)
+  tl.add(form, { opacity: [1, 0], translateY: [0, -22], duration: 260, ease: 'inQuad' }, 0)
+    .add(done, { opacity: [0, 1], translateY: [16, 0], duration: 280 }, 110)
+  // 勾号：略小尺寸弹性放大到满格（outBack 收尾带轻微回弹）
+  if (mark) tl.add(mark, { opacity: [0, 1], scale: [0.4, 1], duration: 620, ease: 'outBack' }, 150)
+  // 成功波环：与勾号同时向外扩散并淡出（只动 transform/opacity）
+  if (ping) tl.add(ping, { opacity: [0.55, 0], scale: [0.85, 1.8], duration: 680, ease: 'outQuad' }, 150)
+  if (title) tl.add(title, { opacity: [0, 1], translateY: [16, 0], duration: 420 }, 270)
+  if (lede) tl.add(lede, { opacity: [0, 1], translateY: [12, 0], duration: 420 }, 350)
   running = [tl]
 }
 
@@ -585,13 +607,14 @@ const onSubmit = async (): Promise<void> => {
       return
     }
     isNewUser.value = Boolean(payload.isNewUser)
-    // 成功：先让主按钮收成 ✓，再滑入欢迎屏，最后交回父级保存凭证并跳转
+    // 成功：主按钮内文案切到「✓ 已登入」→ 滑入欢迎屏 → 交回父级保存凭证并跳转
     submitted.value = true
     loading.value = false
     welcomeTimer = setTimeout(() => {
       screen.value = 'welcome'
-      finishTimer = setTimeout(() => emit('success', payload as unknown as TokenResult), 900)
-    }, 520)
+      // 第三屏入场约 770ms 落定，再留 ~180ms 稳定停留后才跳转
+      finishTimer = setTimeout(() => emit('success', payload as unknown as TokenResult), 950)
+    }, 420)
   } catch (err: unknown) {
     errorMessage.value = resolveError(
       err,
@@ -1015,6 +1038,9 @@ html[data-theme='dark'] .qm-auth {
 
 .btn-form {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   padding: 13px 0;
   border: none;
@@ -1026,7 +1052,8 @@ html[data-theme='dark'] .qm-auth {
   font-weight: 600;
   letter-spacing: 0.05em;
   cursor: pointer;
-  transition: background 0.35s ease, color 0.35s ease, width 0.45s var(--qm-ease), margin 0.45s var(--qm-ease);
+  /* 只过渡颜色/阴影：宽高与外边距会逐帧触发布局重排 */
+  transition: background 0.35s ease, color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .btn-form:disabled {
@@ -1044,53 +1071,36 @@ html[data-theme='dark'] .qm-auth {
   box-shadow: 0 14px 28px -18px rgba(234, 88, 12, 0.9);
 }
 
-.btn-form__label {
-  transition: opacity 0.25s ease;
+/* 标签与「已登入」同格叠放：切换只做透明度/缩放，不产生任何布局变化。
+   （原先用 width + margin-left 把按钮收成圆点，会逐帧触发布局重排，
+   叠加背景颗粒层的全屏混合，正是提交瞬间卡顿的来源） */
+.btn-form__stack {
+  display: grid;
+  place-items: center;
 }
 
-.btn-form::before {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  color: #fffbeb;
-  font-size: 16px;
-  transform: translate(-50%, -50%) scale(0);
-  transition: transform 0.45s cubic-bezier(0.17, 0.09, 0.77, 1.8);
+.btn-form__label,
+.btn-form__done {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.25s ease, transform 0.35s var(--qm-ease);
 }
 
-.form-submitted .btn-form {
-  width: 46px;
-  margin-left: calc(50% - 46px);
-  padding-left: 0;
-  padding-right: 0;
+.btn-form__done {
+  opacity: 0;
+  transform: scale(0.8);
 }
 
 .form-submitted .btn-form__label {
   opacity: 0;
+  transform: scale(0.92);
 }
 
-.form-submitted .btn-form::before {
-  transform: translate(-50%, -50%) scale(1);
-}
-
-.form__success {
-  position: absolute;
-  top: 50%;
-  left: calc(50% + 12px);
-  color: var(--qm-accent);
-  font-size: 14px;
-  font-weight: 600;
-  opacity: 0;
-  transform: translateY(-50%) scale(0.9);
-  transform-origin: left center;
-  transition: opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s;
-  pointer-events: none;
-}
-
-.form-submitted .form__success {
+.form-submitted .btn-form__done {
   opacity: 1;
-  transform: translateY(-50%) scale(1);
+  transform: scale(1);
 }
 
 /* ===== 分隔线与第三方 ===== */
@@ -1167,18 +1177,32 @@ html[data-theme='dark'] .qm-auth {
 }
 
 /* ===== 第三屏 ===== */
+.done-badge {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 22px;
+}
+
 .done-mark {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  margin-bottom: 22px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   background: linear-gradient(to bottom right, #f59e0b, #ea580c);
   color: #fffbeb;
-  font-size: 26px;
   box-shadow: 0 16px 30px -18px rgba(234, 88, 12, 0.9);
+}
+
+/* 成功波环：勾号落位时向外扩散一圈，给「完成」一个收束感（只动 transform/opacity） */
+.done-ping {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(245, 158, 11, 0.6);
+  border-radius: 50%;
+  opacity: 0;
 }
 
 /* ===== 矮视口收紧间距 ===== */
@@ -1217,8 +1241,8 @@ html[data-theme='dark'] .qm-auth {
   .send,
   .link,
   .btn-form,
-  .btn-form::before,
-  .form__success,
+  .btn-form__label,
+  .btn-form__done,
   .oauth-btn {
     transition: none !important;
   }

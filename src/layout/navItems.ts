@@ -27,7 +27,8 @@ interface SpaceTab {
   icon: string;
 }
 
-// 个人空间导航：收藏/安全仅自己可见（他人只保留：主页/作品/公开仓库）
+// 个人空间导航：收藏仅自己可见（他人只保留：主页/作品/公开仓库）
+// 安全设置已从导航移除，改为主页封面按钮旁的入口跳转 /settings/security
 export function buildSpaceNavItems(userId: string, isSelf: boolean): NavLink[] {
   const tabItems: SpaceTab[] = [
     {
@@ -45,15 +46,10 @@ export function buildSpaceNavItems(userId: string, isSelf: boolean): NavLink[] {
       key: 'files',
       label: isSelf ? '我的仓库' : '公开仓库',
       icon: 'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'
-    },
-    {
-      key: 'security',
-      label: '安全',
-      icon: 'M12 17v2M7 11V7a5 5 0 0 1 10 0v4M5 11h14a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1z'
     }
   ];
   return (
-    isSelf ? tabItems : tabItems.filter((t) => !['favorites', 'security'].includes(t.key))
+    isSelf ? tabItems : tabItems.filter((t) => t.key !== 'favorites')
   ).map((t) => ({
     to: { path: `/users/${userId}`, query: { tab: t.key } },
     label: t.label,

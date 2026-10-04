@@ -89,9 +89,10 @@
             @click.stop="userMenuOpen = !userMenuOpen"
           >
             <img
-              :src="auth.user && auth.user.avatar ? auth.user.avatar : avatarFallback"
+              :src="avatarSrc"
               alt="avatar"
-              class="w-9 h-9 rounded-full object-cover border-2 border-white/60 dark:border-white/10"
+              class="w-9 h-9 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/10"
+              @error="avatarFailed = true"
             />
           </button>
 
@@ -102,20 +103,21 @@
             enter-from-class="opacity-0 -translate-y-1"
             leave-to-class="opacity-0 -translate-y-1"
           >
-            <div v-if="userMenuOpen" class="absolute right-0 top-full mt-2 w-[min(15rem,90vw)] p-2 z-50 rounded-[5%] bg-white dark:bg-zinc-800/95 border border-zinc-200/70 dark:border-zinc-700/60">
+            <div v-if="userMenuOpen" class="absolute right-0 top-full mt-2 w-[min(17rem,90vw)] z-50 qm-surface overflow-hidden">
               <!-- 用户数据区：用户名 + 等级 + 经验 + 硬币 -->
-              <div class="px-3 pt-2 pb-3">
+              <div class="px-3.5 pt-3.5 pb-3">
                 <div class="flex items-center gap-3">
                   <img
-                    :src="auth.user && auth.user.avatar ? auth.user.avatar : avatarFallback"
+                    :src="avatarSrc"
                     alt="avatar"
-                    class="w-10 h-10 rounded-full object-cover border-2 border-white/60 dark:border-white/10"
+                    class="w-10 h-10 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/10"
+                    @error="avatarFailed = true"
                   />
                   <div class="min-w-0">
                     <div class="text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate">{{ auth.user ? (auth.user.name || '用户') : '未登录' }}</div>
-                    <div class="mt-0.5 flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400">
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L21.5 9.3l-4.75 4.4 1.13 6.8L12 17.3l-5.88 3.2 1.13-6.8L2.5 9.3l6.6-1.04L12 2z" /></svg>
-                      Lv.{{ userInfo ? userInfo.level : 1 }}
+                    <div class="mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26L21.5 9.3l-4.75 4.4 1.13 6.8L12 17.3l-5.88 3.2 1.13-6.8L2.5 9.3l6.6-1.04L12 2z" /></svg>
+                      Lv.{{ level }}
                     </div>
                   </div>
                 </div>
@@ -124,8 +126,8 @@
                 <div class="mt-3">
                   <div class="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">
                     <span>经验</span>
-                    <span v-if="isMaxLevel">已满级 · 累计 {{ userInfo ? userInfo.experience : 0 }} 经验</span>
-                    <span v-else>{{ userInfo ? userInfo.experience : 0 }} / {{ levelThreshold }}</span>
+                    <span v-if="isMaxLevel" class="font-numeric">已满级 · 累计 {{ experience }} 经验</span>
+                    <span v-else class="font-numeric">{{ experience }} / {{ levelThreshold }}</span>
                   </div>
                   <div class="h-1.5 rounded-full bg-zinc-200/70 dark:bg-zinc-700/60 overflow-hidden">
                     <div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-300" :style="{ width: expPercent + '%' }"></div>
@@ -133,36 +135,39 @@
                 </div>
 
                 <!-- 硬币 + 每日签到（POST /api/user-info/sign-in，+250 经验） -->
-                <div class="mt-2.5 flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-200">
-                  <svg class="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v10M9.5 9.5c.5-.7 1.4-1 2.5-1s2 .3 2.5 1c.6.8.2 1.8-1.2 2.3-1.8.6-2.4 1.5-1.8 2.4.5.8 1.5 1.1 2.5 1s2-.4 2.5-1.2" /></svg>
-                  <span class="font-medium">{{ userInfo ? userInfo.coins : 0 }}</span>
+                <div class="mt-3 flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-200">
+                  <svg class="w-4 h-4 shrink-0 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v10M9.5 9.5c.5-.7 1.4-1 2.5-1s2 .3 2.5 1c.6.8.2 1.8-1.2 2.3-1.8.6-2.4 1.5-1.8 2.4.5.8 1.5 1.1 2.5 1s2-.4 2.5-1.2" /></svg>
+                  <span class="font-numeric font-medium">{{ coins }}</span>
                   <span class="text-xs text-zinc-400">硬币</span>
                   <span class="flex-1"></span>
                   <button
                     v-if="userInfo && !userInfo.signedInToday"
-                    class="h-7 px-2.5 rounded-[5%] text-[11px] font-medium bg-amber-400/15 text-amber-600 dark:text-amber-300 hover:bg-amber-400/25 transition-colors disabled:opacity-40"
+                    class="h-7 shrink-0 rounded-[5%] px-2.5 text-[11px] font-medium bg-amber-400/15 text-amber-600 dark:text-amber-300 hover:bg-amber-400/25 transition-colors disabled:opacity-40"
                     :disabled="signingIn"
                     @click="onSignIn"
                   >{{ signingIn ? '签到中…' : '每日签到 +250经验' }}</button>
-                  <span v-else-if="userInfo && userInfo.signedInToday" class="text-[11px] text-zinc-400">今日已签到 <svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                  <span v-else-if="userInfo && userInfo.signedInToday" class="shrink-0 text-[11px] text-zinc-400">今日已签到 <svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
                 </div>
               </div>
 
-              <div class="h-px bg-zinc-200/70 dark:bg-zinc-700/60 my-1"></div>
+              <div class="h-px bg-black/[0.06] dark:bg-white/[0.08]"></div>
 
-              <router-link :to="auth.user ? '/users/' + auth.user.id : '/login'" class="flex items-center gap-2 px-3 py-2 rounded-[5%] text-sm text-zinc-700 dark:text-zinc-200 hover:bg-amber-50 dark:hover:bg-zinc-800 transition-colors">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                个人主页
-              </router-link>
-              <router-link to="/admin" class="flex items-center gap-2 px-3 py-2 rounded-[5%] text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-zinc-800 transition-colors">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>
-                管理后台
-              </router-link>
-              <div class="h-px bg-zinc-200 dark:bg-zinc-700 my-1"></div>
-              <button @click="onLogout" class="w-full flex items-center gap-2 px-3 py-2 rounded-[5%] text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5M21 12H9" /></svg>
-                退出登录
-              </button>
+              <!-- 菜单项：统一 36px 行高 + 中性悬浮态（语义色只由文字/图标承担） -->
+              <div class="p-1.5">
+                <router-link :to="auth.user ? '/users/' + auth.user.id : '/login'" class="flex h-9 items-center gap-2.5 px-2.5 rounded-[5%] text-sm text-zinc-700 dark:text-zinc-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors">
+                  <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                  个人主页
+                </router-link>
+                <router-link v-if="auth.isAdmin" to="/admin" class="flex h-9 items-center gap-2.5 px-2.5 rounded-[5%] text-sm text-blue-600 dark:text-blue-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors">
+                  <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>
+                  管理后台
+                </router-link>
+                <div class="h-px bg-black/[0.06] dark:bg-white/[0.08] my-1.5 mx-1"></div>
+                <button @click="onLogout" class="w-full flex h-9 items-center gap-2.5 px-2.5 rounded-[5%] text-sm text-red-500 hover:bg-red-500/10 transition-colors">
+                  <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5M21 12H9" /></svg>
+                  退出登录
+                </button>
+              </div>
             </div>
           </transition>
         </div>
@@ -183,7 +188,7 @@ import { useToastStore } from '@/stores/toast'
 import { useFeedTabStore, type FeedTab } from '@/stores/feedTab'
 import SkinPanel from '@/components/common/SkinPanel.vue'
 import NotificationPanel from '@/components/common/NotificationPanel.vue'
-import { getMyUserInfo, signIn } from '@/api/userinfo'
+import { signIn } from '@/api/userinfo'
 import { getNotificationUnreadCount } from '@/api/notification'
 import { MAIN_NAV_ITEMS, buildSpaceNavItems } from '@/layout/navItems'
 
@@ -238,33 +243,34 @@ const avatarFallback = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="h
 
 // ==================== 用户下拉菜单（点击展开/关闭） ====================
 const userMenuOpen = ref(false)
-// 用户数据：等级 / 经验 / 硬币（GET /api/user-info/me；未创建资料时后端返回默认 1 级 / 0 币）
-const userInfo = ref<any>(null)
+// 用户数据（等级 / 经验 / 硬币，含头像）：单一事实源在 auth store —— 它已带本地缓存并统一请求
+// GET /api/user-info/me，此处只读取，避免同一接口被请求两次。
+const userInfo = computed(() => auth.userInfo)
+
+// 头像：地址失效/被清理时回退占位图，避免显示裂图
+const avatarFailed = ref(false)
+const avatarSrc = computed(() => (!avatarFailed.value && auth.user?.avatar) || avatarFallback)
+watch(() => auth.user?.avatar, () => { avatarFailed.value = false })
 
 const MAX_LEVEL = 9 // 与后端 UserInfo.MaxLevel 一致
 
+// 字段级兜底：UserInfo 各字段可选，缺失时回落默认值，避免渲染出空白的 Lv. 或 NaN
+const level = computed<number>(() => userInfo.value?.level ?? 1)
+const experience = computed<number>(() => userInfo.value?.experience ?? 0)
+const coins = computed<number>(() => userInfo.value?.coins ?? 0)
+
 // 升级所需经验：后端 LevelUpThreshold(level) = 500 × 5 × level = 2500 × level
-const levelThreshold = computed<number>(() => (userInfo.value ? 2500 * userInfo.value.level : 2500))
-const isMaxLevel = computed<boolean>(() => !!userInfo.value && userInfo.value.level >= MAX_LEVEL)
+const levelThreshold = computed<number>(() => 2500 * level.value)
+const isMaxLevel = computed<boolean>(() => level.value >= MAX_LEVEL)
 const expPercent = computed<number>(() => {
-  if (!userInfo.value) return 0
   if (isMaxLevel.value) return 100
-  const t = 2500 * userInfo.value.level
-  return t > 0 ? Math.min(100, Math.round((userInfo.value.experience / t) * 100)) : 0
+  const t = 2500 * level.value
+  return t > 0 ? Math.min(100, Math.round((experience.value / t) * 100)) : 0
 })
 
 async function loadUserInfo(): Promise<void> {
-  if (!auth.isLoggedIn()) {
-    userInfo.value = null
-    return
-  }
-  try {
-    const res = await getMyUserInfo()
-    userInfo.value = (res && res.data) || null
-  } catch (e) {
-    // 接口失败不阻塞界面，下拉显示默认值（Lv.1 / 0 币）
-    userInfo.value = null
-  }
+  // 统一走 auth store（负责本地缓存 + 失败静默）；未登录时 store 内部会清空
+  await auth.loadUserInfo()
 }
 
 // 每日签到（POST /api/user-info/sign-in → SignInResultDto{level, experience, coins, upgradedLevels}）
@@ -319,7 +325,6 @@ watch(() => auth.isLoggedIn(), (logged: boolean) => {
     loadUserInfo()
     loadUnread()
   } else {
-    userInfo.value = null
     userMenuOpen.value = false
     notifOpen.value = false
     unread.value = 0

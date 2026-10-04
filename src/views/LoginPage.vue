@@ -53,6 +53,7 @@
 import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
+import { useAuthStore } from '@/stores/auth'
 import LoginFrom from '@/components/LoginFrom.vue'
 import BackgroundImage from '@/components/BackgroundImage.vue'
 import { oauthCallback, saveLoginResult } from '@/api/auth'
@@ -61,6 +62,7 @@ import type { TokenResult } from '@/types'
 const route = useRoute()
 const router = useRouter()
 const theme = useThemeStore()
+const auth = useAuthStore()
 
 // ==================== 登录收尾（表单登录 / OAuth 回调共用） ====================
 // 凭证落盘后按 ?redirect 回跳原页面（由 main.ts 会话失效装配写入），无则回首页
@@ -69,6 +71,10 @@ const finishLogin = (payload: TokenResult): void => {
     console.error('登录失败：响应缺少 accessToken', payload)
     return
   }
+  // store 在应用启动时就已创建，此时 token 还是旧的，必须先重解析 JWT 再拉资料，
+  // 否则登录后 auth.user 为空、顶栏头像要等整页刷新才出现。
+  auth.refreshUserFromToken()
+  void auth.loadUserInfo()
   const redirect = route.query.redirect
   router.replace(
     typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')

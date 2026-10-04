@@ -58,7 +58,7 @@
 
       <!-- ===== 加载中：骨架 ===== -->
       <div v-if="loading" class="space-y-3" role="status">
-        <div v-for="i in 4" :key="i" class="glass-card p-4 flex items-center gap-4 animate-pulse">
+        <div v-for="i in 4" :key="i" class="p-4 flex items-center gap-4 animate-pulse">
           <div class="w-12 h-12 rounded-xl bg-zinc-200/70 dark:bg-zinc-800/70"></div>
           <div class="flex-1 space-y-2">
             <div class="h-4 w-1/3 rounded bg-zinc-200/70 dark:bg-zinc-800/70"></div>

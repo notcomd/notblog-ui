@@ -7,7 +7,7 @@
 
     <div class="flex gap-5">
       <!-- 左：社区列表 -->
-      <div class="w-72 shrink-0 glass-card p-3 flex flex-col h-[calc(100vh-10rem)]">
+      <div class="w-72 shrink-0 pr-4 flex flex-col h-[calc(100vh-10rem)] border-r border-zinc-200/70 dark:border-zinc-800">
         <input v-model="keyword" name="keyword" aria-label="按社区名称检索" class="h-10 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all mb-3" placeholder="按社区名称检索…" @input="filterCircles" />
         <div class="flex-1 overflow-y-auto space-y-1 min-h-0">
           <button v-for="c in filtered" :key="c.circleGuid" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-[5%] transition-all text-left"

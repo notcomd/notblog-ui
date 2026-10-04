@@ -3,20 +3,20 @@
     <!-- ===== 顶部：标题 + 草稿说明 ===== -->
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
       <div class="min-w-0">
-        <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 font-display">发布工作台</h1>
-        <p class="text-sm text-zinc-400 mt-1">选择内容类型开始创作，未发布的作品会按类型整理在下方</p>
+        <h1 class="font-display text-2xl font-bold text-zinc-800 dark:text-zinc-100">发布工作台</h1>
+        <p class="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">选择内容类型开始创作，未发布的作品会按类型整理在下方</p>
       </div>
-      <button class="px-4 h-10 shrink-0 rounded-2xl text-sm backdrop-blur-xl bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-zinc-600 dark:text-zinc-300 hover:opacity-90 transition-all" type="button" @click="toast.push('草稿保存在本机浏览器中', 'info')">
+      <button class="inline-flex h-9 shrink-0 items-center rounded-[5%] px-3 text-xs text-zinc-500 transition-colors hover:bg-black/[0.04] hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-white/[0.06] dark:hover:text-zinc-200" type="button" @click="toast.push('草稿保存在本机浏览器中', 'info')">
         <svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>草稿自动保存到本机
       </button>
     </div>
 
-    <!-- ===== 创作类型卡片：SVG 主题 + 毛玻璃 ===== -->
+    <!-- ===== 创作类型：无框卡片（顶部波带 + 线稿装饰 + 印章图标） ===== -->
     <div class="grid grid-cols-3 gap-4">
       <div
         v-for="(t, ti) in types"
         :key="t.type"
-        class="relative flex flex-col overflow-hidden rounded-3xl backdrop-blur-2xl bg-white/60 dark:bg-zinc-900/55 border border-white/50 dark:border-white/10 shadow-lg shadow-black/[0.04] group cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-black/10"
+        class="group relative flex cursor-pointer flex-col overflow-hidden rounded-[5%] transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.045]"
         role="link"
         tabindex="0"
         @click="createNew(t.type)"
@@ -24,12 +24,12 @@
         @keydown.space.prevent="createNew(t.type)"
       >
         <!-- SVG 顶部波带（类型渐变） -->
-        <svg class="absolute top-0 left-0 w-full h-8 pointer-events-none" viewBox="0 0 400 30" preserveAspectRatio="none" aria-hidden="true">
-          <path :d="t.ribbonPath" :fill="'url(#' + t.gradId + ')'" opacity="0.9" />
+        <svg class="pointer-events-none absolute left-0 top-0 h-6 w-full" viewBox="0 0 400 30" preserveAspectRatio="none" aria-hidden="true">
+          <path :d="t.ribbonPath" :fill="'url(#' + t.gradId + ')'" opacity="0.85" />
         </svg>
         <!-- SVG 主题装饰：右上角大线稿（hover 微动） -->
         <div
-          class="absolute -top-3 -right-7 opacity-[0.14] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 pointer-events-none select-none"
+          class="pointer-events-none absolute -right-7 -top-3 select-none opacity-[0.12] transition-transform duration-500 group-hover:rotate-3 group-hover:scale-110"
           aria-hidden="true"
           v-html="t.deco"
         ></div>
@@ -42,7 +42,7 @@
 
           <!-- 印章式类型图标 -->
           <div
-            class="w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-black/10 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
+            class="flex h-16 w-16 items-center justify-center rounded-[5%] text-white shadow-lg shadow-black/10 transition-transform duration-300 group-hover:-rotate-3 group-hover:scale-110"
             :class="t.seal"
             v-html="t.icon"
           ></div>
@@ -51,10 +51,10 @@
           <p class="text-xs text-zinc-400 mt-1">{{ t.desc }}</p>
 
           <!-- 底部 CTA（mt-auto 贴底，三卡底部对齐） -->
-          <div class="mt-auto pt-4 border-t border-white/40 dark:border-white/10 flex items-center justify-between">
+          <div class="mt-auto flex items-center justify-between border-t border-zinc-200/70 pt-4 dark:border-zinc-800/70">
             <span class="text-[11px] text-zinc-400">点击卡片开始创作</span>
             <span
-              class="inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-3.5 py-1.5 backdrop-blur bg-white/50 dark:bg-zinc-800/50 border border-white/50 dark:border-white/10 transition-all duration-300 group-hover:gap-2.5"
+              class="inline-flex items-center gap-1.5 text-xs font-semibold transition-all duration-300 group-hover:gap-2.5"
               :class="t.cta"
             >
               {{ t.label }}
@@ -66,10 +66,10 @@
     </div>
 
     <!-- ===== 未发布作品：从卡片分离，按类型分类 ===== -->
-    <section class="mt-8">
+    <section class="mt-10 border-t border-zinc-200/70 pt-6 dark:border-zinc-800/70">
       <div class="flex flex-wrap items-center gap-4 justify-between mb-5">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-black/10">
+          <div class="flex h-10 w-10 items-center justify-center rounded-[5%] bg-gradient-to-br from-amber-400 to-orange-500 text-white">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8" /><path d="M1 3h22v5H1z" /><path d="M10 12h4" /></svg>
           </div>
           <div>
@@ -78,26 +78,26 @@
           </div>
         </div>
 
-        <!-- 分类筛选（毛玻璃胶囊） -->
-        <div class="inline-flex items-center gap-1 p-1 rounded-full backdrop-blur-xl bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10">
+        <!-- 分类筛选：分段控件 -->
+        <div class="inline-flex items-center gap-1 rounded-[5%] bg-black/5 p-1 dark:bg-white/10" role="group" aria-label="按类型筛选草稿">
           <button
             v-for="f in filters"
             :key="f.key"
             type="button"
-            class="h-8 px-3.5 rounded-full text-xs font-medium transition-all inline-flex items-center gap-1.5"
-            :class="activeFilter === f.key ? 'bg-white dark:bg-zinc-700 text-amber-600 dark:text-amber-300 shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
+            class="inline-flex h-8 items-center gap-1.5 rounded-[5%] px-3.5 text-xs font-medium transition-colors"
+            :class="activeFilter === f.key ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'text-zinc-500 hover:bg-white/60 hover:text-zinc-700 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-200'"
             :aria-pressed="activeFilter === f.key"
             @click="activeFilter = f.key"
           >
-            <span class="w-1.5 h-1.5 rounded-full" :class="f.dot" aria-hidden="true"></span>
+            <span class="h-1.5 w-1.5 rounded-full" :class="activeFilter === f.key ? 'bg-white/80' : f.dot" aria-hidden="true"></span>
             {{ f.label }}
             <span class="font-numeric text-[10px] opacity-60">{{ countOf(f.key) }}</span>
           </button>
         </div>
       </div>
 
-      <!-- 草稿容器：毛玻璃 -->
-      <div class="rounded-3xl backdrop-blur-2xl bg-white/60 dark:bg-zinc-900/55 border border-white/50 dark:border-white/10 p-5">
+      <!-- 草稿列表：无框（行 hover 染底） -->
+      <div>
         <!-- 空态：SVG 空文档 -->
         <div v-if="!draftGroups.length" class="py-14 flex flex-col items-center gap-3 text-zinc-400">
           <svg class="w-16 h-16 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M9 13h6M9 17h6" /></svg>
@@ -119,10 +119,10 @@
               <div
                 v-for="d in g.items"
                 :key="d.id"
-                class="group flex items-center gap-3 p-3 rounded-2xl bg-white/50 dark:bg-zinc-800/50 border border-white/40 dark:border-white/5 transition-colors hover:bg-white/80 dark:hover:bg-zinc-800/80"
+                class="group flex items-center gap-3 rounded-[5%] p-3 card-lift"
               >
                 <!-- 缩略图 / 类型徽标 -->
-                <div class="w-11 h-11 rounded-xl overflow-hidden shrink-0 flex items-center justify-center text-white" :class="g.seal">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[5%] text-white" :class="g.seal">
                   <img v-if="thumbOf(d)" :src="thumbOf(d)" alt="" class="w-full h-full object-cover" @error="hideImg" />
                   <span v-else v-html="g.iconSm"></span>
                 </div>
@@ -137,10 +137,10 @@
 
                 <!-- 操作：继续编辑 / 删除 -->
                 <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button class="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-amber-400/15 hover:text-amber-500 transition-colors" type="button" title="继续编辑" aria-label="继续编辑草稿" @click="editDraft(d)">
+                  <button class="flex h-7 w-7 items-center justify-center rounded-[5%] text-zinc-400 transition-colors hover:bg-amber-400/15 hover:text-amber-500" type="button" title="继续编辑" aria-label="继续编辑草稿" @click="editDraft(d)">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" /></svg>
                   </button>
-                  <button class="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-400 hover:bg-red-500/15 hover:text-red-500 transition-colors" type="button" title="删除" aria-label="删除草稿" @click="confirmDelete(d)">
+                  <button class="flex h-7 w-7 items-center justify-center rounded-[5%] text-zinc-400 transition-colors hover:bg-red-500/15 hover:text-red-500" type="button" title="删除" aria-label="删除草稿" @click="confirmDelete(d)">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
                   </button>
                 </div>

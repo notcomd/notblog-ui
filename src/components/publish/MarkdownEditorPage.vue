@@ -1,93 +1,80 @@
 <template>
   <div class="flex flex-col flex-1">
-    <!-- ============ 第 1 步：创建博客文章（封面 + 标题 + 发布渠道） ============ -->
-    <div v-if="step === 'meta'" class="grid grid-cols-[280px_1fr] gap-5">
-      <!-- 左列：封面卡（3:4 竖版，等高） -->
-      <div class="flex flex-col">
-        <label class="text-xs text-zinc-400 block mb-1.5">封面（用于列表展示，必填 · 点击上传）</label>
-        <div
-          class="relative flex-1 aspect-[3/4] rounded-2xl overflow-hidden border-2 border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-100/60 dark:bg-zinc-900/60 cursor-pointer group transition-colors hover:border-emerald-400 dark:hover:border-emerald-400"
-          tabindex="0"
-          @click="pickCover"
-          @keydown.enter.prevent="pickCover"
-          @keydown.space.prevent="pickCover"
-        >
-          <img v-if="coverUrl" :src="coverUrl" alt="封面" class="w-full h-full object-cover" @error="hideImg" />
-          <div v-else class="w-full h-full flex flex-col items-center justify-center gap-2 text-zinc-400">
-            <span class="text-3xl"><svg class="w-8 h-8 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
-            <span class="text-xs">{{ coverUploading ? '上传中…' : '点击上传封面' }}</span>
+    <!-- ============ 第 1 步：文章信息（写作优先纵向流：标题 → 封面 → 渠道 → 下一步） ============ -->
+    <div v-if="step === 'meta'" class="flex flex-col">
+      <!-- ① 标题（无框大标题，像写稿一样直接落字） -->
+      <section>
+        <label for="md-title" class="block text-[11px] font-medium text-zinc-400 dark:text-zinc-500">标题</label>
+        <input
+          id="md-title"
+          v-model="title"
+          name="title"
+          aria-label="输入文章标题"
+          type="text"
+          maxlength="200"
+          placeholder="输入文章标题"
+          class="mt-2 w-full rounded-[5%] border-0 bg-transparent py-1 text-xl font-medium text-zinc-800 outline-none transition-colors placeholder:text-zinc-400 focus:bg-black/[0.02] dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:bg-white/[0.03]"
+          @keyup.enter="goWrite"
+        />
+      </section>
+
+      <!-- ② 封面 -->
+      <section class="mt-8 border-t border-zinc-200/70 pt-6 dark:border-zinc-800/70">
+        <span class="block text-[11px] font-medium text-zinc-400 dark:text-zinc-500">
+          封面
+          <span class="ml-1.5 font-normal">用于列表展示 · 建议 3:4</span>
+        </span>
+        <div class="mt-3 w-[200px]">
+          <div
+            class="group relative aspect-[3/4] cursor-pointer overflow-hidden rounded-[5%] border border-dashed border-zinc-300 bg-black/[0.015] text-zinc-400 transition-colors hover:border-amber-400 dark:border-zinc-700 dark:bg-white/[0.02] dark:hover:border-amber-400"
+            tabindex="0"
+            @click="pickCover"
+            @keydown.enter.prevent="pickCover"
+            @keydown.space.prevent="pickCover"
+          >
+            <img v-if="coverUrl" :src="coverUrl" alt="封面" class="h-full w-full object-cover" @error="hideImg" />
+            <div v-else class="flex h-full w-full flex-col items-center justify-center gap-2">
+              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+              <span class="text-xs">{{ coverUploading ? '上传中…' : '点击上传封面' }}</span>
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+              {{ coverUrl ? '点击更换封面' : '点击上传封面' }}
+            </div>
+            <button
+              v-if="coverUrl"
+              type="button"
+              class="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+              title="移除封面"
+              aria-label="移除封面"
+              @click.stop="clearCover"
+            ><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
           </div>
-          <div class="absolute inset-0 bg-black/40 text-white text-xs font-medium flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            {{ coverUrl ? '点击更换封面' : '点击上传封面' }}
-          </div>
-          <button
-            v-if="coverUrl"
-            type="button"
-            class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 text-white text-[10px] flex items-center justify-center hover:bg-black/70 transition-colors"
-            title="移除封面"
-            aria-label="移除封面"
-            @click.stop="clearCover"
-          ><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
         <input ref="coverInput" type="file" accept="image/*" class="hidden" :disabled="coverUploading" @change="onCoverPick" />
-        <p class="text-[10px] text-zinc-400 mt-1.5">图片 ≤10MB，建议 3:4 比例</p>
-      </div>
+        <p class="mt-2 text-[11px] text-zinc-400">图片 ≤10MB</p>
+      </section>
 
-      <!-- 右列：标题 + 发布渠道 + 下一步 -->
-      <div class="flex flex-col gap-4">
-        <!-- 标题（必填） -->
-        <div>
-          <label class="text-xs text-zinc-400 block mb-1.5">标题（必填）</label>
-          <input
-            v-model="title"
-            name="title"
-            aria-label="输入文章标题"
-            type="text"
-            maxlength="200"
-            placeholder="输入文章标题"
-            class="w-full h-11 px-4 rounded-xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-emerald-400/50 transition-all"
-            @keyup.enter="goWrite"
-          />
+      <!-- ③ 发布渠道 -->
+      <section class="mt-8 border-t border-zinc-200/70 pt-6 dark:border-zinc-800/70">
+        <span class="block text-[11px] font-medium text-zinc-400 dark:text-zinc-500">发布渠道</span>
+        <div class="mt-2 flex h-11 max-w-[420px] gap-1 rounded-[5%] bg-black/5 p-1 dark:bg-white/10" role="group" aria-label="发布渠道">
+          <button type="button" class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[5%] text-xs font-medium transition-colors" :class="visibility === 'Public' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'text-zinc-600 hover:bg-white/60 dark:text-zinc-300 dark:hover:bg-zinc-800/60'" :aria-pressed="visibility === 'Public'" @click="visibility = 'Public'"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>公开</button>
+          <button type="button" class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[5%] text-xs font-medium transition-colors" :class="visibility === 'Private' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'text-zinc-600 hover:bg-white/60 dark:text-zinc-300 dark:hover:bg-zinc-800/60'" :aria-pressed="visibility === 'Private'" @click="visibility = 'Private'"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>私密</button>
         </div>
+        <p class="mt-2 text-[11px] text-zinc-400">{{ visibility === 'Public' ? '出现在广场与你自己的主页' : '仅登录后你本人可查看' }}</p>
+      </section>
 
-        <!-- 发布渠道（后端 Markdown 支持公开 / 私密两类） -->
-        <div>
-          <label class="text-xs text-zinc-400 block mb-1.5">发布渠道</label>
-          <div class="flex flex-wrap gap-3">
-            <button
-              type="button"
-              class="flex-1 min-w-[180px] h-16 px-4 rounded-2xl border transition-all text-left"
-              :class="visibility === 'Public' ? 'border-emerald-400 bg-emerald-400/10 ring-1 ring-emerald-400/40' : 'border-zinc-200 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 hover:border-emerald-300'"
-              :aria-pressed="visibility === 'Public'"
-              @click="visibility = 'Public'"
-            >
-              <span class="block text-sm font-medium text-zinc-700 dark:text-zinc-200"><svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>发布到主页 · 所有人可见</span>
-              <span class="block text-[11px] text-zinc-400 mt-0.5">出现在广场与你自己的主页</span>
-            </button>
-            <button
-              type="button"
-              class="flex-1 min-w-[180px] h-16 px-4 rounded-2xl border transition-all text-left"
-              :class="visibility === 'Private' ? 'border-emerald-400 bg-emerald-400/10 ring-1 ring-emerald-400/40' : 'border-zinc-200 dark:border-zinc-700 bg-white/60 dark:bg-zinc-800/60 hover:border-emerald-300'"
-              :aria-pressed="visibility === 'Private'"
-              @click="visibility = 'Private'"
-            >
-              <span class="block text-sm font-medium text-zinc-700 dark:text-zinc-200"><svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>私密 · 仅自己可见</span>
-              <span class="block text-[11px] text-zinc-400 mt-0.5">仅登录后你本人可查看</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 下一步 -->
-        <div class="mt-auto pt-3 flex flex-row justify-end gap-3">
-          <button type="button" class="w-52 h-11 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-500 text-white text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50" :disabled="!title.trim() || !coverUrl" @click="goWrite">
-            <span class="inline-flex items-center justify-center gap-1.5">下一步：写正文 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg></span>
-          </button>
-        </div>
-      </div>
+      <!-- ④ 下一步 -->
+      <section class="mt-8 flex justify-end border-t border-zinc-200/70 pt-6 dark:border-zinc-800/70">
+        <button type="button" class="btn-sheen inline-flex h-11 items-center justify-center gap-1.5 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 px-8 text-sm font-medium text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50" :disabled="!title.trim() || !coverUrl" @click="goWrite">
+          下一步：写正文
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+        </button>
+      </section>
     </div>
 
     <!-- ============ 第 2 步：书写正文（全屏编辑器；保存/发布/预览开关已并入顶部工具栏） ============ -->
-    <!-- 专注模式下功能栏、顶栏、卡片内边距与页面标题区均已让位，故仅留内容区自身外边距（含卡片 1px 边框余量） -->
+    <!-- 专注模式下功能栏、顶栏与页面标题区均已让位，故仅留内容区自身高度 -->
     <div v-else class="min-h-[420px]" :class="focus.focusMode ? 'h-[calc(100vh-1.75rem)]' : 'h-[calc(100vh-16rem)]'">
       <MarkdownEditor
         ref="mdEditorRef"
@@ -103,7 +90,7 @@
         <template #toolbar-extra>
           <button
             type="button"
-            class="h-8 px-3 rounded-lg text-xs font-medium bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:opacity-90 transition-all inline-flex items-center gap-1"
+            class="inline-flex h-8 items-center gap-1 rounded-[5%] px-3 text-xs font-medium text-zinc-600 transition-colors hover:bg-black/[0.04] dark:text-zinc-300 dark:hover:bg-white/[0.06]"
             @click="step = 'meta'"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>

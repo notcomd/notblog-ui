@@ -43,4 +43,11 @@ onSessionExpired(reason => {
   router.replace({ path: '/login', query: redirect ? { redirect } : {} });
 });
 
+// ═══ 用户资料预热（含头像）═══
+// JWT 只带 id/email/name/role，不含头像；头像唯一来源是 Message GET /api/user-info/me。
+// 启动时拉取一次并写入 localStorage 缓存（未登录时内部直接跳过并清残留缓存），
+// 之后刷新页面即可用缓存先渲染头像，无需等接口返回。
+const auth = useAuthStore(pinia);
+void auth.loadUserInfo();
+
 app.mount('#app');

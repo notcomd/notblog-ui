@@ -1,5 +1,5 @@
 <template>
-  <article class="group relative glass-card overflow-hidden card-lift qm-glow">
+  <article class="group relative glass-card overflow-hidden card-lift">
     <!-- 更多操作：绝对定位在封面之上。
          放在链接外层——<a> 内不允许嵌套 <button>（可点击元素嵌套是无效 HTML） -->
     <div class="absolute top-2 right-2 z-10">

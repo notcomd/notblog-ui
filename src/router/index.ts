@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteRecordRaw } from 'vue-router';
 
 import { getToken } from '@/utils/auth';
+import { useAuthStore } from '@/stores/auth';
+import { useToastStore } from '@/stores/toast';
 
 // MonoHub 主应用
 import AppLayout from '@/layout/AppLayout.vue';
@@ -14,6 +16,7 @@ import MarkdownDetailView from '@/views/MarkdownDetailView.vue';
 import PublishView from '@/views/PublishView.vue';
 import WorkspaceView from '@/views/WorkspaceView.vue';
 import SearchView from '@/views/SearchView.vue';
+import SecuritySettingsView from '@/views/SecuritySettingsView.vue';
 
 // 管理后台
 import AdminLayout from '@/layout/AdminLayout.vue';
@@ -78,6 +81,12 @@ const routes: RouteRecordRaw[] = [
         name: 'Workspace',
         component: WorkspaceView,
         meta: { requiresAuth: true }
+      },
+      {
+        path: 'settings/security',
+        name: 'SecuritySettings',
+        component: SecuritySettingsView,
+        meta: { requiresAuth: true }
       }
     ]
   },
@@ -85,7 +94,8 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin',
     component: AdminLayout,
-    meta: { requiresAuth: true },
+    // requiresAdmin：仅 Root / Administrator 可进入（前端门禁；真正的鉴权在后端权限中间件）
+    meta: { requiresAuth: true, requiresAdmin: true },
     children: [
       { path: '', name: 'AdminDashboard', component: AdminDashboardView },
       { path: 'users', name: 'AdminUsers', component: AdminUsersView },
@@ -114,9 +124,17 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   if (to.meta && to.meta.requiresAuth && !getToken()) {
     next('/login');
-  } else {
-    next();
+    return;
   }
+  // 管理端角色门禁：非 Root / Administrator 挡回首页并说明原因，
+  // 否则手输 /admin 会进入一个所有请求都 403 的空壳页面。
+  // 注意：这只是前端门禁，真正的鉴权在后端权限中间件（前端判定可被绕过）。
+  if (to.meta && to.meta.requiresAdmin && !useAuthStore().isAdmin) {
+    useToastStore().push('无权访问管理后台', 'warning');
+    next('/home');
+    return;
+  }
+  next();
 });
 
 export default router;

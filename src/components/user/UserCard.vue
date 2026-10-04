@@ -1,7 +1,7 @@
 <template>
-  <div class="glass-card overflow-hidden">
-    <!-- ===== 封面区：媒体 + 主题色边缘渐变模糊 + 右上角上传按钮 ===== -->
-    <div class="relative h-44 overflow-hidden">
+  <div>
+    <!-- ===== 封面区（通栏 Hero）：媒体 + 主题色边缘渐变模糊 + 右上角操作 ===== -->
+    <div ref="coverBox" class="relative h-72 overflow-hidden" :class="bleed ? '-mx-6 -mt-6' : 'rounded-[5%]'">
       <!-- 无封面 / 加载失败：默认渐变 -->
       <template v-if="!user.coverUrl || coverFailed">
         <div class="absolute inset-0 bg-gradient-to-r from-amber-300/70 via-orange-300/50 to-emerald-300/60 dark:from-amber-500/25 dark:via-orange-500/20 dark:to-emerald-500/25">
@@ -9,7 +9,7 @@
         </div>
       </template>
       <template v-else>
-        <!-- 底层：模糊主题底色（blur ≈ 封面高度 20%：176px × 20% ≈ 35px），边缘经渐变融入 -->
+        <!-- 底层：模糊主题底色（Hero 通栏后高度 288px，保留 35px 柔化，边缘由渐变遮罩融入） -->
         <div class="absolute inset-0 blur-[35px] scale-[1.3]">
           <img v-if="!coverIsVideo" :src="user.coverUrl" alt="" class="w-full h-full object-cover" @error="coverFailed = true" />
           <video v-else :src="user.coverUrl" :autoplay="!reduceMotion" muted loop playsinline class="w-full h-full object-cover"></video>
@@ -21,24 +21,40 @@
         <div class="absolute inset-0" :style="coverOverlayStyle"></div>
       </template>
 
-      <!-- 右上角：添加/更换封面（仅自己） -->
-      <button
-        v-if="isSelf"
-        class="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 h-8 rounded-[5%] bg-black/45 hover:bg-black/60 text-white text-xs font-medium transition-colors active:scale-95 disabled:opacity-60"
-        type="button"
-        :disabled="coverUploading"
-        title="上传封面（图片/动态图/视频，≤20MB）"
-        @click="coverInput && coverInput.click()"
-      >
-        <svg v-if="!coverUploading" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
-        <svg v-else class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.56" /></svg>
-        {{ coverUploading ? `上传中 ${coverProgress}%` : (user.coverUrl ? '更换封面' : '添加封面') }}
-      </button>
+      <!-- 顶部渐隐：顶栏（浮在封面上、透明）文字随之切换明暗，用主题色遮罩保证标题/图标可读 -->
+      <div class="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/75 via-white/35 to-transparent dark:from-black/60 dark:via-black/30 pointer-events-none"></div>
+
+      <!-- 底部渐深：Hero 下缘与页面自然衔接 -->
+      <div class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/25 to-transparent pointer-events-none"></div>
+
+      <!-- 右下角操作区：安全设置 + 更换封面（仅自己） -->
+      <div v-if="isSelf" class="absolute bottom-4 right-4 z-10 flex items-center gap-2">
+        <button
+          class="flex items-center gap-1.5 px-3 h-9 rounded-[5%] bg-black/45 hover:bg-black/60 text-white text-xs font-medium transition-colors active:scale-95"
+          type="button"
+          title="账号与安全设置"
+          @click="emit('open-security')"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+          安全
+        </button>
+        <button
+          class="flex items-center gap-1.5 px-3 h-9 rounded-[5%] bg-black/45 hover:bg-black/60 text-white text-xs font-medium transition-colors active:scale-95 disabled:opacity-60"
+          type="button"
+          :disabled="coverUploading"
+          title="上传封面（图片/动态图/视频，≤20MB）"
+          @click="coverInput && coverInput.click()"
+        >
+          <svg v-if="!coverUploading" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+          <svg v-else class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.56" /></svg>
+          {{ coverUploading ? `上传中 ${coverProgress}%` : (user.coverUrl ? '更换封面' : '添加封面') }}
+        </button>
+      </div>
       <input ref="coverInput" type="file" accept="image/*,video/*" class="hidden" @change="onCoverPick" />
     </div>
 
-    <!-- ===== 信息区：头像 + 用户名/等级/签名 + 操作（与封面完全分离，头像不叠封面） ===== -->
-    <div class="px-6 pt-4 pb-4">
+    <!-- ===== 信息区（无框）：头像 + 用户名/等级/签名 + 操作（与封面分离，头像不叠封面） ===== -->
+    <div class="pt-5" :class="bleed ? 'max-w-[1200px] mx-auto' : 'px-1'">
       <div class="flex items-center gap-4">
         <!-- 头像（失败回退首字母头像） -->
         <div class="relative group shrink-0">
@@ -53,7 +69,7 @@
         <!-- 用户名 / 等级（一行）+ 签名（另起一行，自己可编辑） -->
         <div class="flex-1 min-w-0 pb-1">
           <div class="flex items-center gap-2">
-            <span class="text-xl font-bold text-zinc-800 dark:text-zinc-100 truncate shrink-0 max-w-[45%]">{{ displayName }}</span>
+            <span class="font-display text-2xl font-bold text-zinc-800 dark:text-zinc-100 truncate shrink-0 max-w-[45%]">{{ displayName }}</span>
             <span v-if="isSelf" class="shrink-0 px-1.5 py-0.5 rounded-[5%] text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-400/10 border border-amber-400/30">我的主页</span>
             <span v-if="userInfo" class="shrink-0 px-1.5 py-0.5 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold">Lv.{{ userInfo.level }}</span>
           </div>
@@ -134,6 +150,23 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- 封面裁剪面板（更换封面为图片时先裁切：按封面显示区域比例，保证填充后不变形、不露空） -->
+    <Teleport to="body">
+      <div v-if="coverCropOpen" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-zinc-800 rounded-[5%] w-[min(94vw,880px)] p-5">
+          <div class="text-sm font-bold text-zinc-800 dark:text-zinc-100">裁剪封面</div>
+          <p class="text-xs text-zinc-400 mt-1 mb-3">拖拽 / 滚轮调整裁剪区域（比例与封面显示区域一致，裁剪后图片将填满封面）</p>
+          <div class="rounded-[5%] overflow-hidden bg-zinc-900">
+            <img ref="coverCropImg" :src="coverCropSrc" alt="" class="max-h-[360px] w-full object-contain" />
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" class="px-4 h-9 rounded-[5%] text-sm text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors" :disabled="coverUploading" @click="closeCoverCrop">取消</button>
+            <button type="button" class="px-5 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-60" :disabled="coverUploading" @click="confirmCoverCrop">{{ coverUploading ? '上传中…' : '裁剪并上传' }}</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -156,11 +189,14 @@ interface Props {
   // Message /api/user-info/me：他人无该数据时为空（不显示等级徽章）
   userInfo?: UserInfoData | null
   following?: boolean
+  // 通栏 Hero：封面用负边距抵消页面内边距铺满内容区（个人主页使用），身份区再与页面容器对齐
+  bleed?: boolean
 }
 const props = withDefaults(defineProps<Props>(), {
   isSelf: false,
   userInfo: null,
-  following: false
+  following: false,
+  bleed: false
 })
 const emit = defineEmits<{
   (e: 'avatar-changed', url: string): void
@@ -168,6 +204,7 @@ const emit = defineEmits<{
   (e: 'bio-changed', bio: string): void
   (e: 'chat'): void
   (e: 'toggle-follow'): void
+  (e: 'open-security'): void
 }>()
 
 const toast = useToastStore()
@@ -295,10 +332,17 @@ function cancelBio() {
 
 // ===== 封面 =====
 const coverInput = ref<HTMLInputElement | null>(null)
+const coverBox = ref<HTMLElement | null>(null) // 封面容器：裁剪框按其实测比例，保证填充后不变形、不露空
 const coverFailed = ref(false)
 const coverUploading = ref(false)
 const coverProgress = ref(0)
 const coverTheme = ref<{ r: number; g: number; b: number } | null>(null) // canvas 采样主色 {r,g,b} | null → 回退默认琥珀
+
+// 封面图片裁剪（选择图片后先裁切再上传；视频无法前端裁剪，直接上传）
+const coverCropOpen = ref(false)
+const coverCropSrc = ref('')
+const coverCropImg = ref<HTMLImageElement | null>(null)
+const coverCropper = ref<Cropper | null>(null)
 
 const coverIsVideo = computed(() => /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test((props.user.coverUrl as string) || ''))
 
@@ -355,7 +399,16 @@ async function refreshTheme(url: string) {
   }
 }
 
-async function onCoverPick(e: Event) {
+// 封面容器当前显示比例（通栏宽度随视口变化）：裁剪框按它取比例，做到「所见即所得」的填充
+function coverAspect(): number {
+  const el = coverBox.value
+  const w = el ? el.clientWidth : 0
+  const h = el ? el.clientHeight : 0
+  return w > 0 && h > 0 ? w / h : 16 / 9
+}
+
+// 选择封面：图片先裁剪，视频直接上传
+function onCoverPick(e: Event) {
   const el = e.target as HTMLInputElement
   const file = el.files && el.files[0]
   el.value = ''
@@ -370,10 +423,68 @@ async function onCoverPick(e: Event) {
     toast.push('封面文件不能超过 20MB', 'error')
     return
   }
+  // 视频无法在前端裁剪，直接上传（展示时 object-cover 填充）
+  if (isVideo) {
+    void uploadCoverFile(file)
+    return
+  }
+  // 图片：打开裁剪面板，按封面显示比例裁切后再上传
+  coverCropSrc.value = URL.createObjectURL(file)
+  coverCropOpen.value = true
+  nextTick(() => {
+    const img = coverCropImg.value
+    if (!img) return
+    const init = () => {
+      if (coverCropper.value) coverCropper.value.destroy()
+      coverCropper.value = new Cropper(img, {
+        aspectRatio: coverAspect(),
+        viewMode: 1,
+        autoCropArea: 0.9,
+        background: false,
+        dragMode: 'move'
+      })
+    }
+    if (img.complete && img.naturalWidth) init()
+    else img.onload = init
+  })
+}
+
+function closeCoverCrop() {
+  if (coverCropper.value) {
+    coverCropper.value.destroy()
+    coverCropper.value = null
+  }
+  if (coverCropSrc.value) {
+    URL.revokeObjectURL(coverCropSrc.value)
+    coverCropSrc.value = ''
+  }
+  coverCropOpen.value = false
+}
+
+// 裁剪并上传（图片封面路径）
+function confirmCoverCrop() {
+  if (!coverCropper.value || coverUploading.value) return
+  // maxWidth/maxHeight 只做上限，不放大小图；保持裁剪框比例
+  const canvas = coverCropper.value.getCroppedCanvas({ maxWidth: 1920, maxHeight: 1920, imageSmoothingQuality: 'high' })
+  canvas.toBlob(async (blob) => {
+    if (!blob) {
+      toast.push('裁剪失败，请重试', 'error')
+      return
+    }
+    const file = new File([blob], 'cover-' + Date.now() + '.jpg', { type: 'image/jpeg' })
+    try {
+      await uploadCoverFile(file)
+    } finally {
+      closeCoverCrop()
+    }
+  }, 'image/jpeg', 0.92)
+}
+
+// 上传封面（图片/视频共用）：≤10MB 直传 / >10MB 分片 → FileRef.fileUri → 本地生效 + 持久化
+async function uploadCoverFile(file: File): Promise<void> {
   coverUploading.value = true
   coverProgress.value = 0
   try {
-    // 上传（≤10MB 直传 /api/files/upload(-image)；>10MB 自动分片）→ FileRef.fileUri
     const res = await uploadUserCover(file, (p) => { coverProgress.value = p })
     const data = unwrap(res) || {}
     const url = data.fileUri || data.file_url || ''

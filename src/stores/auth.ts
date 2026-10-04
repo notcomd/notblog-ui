@@ -1,7 +1,16 @@
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
-import { getToken, removeToken, removeRefreshToken } from '@/utils/auth';
-import type { CurrentUser } from '@/types';
+import {
+  getToken,
+  removeToken,
+  removeRefreshToken,
+  getUserInfoCache,
+  setUserInfoCache,
+  removeUserInfoCache,
+  hasAdminRole
+} from '@/utils/auth';
+import { getMyUserInfo } from '@/api/userinfo';
+import type { CurrentUser, UserInfo } from '@/types';
 
 // 从 JWT payload 解析用户信息（sub/email/name/role claims）
 function parseJwt(token: string): Record<string, unknown> | null {
@@ -34,6 +43,15 @@ function normalizeClaims(claims: Record<string, unknown>): Record<string, unknow
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(getToken());
   const user = ref<CurrentUser | null>(null);
+  // 用户资料（含头像）：JWT 不含头像，唯一来源是 Message /api/user-info/me。
+  // 首帧先用本地缓存渲染，随后由 loadUserInfo() 拉取覆盖，避免刷新时头像闪一下占位图。
+  const userInfo = ref<UserInfo | null>(getUserInfoCache<UserInfo>());
+
+  /** 把资料的 avatarUrl 合并进 user —— user 来自 JWT，资料来自接口，两者需显式同步 */
+  function applyUserInfo(): void {
+    if (!user.value) return;
+    user.value.avatar = userInfo.value?.avatarUrl || '';
+  }
 
   function refreshUserFromToken() {
     const t = getToken();
@@ -50,20 +68,67 @@ export const useAuthStore = defineStore('auth', () => {
           role: String(claims.role ?? claims.Role ?? '')
         }
       : null;
+    applyUserInfo();
   }
 
   refreshUserFromToken();
 
-  function isLoggedIn(): boolean {
-    return !!getToken();
+  /**
+   * 拉取当前用户资料（Message GET /api/user-info/me，含 avatarUrl）并写入本地缓存。
+   * 失败静默：保留缓存值，不因一次网络抖动把顶栏头像清成占位图。
+   * 并发去重：应用启动 / 登录成功 / 顶栏挂载可能几乎同时触发，共享同一在途请求，
+   * 避免同一接口被重复请求。
+   */
+  let inflightLoad: Promise<void> | null = null;
+
+  function loadUserInfo(): Promise<void> {
+    if (inflightLoad) return inflightLoad;
+    inflightLoad = doLoadUserInfo().finally(() => {
+      inflightLoad = null;
+    });
+    return inflightLoad;
   }
+
+  async function doLoadUserInfo(): Promise<void> {
+    if (!getToken()) {
+      // 未登录：不发请求，并清掉可能残留的上一个用户的资料
+      userInfo.value = null;
+      removeUserInfoCache();
+      applyUserInfo();
+      return;
+    }
+    try {
+      const res = await getMyUserInfo();
+      const d = (res && (res as { data?: UserInfo }).data) || (res as unknown as UserInfo);
+      if (!d) return;
+      userInfo.value = d;
+      setUserInfoCache(d);
+      applyUserInfo();
+    } catch {
+      /* 静默：沿用缓存 */
+    }
+  }
+
+  // 读响应式 token ref（而非直读 localStorage），否则模板 v-if 与 watch 都不会随登录态变化重算
+  function isLoggedIn(): boolean {
+    return !!token.value;
+  }
+
+  /**
+   * 是否为后台管理角色（Root / Administrator）：管理端入口显隐与路由门禁共用这一处判定。
+   * 判定细节见 utils/auth 的 hasAdminRole（含多角色 claim 的拆分与精确匹配）。
+   * ⚠️ 前端判定只用于界面与路由，真正的鉴权在后端权限中间件。
+   */
+  const isAdmin = computed<boolean>(() => hasAdminRole(user.value?.role));
 
   function logout() {
     removeToken();
     removeRefreshToken();
+    removeUserInfoCache();
     token.value = '';
     user.value = null;
+    userInfo.value = null;
   }
 
-  return { token, user, isLoggedIn, logout, refreshUserFromToken };
+  return { token, user, userInfo, isLoggedIn, isAdmin, logout, refreshUserFromToken, loadUserInfo };
 });

@@ -1,100 +1,114 @@
 <template>
-  <div class="flex flex-col flex-1">
-    <!-- 媒体上传：封面卡 + 视频卡左右并排两列，等高统一尺寸 -->
-    <div class="grid grid-cols-2 gap-4 mb-5">
-      <!-- 封面卡（必填 · 点击上传/更换） -->
-      <div class="flex flex-col">
-        <label class="text-xs text-zinc-400 block mb-1.5">封面图（必填 · 点击上传）</label>
-        <div
-          class="relative flex-1 aspect-video rounded-2xl overflow-hidden border-2 border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-100/60 dark:bg-zinc-900/60 cursor-pointer group transition-colors hover:border-blue-400 dark:hover:border-blue-400"
-          @click="pickCover"
-        >
-          <img v-if="coverUrl" :src="coverUrl" alt="封面" class="w-full h-full object-cover" @error="hideImg" />
-          <div v-else class="w-full h-full flex flex-col items-center justify-center gap-2 text-zinc-400">
-            <span class="text-3xl"><svg class="w-8 h-8 mx-auto text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg></span>
-            <span class="text-xs">{{ coverUploading ? '上传中…' : '点击上传封面' }}</span>
+  <div class="flex flex-col">
+    <!-- ===== ① 标题与描述：写作优先，无框书写面 ===== -->
+    <section>
+      <label for="video-content" class="block text-[11px] font-medium text-zinc-400 dark:text-zinc-500">标题与描述</label>
+      <textarea
+        id="video-content"
+        v-model="content"
+        name="content"
+        aria-label="视频标题与描述"
+        rows="4"
+        class="mt-2 min-h-[120px] w-full resize-none rounded-[5%] border-0 bg-transparent py-1 text-[15px] leading-7 text-zinc-800 outline-none transition-colors placeholder:text-zinc-400 focus:bg-black/[0.02] dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:bg-white/[0.03]"
+        placeholder="视频标题与描述…（支持 @提及）"
+      ></textarea>
+    </section>
+
+    <!-- ===== ② 视频与封面 ===== -->
+    <section class="mt-8 border-t border-zinc-200/70 pt-6 dark:border-zinc-800/70">
+      <div class="mb-3 flex items-baseline justify-between gap-3">
+        <span class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500">
+          视频与封面
+          <span class="ml-1.5 font-normal">视频必填 · 封面用于列表展示</span>
+        </span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <!-- 视频 -->
+        <div class="flex flex-col">
+          <span class="text-[11px] text-zinc-400 dark:text-zinc-500">视频文件</span>
+          <div
+            class="mt-2 flex aspect-video cursor-pointer flex-col items-center justify-center gap-2 rounded-[5%] border border-dashed border-zinc-300 bg-black/[0.015] text-zinc-400 transition-colors hover:border-amber-400 dark:border-zinc-700 dark:bg-white/[0.02] dark:hover:border-amber-400"
+            tabindex="0"
+            @click="pickVideo"
+            @keydown.enter.prevent="pickVideo"
+            @keydown.space.prevent="pickVideo"
+          >
+            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
+            <span class="text-xs">{{ videoUploading ? '上传中…' : '点击上传视频文件' }}</span>
           </div>
-          <div class="absolute inset-0 bg-black/40 text-white text-xs font-medium flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            {{ coverUrl ? '点击更换封面' : '点击上传封面' }}
+          <input ref="videoInput" type="file" accept="video/*" class="hidden" :disabled="videoUploading" @change="onVideoFile" />
+          <div v-if="videoUrl" class="mt-2 flex items-center gap-2">
+            <input
+              v-model="videoUrl"
+              name="videoUrl"
+              aria-label="视频 URL"
+              class="min-w-0 flex-1 rounded-[5%] border border-white/60 bg-white/70 px-3.5 h-10 text-xs text-zinc-600 outline-none transition-all focus:ring-2 focus:ring-amber-400/50 dark:border-white/10 dark:bg-zinc-800/70 dark:text-zinc-300"
+              placeholder="视频 URL（mp4/webm）"
+            />
+            <button class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[5%] text-zinc-400 transition-colors hover:bg-red-500/10 hover:text-red-500" title="清除视频" aria-label="清除视频" @click="clearVideo">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
+            </button>
           </div>
-          <button
-            v-if="coverUrl"
-            class="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 text-white text-[10px] flex items-center justify-center hover:bg-black/70 transition-colors"
-            title="移除封面"
-            aria-label="移除封面"
-            @click.stop="clearCover"
-          ><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          <p class="mt-1.5 text-[11px] text-zinc-400">mp4 / webm ≤500MB，也可直接粘贴地址</p>
         </div>
-        <input ref="coverInput" type="file" accept="image/*" class="hidden" :disabled="coverUploading" @change="onCoverPick" />
-      </div>
 
-      <!-- 视频文件 / 地址卡 -->
-      <div class="flex flex-col">
-        <label class="text-xs text-zinc-400 block mb-1.5">视频文件 / 地址</label>
-        <div
-          class="flex-1 min-h-[10rem] rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-100/60 dark:bg-zinc-900/60 cursor-pointer group transition-colors hover:border-blue-400 dark:hover:border-blue-400 flex flex-col items-center justify-center gap-2 text-zinc-400"
-          tabindex="0"
-          @click="pickVideo"
-          @keydown.enter.prevent="pickVideo"
-          @keydown.space.prevent="pickVideo"
-        >
-          <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
-          <span class="text-xs">{{ videoUploading ? '上传中…' : '点击上传视频文件（mp4/webm，≤500MB）' }}</span>
+        <!-- 封面 -->
+        <div class="flex flex-col">
+          <span class="text-[11px] text-zinc-400 dark:text-zinc-500">封面图</span>
+          <div
+            class="group mt-2 relative flex aspect-video cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[5%] border border-dashed border-zinc-300 bg-black/[0.015] text-zinc-400 transition-colors hover:border-amber-400 dark:border-zinc-700 dark:bg-white/[0.02] dark:hover:border-amber-400"
+            @click="pickCover"
+          >
+            <img v-if="coverUrl" :src="coverUrl" alt="封面" class="h-full w-full object-cover" @error="hideImg" />
+            <template v-else>
+              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+              <span class="text-xs">{{ coverUploading ? '上传中…' : '点击上传封面' }}</span>
+            </template>
+            <div class="absolute inset-0 flex items-center justify-center bg-black/40 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+              {{ coverUrl ? '点击更换封面' : '点击上传封面' }}
+            </div>
+            <button
+              v-if="coverUrl"
+              class="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+              title="移除封面"
+              aria-label="移除封面"
+              @click.stop="clearCover"
+            ><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+          <input ref="coverInput" type="file" accept="image/*" class="hidden" :disabled="coverUploading" @change="onCoverPick" />
+          <p class="mt-1.5 text-[11px] text-zinc-400">图片 ≤10MB，建议 16:9</p>
         </div>
-        <input ref="videoInput" type="file" accept="video/*" class="hidden" :disabled="videoUploading" @change="onVideoFile" />
-        <!-- 上传后显示视频 URL（也可直接粘贴地址） -->
-        <div v-if="videoUrl" class="mt-2 flex items-center gap-2">
-          <input
-            v-model="videoUrl"
-            name="videoUrl"
-            aria-label="视频 URL"
-            class="flex-1 h-10 px-3.5 rounded-xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-xs text-zinc-600 dark:text-zinc-300 outline-none focus:ring-2 focus:ring-blue-400/50 transition-all min-w-0"
-            placeholder="视频 URL（mp4/webm）"
-          />
-          <button class="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-zinc-400 hover:bg-red-500/10 hover:text-red-500 transition-colors" title="清除视频" aria-label="清除视频" @click="clearVideo">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /></svg>
-          </button>
+      </div>
+    </section>
+
+    <!-- ===== ③ 发布设置 ===== -->
+    <section class="mt-8 grid grid-cols-2 gap-5 border-t border-zinc-200/70 pt-6 dark:border-zinc-800/70">
+      <div>
+        <label for="video-circle" class="block text-[11px] font-medium text-zinc-400 dark:text-zinc-500">发布到</label>
+        <select id="video-circle" v-model="circleGuid" name="circleGuid" aria-label="发布到社区" class="mt-2 h-11 w-full rounded-[5%] border border-white/60 bg-white/70 px-4 text-sm outline-none transition-all focus:ring-2 focus:ring-amber-400/50 dark:border-white/10 dark:bg-zinc-800/70">
+          <option value="">主页（不选社区）</option>
+          <option v-for="c in myCircles" :key="c.circleGuid" :value="c.circleGuid">{{ c.name }}</option>
+        </select>
+      </div>
+      <div>
+        <span class="block text-[11px] font-medium text-zinc-400 dark:text-zinc-500">谁可以看</span>
+        <div class="mt-2 flex h-11 gap-1 rounded-[5%] bg-black/5 p-1 dark:bg-white/10" role="group" aria-label="谁可以看">
+          <button type="button" class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[5%] text-xs font-medium transition-colors" :class="visibility === 'Public' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'text-zinc-600 hover:bg-white/60 dark:text-zinc-300 dark:hover:bg-zinc-800/60'" :aria-pressed="visibility === 'Public'" @click="visibility = 'Public'"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>公开</button>
+          <button type="button" class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[5%] text-xs font-medium transition-colors" :class="visibility === 'Private' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'text-zinc-600 hover:bg-white/60 dark:text-zinc-300 dark:hover:bg-zinc-800/60'" :aria-pressed="visibility === 'Private'" @click="visibility = 'Private'"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>私密</button>
         </div>
-        <p class="text-[10px] text-zinc-400 mt-1.5">点击上方区域选择本地文件，或粘贴视频地址到下方输入框</p>
       </div>
-    </div>
+    </section>
 
-    <!-- 视频描述（高度减半） -->
-    <textarea
-      v-model="content"
-      name="content"
-      aria-label="视频标题与描述"
-      rows="3"
-      class="w-full resize-none rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400/50 transition-all"
-      placeholder="视频标题与描述…（支持 @提及）"
-    ></textarea>
-
-    <!-- 发布到社区（可选） -->
-    <div class="mt-4">
-      <select v-model="circleGuid" name="circleGuid" aria-label="发布到社区" class="w-full h-11 px-4 rounded-2xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-blue-400/50 transition-all">
-        <option value="">发布到主页（不选社区）</option>
-        <option v-for="c in myCircles" :key="c.circleGuid" :value="c.circleGuid">{{ c.name }}</option>
-      </select>
-    </div>
-
-    <!-- 可见范围：公开 / 私密 -->
-    <div class="mt-4">
-      <label class="text-xs text-zinc-400 block mb-1.5">谁可以看</label>
-      <div class="flex flex-wrap gap-2">
-        <button type="button" class="h-9 px-4 rounded-xl text-xs font-medium transition-all" :class="visibility === 'Public' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-300'" @click="visibility = 'Public'"><svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>公开</button>
-        <button type="button" class="h-9 px-4 rounded-xl text-xs font-medium transition-all" :class="visibility === 'Private' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-300'" @click="visibility = 'Private'"><svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>私密 · 仅自己可见</button>
-      </div>
-    </div>
-
-    <!-- 底部按钮：右对齐，固定宽度 -->
-    <div class="mt-4 flex flex-row justify-end gap-3">
-      <button class="w-44 h-11 rounded-2xl bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="savingDraft" @click="saveAsDraft">
+    <!-- ===== ④ 操作 ===== -->
+    <section class="mt-8 flex justify-end gap-3 border-t border-zinc-200/70 pt-6 dark:border-zinc-800/70">
+      <button class="h-11 rounded-[5%] border border-zinc-200/80 px-6 text-sm font-medium text-zinc-600 transition-colors hover:bg-black/[0.03] disabled:opacity-50 dark:border-zinc-700/80 dark:text-zinc-300 dark:hover:bg-white/[0.05]" :disabled="savingDraft" @click="saveAsDraft">
         <span v-if="!savingDraft" class="inline-flex items-center gap-1.5"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>存草稿</span><span v-else>保存中…</span>
       </button>
-      <button class="w-44 h-11 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-medium hover: active:scale-[0.98] transition-all disabled:opacity-50" :disabled="publishing || !content.trim() || !coverUrl" @click="publish">
+      <button class="btn-sheen h-11 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 px-8 text-sm font-medium text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50" :disabled="publishing || !content.trim() || !coverUrl" @click="publish">
         {{ publishing ? '发布中…' : '发布视频' }}
       </button>
-    </div>
+    </section>
   </div>
 </template>
 
@@ -232,7 +246,7 @@ function saveAsDraft() {
       title: firstLine(content.value),
       content: content.value,
       videoUrl: videoUrl.value,
-        videoFileId: videoFileId.value,
+      videoFileId: videoFileId.value,
       cover: coverUrl.value,
       coverUrl: coverUrl.value,
       coverFileId: coverFileId.value,

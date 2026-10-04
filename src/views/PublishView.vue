@@ -1,22 +1,16 @@
 <template>
-  <!-- 专注写作时解除宽度上限，编辑器横向也铺满 -->
-  <div class="mx-auto" :class="focus.focusMode ? 'max-w-none' : 'max-w-[1400px]'">
-    <!-- 专注写作时收掉卡片内边距与头部标题区，把空间全部让给编辑器 -->
-    <div
-      class="glass-card flex flex-col"
-      :class="focus.focusMode ? 'p-0 min-h-0' : 'p-6 min-h-[calc(100vh-20rem)]'"
-    >
-      <!-- 头部：标题 + 返回工作台（类型选择已移至工作台，此处不再提供 Tab 切换；专注模式下隐藏） -->
-      <div v-if="!focus.focusMode" class="flex flex-wrap items-start justify-between gap-4 mb-6">
-        <div class="min-w-0">
-          <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100 mb-1">{{ title }}</h1>
-          <p class="text-sm text-zinc-400">{{ subtitle }}</p>
-        </div>
-        <router-link to="/workspace" class="shrink-0 flex items-center gap-1.5 px-3.5 h-9 rounded-xl text-xs font-medium bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover: active:scale-95 transition-all">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+  <!-- 专注写作时解除宽度上限，编辑器横向也铺满；平时收窄成适合书写的单栏 -->
+  <div class="mx-auto" :class="focus.focusMode ? 'max-w-none' : 'max-w-[860px]'">
+    <div :class="focus.focusMode ? '' : 'pb-4'">
+      <!-- 页头：返回工作台 + 标题（无框，靠字重与留白分层） -->
+      <header v-if="!focus.focusMode" class="mb-7">
+        <router-link to="/workspace" class="inline-flex items-center gap-1.5 text-xs text-zinc-500 transition-colors hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
           工作台
         </router-link>
-      </div>
+        <h1 class="mt-3 font-display text-2xl font-bold text-zinc-800 dark:text-zinc-100">{{ title }}</h1>
+        <p class="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">{{ subtitle }}</p>
+      </header>
 
       <!-- 按路由类型渲染对应编辑器 -->
       <PostEditor v-if="mode === 'post'" :my-circles="myCircles" :draft="currentDraft" />

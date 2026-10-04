@@ -1,7 +1,7 @@
 <template>
   <!-- 群组进行中的房间列表：成员可自由加入（需密码房间先输密码） -->
   <div class="fixed inset-0 z-[75] flex items-center justify-center bg-zinc-950/70" @click.self="close">
-    <div class="w-[380px] glass-card p-5 flex flex-col gap-4">
+    <div class="w-[380px] qm-surface p-5 flex flex-col gap-4">
       <div class="flex items-center justify-between shrink-0">
         <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">进行中的房间</h3>
         <button class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60" aria-label="关闭" @click="close">
