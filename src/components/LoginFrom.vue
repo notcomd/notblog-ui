@@ -121,6 +121,44 @@
           </div>
           <p v-if="errors.password" id="qm-password-error" class="error" role="alert">{{ errors.password }}</p>
 
+          <!-- 二次验证：按需展开的邮箱验证码表单（账号开启二次验证时必填，后端 Login 返回 EMAIL_CODE_REQUIRED 时自动展开） -->
+          <template v-if="passwordCodeOpen">
+            <div class="field">
+              <label class="field__label" for="qm-login-password-code">邮箱验证码</label>
+              <input
+                id="qm-login-password-code"
+                ref="passwordCodeInput"
+                v-model="code"
+                class="field__input field__input--code"
+                type="text"
+                inputmode="text"
+                maxlength="9"
+                name="code"
+                autocomplete="one-time-code"
+                :disabled="loading || submitted"
+              />
+              <button
+                type="button"
+                class="send"
+                :disabled="codeCountdown > 0 || loading || submitted"
+                @click="handleSendCode"
+              >
+                {{ codeCountdown > 0 ? `${codeCountdown}s 后重发` : '获取验证码' }}
+              </button>
+            </div>
+            <p class="hint">账号已开启二次验证，请点击「获取验证码」并填写后重试。</p>
+            <p v-if="errors.code" id="qm-password-code-error" class="error" role="alert">{{ errors.code }}</p>
+          </template>
+          <button
+            v-else
+            type="button"
+            class="link"
+            :disabled="loading || submitted"
+            @click="openPasswordCode(true)"
+          >
+            已开启二次验证？获取邮箱验证码
+          </button>
+
           <div class="row">
             <label class="remember">
               <input v-model="rememberMe" type="checkbox" :disabled="loading || submitted" />
@@ -231,7 +269,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { animate, createTimeline, stagger } from 'animejs'
 import { login, sendEmailCode, oauthLoginInit } from '@/api/auth'
 import type { TokenResult } from '@/types'
@@ -266,6 +304,10 @@ const password = ref('')
 const code = ref('')
 const rememberMe = ref(false)
 const showPassword = ref(false)
+/** 密码登入下的验证码表单是否展开（默认收起；账号开启二次验证时由后端 EMAIL_CODE_REQUIRED 触发自动展开） */
+const passwordCodeOpen = ref(false)
+/** 密码登入下的验证码输入框（自动展开后聚焦用） */
+const passwordCodeInput = ref<HTMLInputElement | null>(null)
 const codeCountdown = ref(0)
 const loading = ref(false)
 const errorMessage = ref('')
@@ -280,7 +322,11 @@ let finishTimer: ReturnType<typeof setTimeout> | null = null
 const formReady = computed<boolean>(() => {
   if (loading.value || submitted.value) return false
   if (!EMAIL_REGEX.test(email.value.trim())) return false
-  return mode.value === 'password' ? password.value.length > 0 : CODE_REGEX.test(code.value)
+  if (mode.value === 'password') {
+    // 验证码表单展开后（账号开启二次验证）需一并填写
+    return password.value.length > 0 && (!passwordCodeOpen.value || CODE_REGEX.test(code.value))
+  }
+  return CODE_REGEX.test(code.value)
 })
 
 /** 根节点状态类：模板的动画全部由这些类驱动 */
@@ -505,6 +551,7 @@ const switchMode = (next: LoginMode): void => {
   errors.value = {}
   errorMessage.value = ''
   code.value = ''
+  passwordCodeOpen.value = false
   codeCountdown.value = 0
   if (codeTimer) {
     clearInterval(codeTimer)
@@ -550,6 +597,16 @@ watch(code, (value: string) => {
   if (cleaned !== value) code.value = cleaned
 })
 
+/**
+ * 展开密码登入下的验证码表单（账号开启二次验证时必填）。
+ * withSend=true：用户显式点击入口时顺带触发获取验证码；自动展开（后端要求）时不发送，交由用户点击。
+ */
+const openPasswordCode = (withSend = false): void => {
+  passwordCodeOpen.value = true
+  void nextTick(() => passwordCodeInput.value?.focus())
+  if (withSend) void handleSendCode()
+}
+
 const startCodeCountdown = (): void => {
   codeCountdown.value = 60
   if (codeTimer) clearInterval(codeTimer)
@@ -571,6 +628,14 @@ const resolveError = (err: unknown, fallback: string): string => {
   return message || fallback
 }
 
+/** 提取后端业务码（统一信封：responseData.code，如 EMAIL_CODE_REQUIRED） */
+const errorBizCode = (err: unknown): string | undefined => {
+  const data = (err as { response?: { data?: unknown } })?.response?.data as
+    | { responseData?: { code?: string }; code?: string }
+    | undefined
+  return data?.responseData?.code ?? data?.code
+}
+
 // ==================== 登录提交（双通道统一入口） ====================
 const onForgotPassword = (): void => {
   errorMessage.value = '忘记密码请联系管理员重置'
@@ -588,6 +653,11 @@ const onSubmit = async (): Promise<void> => {
       errors.value.password = '请输入密码'
       valid = false
     }
+    // 验证码表单展开后必须填写（账号开启二次验证）
+    if (passwordCodeOpen.value && !CODE_REGEX.test(code.value)) {
+      errors.value.code = '请输入 9 位验证码（数字和字母混合）'
+      valid = false
+    }
   } else if (!CODE_REGEX.test(code.value)) {
     errors.value.code = '请输入 9 位验证码（数字和字母混合）'
     valid = false
@@ -595,8 +665,13 @@ const onSubmit = async (): Promise<void> => {
   if (!valid) return
 
   // 后端统一登录/注册：POST /api/identity/ready/identity/Login { email, code?, password? }
+  // 密码登入：账号开启二次验证（默认开启）时必须同时携带 code；未展开验证码表单时不发送该字段
   const payloadInput = mode.value === 'password'
-    ? { email: email.value.trim(), password: password.value }
+    ? {
+        email: email.value.trim(),
+        password: password.value,
+        code: passwordCodeOpen.value && code.value ? code.value : undefined
+      }
     : { email: email.value.trim(), code: code.value }
 
   loading.value = true
@@ -616,6 +691,10 @@ const onSubmit = async (): Promise<void> => {
       finishTimer = setTimeout(() => emit('success', payload as unknown as TokenResult), 950)
     }, 420)
   } catch (err: unknown) {
+    // 账号开启二次验证（默认开启）：密码已校验通过但缺验证码 → 就地展开验证码表单，引导获取后重试
+    if (mode.value === 'password' && errorBizCode(err) === 'EMAIL_CODE_REQUIRED') {
+      openPasswordCode()
+    }
     errorMessage.value = resolveError(
       err,
       mode.value === 'password' ? '登入失败，请检查邮箱和密码' : '登入失败，请检查邮箱和验证码'

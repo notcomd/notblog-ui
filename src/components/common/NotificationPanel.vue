@@ -1,7 +1,7 @@
 <template>
-  <div class="absolute right-0 top-full mt-2 w-[min(20rem,90vw)] z-50 rounded-[5%] bg-white dark:bg-zinc-800/95 border border-zinc-200/70 dark:border-zinc-700/60 flex flex-col overflow-hidden" @click.stop>
+  <div class="absolute right-0 top-full mt-2 w-[min(20rem,90vw)] z-50 qm-surface flex flex-col overflow-hidden" @click.stop>
     <!-- 头部 -->
-    <div class="flex items-center justify-between px-4 h-11 border-b border-zinc-200/70 dark:border-zinc-700/60">
+    <div class="flex items-center justify-between px-4 h-11 border-b border-black/[0.06] dark:border-white/[0.08]">
       <span class="text-sm font-medium text-zinc-800 dark:text-zinc-100">通知</span>
       <button v-if="hasUnread" class="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors" @click="onReadAll">
         全部已读
@@ -30,7 +30,7 @@
           v-for="(n, i) in list"
           :key="n.notifyGuid"
           class="flex gap-3 px-4 py-3 cursor-pointer transition-colors"
-          :class="n.isRead ? 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' : 'bg-amber-50/50 dark:bg-amber-400/5 hover:bg-amber-50 dark:hover:bg-amber-400/10'"
+          :class="n.isRead ? 'hover:bg-black/[0.03] dark:hover:bg-white/[0.05]' : 'bg-amber-400/10 hover:bg-amber-400/20'"
           :ref="el => setItemRef(el, i)"
           tabindex="0"
           :aria-expanded="expanded[i]"
