@@ -10,8 +10,8 @@
       <div class="flex flex-wrap gap-1 glass p-1 rounded-[5%]">
         <button v-for="t in fileTypes" :key="t.key" class="px-4 py-1.5 rounded-[5%] text-sm font-medium transition-all" :class="type === t.key ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'" @click="switchType(t.key)">{{ t.label }}</button>
       </div>
-      <input v-model="keyword" name="keyword" aria-label="按文件名或上传者检索" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="按文件名 / 上传者检索" @keyup.enter="load" />
-      <button class="h-10 px-4 rounded-[5%] border border-white/50 bg-white/60 text-sm text-zinc-600 transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-700/70" @click="load">搜索</button>
+      <input v-model="keyword" name="keyword" aria-label="按文件名或上传者检索" class="h-10 w-64 px-4 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="按文件名 / 上传者检索" @keyup.enter="load" />
+      <button class="h-10 px-4 rounded-[5%] bg-transparent text-sm text-zinc-600 transition-colors hover:bg-black/[0.04] ring-1 ring-inset ring-zinc-200/70 dark:text-zinc-300 dark:hover:bg-white/[0.06] dark:ring-zinc-800" @click="load">搜索</button>
     </div>
 
     <!-- 文件网格（4列） -->
@@ -34,8 +34,8 @@
         </div>
       </div>
       <div v-if="files.length === 0" class="col-span-full py-16 flex flex-col items-center gap-3 text-zinc-400">
-        <div class="text-5xl" v-if="type === 'wallpaper'"><svg class="w-12 h-12 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div class="text-5xl" v-else><svg class="w-12 h-12 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
-        <p class="text-sm">{{ type === 'wallpaper' ? '暂无用户壁纸' : '该分类下暂无文件' }}</p>
+        <div class="text-5xl"><svg class="w-12 h-12 text-zinc-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+        <p class="text-sm">该分类下暂无文件</p>
       </div>
     </div>
 
@@ -50,28 +50,27 @@
       </div>
     </AdminModal>
 
-    <!-- 文件详情弹窗 -->
+    <!-- 文件详情弹窗（仅展示后端下发的字段；物理路径等存储细节由后端有意不外发） -->
     <AdminModal v-if="inspecting" :title="'文件详情：' + inspecting.name" @close="inspecting = null">
       <div class="space-y-2.5 text-sm">
-        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400 shrink-0">MD5</span><span class="text-zinc-700 dark:text-zinc-200 font-mono text-xs min-w-0 break-all text-right">{{ inspecting.md5 }}</span></div>
-        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400 shrink-0">存储路径</span><span class="text-zinc-700 dark:text-zinc-200 font-mono text-xs min-w-0 break-all text-right">{{ inspecting.path }}</span></div>
-        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400 shrink-0">上传 IP</span><span class="text-zinc-700 dark:text-zinc-200 min-w-0 break-all text-right">{{ inspecting.uploadIp }}</span></div>
-        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400 shrink-0">关联内容</span><span class="text-zinc-700 dark:text-zinc-200 min-w-0 break-all text-right">{{ inspecting.refTweetId || '无' }}</span></div>
-        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%] bg-white/60 dark:bg-zinc-800/60"><span class="text-zinc-400 shrink-0">上传者</span><span class="text-zinc-700 dark:text-zinc-200 min-w-0 break-all text-right">{{ inspecting.uploader }}</span></div>
+        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%]"><span class="text-zinc-400 shrink-0">文件 ID</span><span class="text-zinc-700 dark:text-zinc-200 font-mono text-xs min-w-0 break-all text-right">{{ inspecting.fileId }}</span></div>
+        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%]"><span class="text-zinc-400 shrink-0">大小</span><span class="text-zinc-700 dark:text-zinc-200 min-w-0 break-all text-right">{{ formatSize(inspecting.size) }}</span></div>
+        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%]"><span class="text-zinc-400 shrink-0">可见性</span><span class="text-zinc-700 dark:text-zinc-200 min-w-0 break-all text-right">{{ inspecting.isPublic ? '公开' : '私有' }}</span></div>
+        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%]"><span class="text-zinc-400 shrink-0">来源</span><span class="text-zinc-700 dark:text-zinc-200 min-w-0 break-all text-right">{{ inspecting.source === 'ContentAttachment' ? '内容附件' : '用户文件仓库' }}</span></div>
+        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%]"><span class="text-zinc-400 shrink-0">上传者</span><span class="text-zinc-700 dark:text-zinc-200 font-mono text-xs min-w-0 break-all text-right">{{ inspecting.uploader }}</span></div>
+        <div class="flex justify-between gap-2 px-4 py-2.5 rounded-[5%]"><span class="text-zinc-400 shrink-0">上传时间</span><span class="text-zinc-700 dark:text-zinc-200 min-w-0 break-all text-right">{{ relativeTime(inspecting.uploadTime) }}</span></div>
       </div>
     </AdminModal>
 
-    <!-- 删除确认 -->
+    <!-- 删除确认（后端为软删除 + 级联物理清理；删除原因后端不接收） -->
     <ConfirmDialog
       v-if="deleteTarget"
       danger
       title="永久删除文件"
       :message="'确定永久删除「' + deleteTarget.name + '」吗？将同时清除所有关联引用，不可恢复！'"
       confirm-text="永久删除"
-      require-reason
-      reason-placeholder="删除原因（必填）"
       @close="deleteTarget = null"
-      @confirm="(reason) => doDelete(reason)"
+      @confirm="doDelete"
     />
   </div>
 </template>
@@ -94,8 +93,7 @@ const fileTypes = [
   { key: 'all', label: '全部' },
   { key: 'image', label: '图片' },
   { key: 'video', label: '视频' },
-  { key: 'doc', label: '文档' },
-  { key: 'wallpaper', label: '用户壁纸' } // 二期：用户上传的自定义背景图（审核/删除/封禁）
+  { key: 'doc', label: '文档' }
 ]
 const type = ref('all')
 const keyword = ref('')
@@ -111,8 +109,7 @@ function switchType(t: string): void {
 
 async function load(): Promise<void> {
   try {
-    const res = await getAdminFiles({ type: type.value, keyword: keyword.value })
-    const data = res && res.data ? res.data : res
+    const data: any = await getAdminFiles({ type: type.value, keyword: keyword.value })
     files.value = data.items || data.list || []
   } catch (e) {
     files.value = []
@@ -131,7 +128,7 @@ function openDelete(f: any): void {
   deleteTarget.value = f
 }
 
-async function doDelete(reason: string): Promise<void> {
+async function doDelete(): Promise<void> {
   try {
     await deleteAdminFile(deleteTarget.value.fileId)
     files.value = files.value.filter(f => f.fileId !== deleteTarget.value.fileId)

@@ -1,14 +1,14 @@
 <template>
   <div class="glass-card overflow-hidden">
     <!-- 工具栏 -->
-    <div v-if="$slots.toolbar" class="px-4 py-3 border-b border-zinc-200/60 dark:border-zinc-700/60 flex flex-wrap items-center gap-3">
+    <div v-if="$slots.toolbar" class="px-4 py-3 border-b border-black/[0.06] dark:border-white/[0.08] flex flex-wrap items-center gap-3">
       <slot name="toolbar"></slot>
     </div>
     <!-- 表格 -->
     <div class="overflow-x-auto">
       <table class="w-full text-sm min-w-[640px]">
         <thead>
-          <tr class="text-left text-xs text-zinc-500 dark:text-zinc-400 border-b border-zinc-200/60 dark:border-zinc-700/60">
+          <tr class="text-left text-xs text-zinc-500 dark:text-zinc-400 border-b border-black/[0.06] dark:border-white/[0.08]">
             <th v-if="selectable" class="px-4 py-3 w-10">
               <input type="checkbox" class="accent-amber-500" aria-label="全选" :checked="allSelected" @change="toggleAll" />
             </th>
@@ -19,7 +19,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, ri) in rows" :key="rowKey(row, ri)" class="border-b border-zinc-100/80 dark:border-zinc-800/60 hover:bg-black/[0.03] dark:hover:bg-white/[0.045] transition-colors">
+          <tr v-for="(row, ri) in rows" :key="rowKey(row, ri)" class="border-b border-black/[0.05] dark:border-white/[0.07] hover:bg-black/[0.03] dark:hover:bg-white/[0.045] transition-colors">
             <td v-if="selectable" class="px-4 py-3">
               <input type="checkbox" class="accent-amber-500" aria-label="选择该行" :checked="isSelected(rowKey(row, ri))" @change="toggleRow(rowKey(row, ri))" />
             </td>
@@ -49,12 +49,12 @@
       </table>
     </div>
     <!-- 分页 -->
-    <div v-if="total > pageSize" class="px-4 py-3 border-t border-zinc-200/60 dark:border-zinc-700/60 flex items-center justify-between text-sm">
+    <div v-if="total > pageSize" class="px-4 py-3 border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between text-sm">
       <span class="text-xs text-zinc-400">共 {{ total }} 条</span>
       <div class="flex items-center gap-1">
-        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-30 dark:text-zinc-400" :disabled="page <= 1" @click="go(page - 1)" aria-label="上一页">‹</button>
+        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-black/[0.05] transition-colors disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-white/[0.07]" :disabled="page <= 1" @click="go(page - 1)" aria-label="上一页">‹</button>
         <span class="px-2 text-xs text-zinc-500 dark:text-zinc-400">{{ page }} / {{ totalPages }}</span>
-        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors disabled:opacity-30 dark:text-zinc-400" :disabled="page >= totalPages" @click="go(page + 1)" aria-label="下一页">›</button>
+        <button class="w-8 h-8 rounded-[5%] text-zinc-500 hover:bg-black/[0.05] transition-colors disabled:opacity-30 dark:text-zinc-400 dark:hover:bg-white/[0.07]" :disabled="page >= totalPages" @click="go(page + 1)" aria-label="下一页">›</button>
       </div>
     </div>
   </div>
@@ -72,7 +72,10 @@ interface Col {
 
 interface Props {
   columns: Col[]
-  rows?: Array<Record<string, unknown>>
+  // 行对象：各管理页传入的后端 DTO 字段名不一，用 Record<string, any> 承接，
+  // 避免插槽内 row.xxx 被推断为 unknown 而在消费侧模板中报类型错误
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rows?: Array<Record<string, any>>
   rowKeyField?: string
   loading?: boolean
   emptyText?: string
@@ -102,8 +105,8 @@ const emit = defineEmits<{
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const colspan = computed(() => props.columns.length + (props.selectable ? 1 : 0) + 1)
 
-function rowKey(row: Record<string, unknown>, index: number): unknown {
-  return row[props.rowKeyField] !== undefined ? row[props.rowKeyField] : index
+function rowKey(row: Record<string, unknown>, index: number): PropertyKey {
+  return row[props.rowKeyField] !== undefined ? (row[props.rowKeyField] as PropertyKey) : index
 }
 
 const allSelected = computed(() => props.rows.length > 0 && props.rows.every(r => props.selected.includes(r[props.rowKeyField])))

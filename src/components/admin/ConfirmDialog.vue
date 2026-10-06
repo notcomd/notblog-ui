@@ -13,7 +13,7 @@
           <input
             v-if="requireReason"
             v-model="reason"
-            class="w-full h-10 px-3.5 mt-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
+            class="w-full h-10 px-3.5 mt-3 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
             name="reason"
             :aria-label="reasonPlaceholder"
             :placeholder="reasonPlaceholder"
@@ -21,7 +21,7 @@
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all" @click="emit('close')">取消</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all" @click="emit('close')">取消</button>
         <button class="px-4 h-10 rounded-[5%] text-sm font-medium text-white active:scale-95 transition-all disabled:opacity-50"
           :class="danger ? 'bg-gradient-to-r from-red-500 to-rose-500 ' : 'bg-gradient-to-r from-amber-400 to-orange-500 '"
           :disabled="requireReason && !reason.trim()"

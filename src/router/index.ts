@@ -28,6 +28,8 @@ import AdminCirclesView from '@/views/admin/AdminCirclesView.vue';
 import AdminFilesView from '@/views/admin/AdminFilesView.vue';
 import AdminAnnouncementsView from '@/views/admin/AdminAnnouncementsView.vue';
 import AdminMenusView from '@/views/admin/AdminMenusView.vue';
+import AdminPermissionsView from '@/views/admin/AdminPermissionsView.vue';
+import AdminSecurityView from '@/views/admin/AdminSecurityView.vue';
 
 // 旧版页面（保留但退出主导航）
 import LoginPage from '@/views/LoginPage.vue';
@@ -104,7 +106,9 @@ const routes: RouteRecordRaw[] = [
       { path: 'circles', name: 'AdminCircles', component: AdminCirclesView },
       { path: 'files', name: 'AdminFiles', component: AdminFilesView },
       { path: 'announcements', name: 'AdminAnnouncements', component: AdminAnnouncementsView },
-      { path: 'menus', name: 'AdminMenus', component: AdminMenusView }
+      { path: 'menus', name: 'AdminMenus', component: AdminMenusView },
+      { path: 'permissions', name: 'AdminPermissions', component: AdminPermissionsView },
+      { path: 'security', name: 'AdminSecurity', component: AdminSecurityView }
     ]
   },
   // ===== 认证 =====

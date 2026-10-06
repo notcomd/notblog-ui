@@ -46,33 +46,33 @@
     <!-- 详情侧滑面板 -->
     <div v-if="viewing" class="fixed inset-0 z-[75] bg-black/40" @click="viewing = null">
       <div class="absolute right-0 top-0 bottom-0 w-[480px] bg-white dark:bg-zinc-800 border-l border-zinc-200/70 dark:border-white/10 shadow-2xl rounded-l-[5%] rounded-r-none flex flex-col">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-200/60 dark:border-zinc-700/60">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-black/[0.06] dark:border-white/[0.08]">
           <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100">举报详情 #{{ viewing.reportGuid }}</h3>
-          <button class="w-8 h-8 rounded-[5%] flex items-center justify-center text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-colors" @click="viewing = null" aria-label="关闭举报详情"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          <button class="w-8 h-8 rounded-[5%] flex items-center justify-center text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors" @click="viewing = null" aria-label="关闭举报详情"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
         <div class="flex-1 overflow-y-auto overscroll-contain p-5 space-y-4">
           <div class="grid grid-cols-2 gap-3 text-sm">
-            <div class="rounded-[5%] bg-white/60 dark:bg-zinc-800/60 p-3">
+            <div class="rounded-[5%] p-3">
               <div class="text-[11px] text-zinc-400">举报目标</div>
               <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">{{ viewing.targetTitle }}</div>
             </div>
-            <div class="rounded-[5%] bg-white/60 dark:bg-zinc-800/60 p-3">
+            <div class="rounded-[5%] p-3">
               <div class="text-[11px] text-zinc-400">目标类型</div>
               <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">{{ viewing.targetType === 'User' ? '用户' : '内容' }}</div>
             </div>
-            <div class="rounded-[5%] bg-white/60 dark:bg-zinc-800/60 p-3">
+            <div class="rounded-[5%] p-3">
               <div class="text-[11px] text-zinc-400">举报类型</div>
               <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">{{ categoryText(viewing.category) }}</div>
             </div>
-            <div class="rounded-[5%] bg-white/60 dark:bg-zinc-800/60 p-3">
+            <div class="rounded-[5%] p-3">
               <div class="text-[11px] text-zinc-400">举报人</div>
               <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">匿名用户</div>
             </div>
-            <div class="rounded-[5%] bg-white/60 dark:bg-zinc-800/60 p-3 col-span-2">
+            <div class="rounded-[5%] p-3 col-span-2">
               <div class="text-[11px] text-zinc-400">举报原因</div>
               <div class="text-zinc-700 dark:text-zinc-200 mt-1">{{ viewing.reportReason }}</div>
             </div>
-            <div class="rounded-[5%] bg-white/60 dark:bg-zinc-800/60 p-3 col-span-2">
+            <div class="rounded-[5%] p-3 col-span-2">
               <div class="text-[11px] text-zinc-400">提交时间</div>
               <div class="text-zinc-700 dark:text-zinc-200 mt-1">{{ relativeTime(viewing.createTime) }}</div>
             </div>
@@ -90,15 +90,15 @@
         <p class="text-sm text-zinc-500 dark:text-zinc-400">选择对「{{ resolveTarget.targetTitle }}」的处理结果：</p>
         <div class="grid grid-cols-3 gap-2">
           <button v-for="opt in resolveOptions" :key="opt.value" class="py-2.5 rounded-[5%] text-sm font-medium transition-all"
-            :class="resolveAction === opt.value ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'"
+            :class="resolveAction === opt.value ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-200'"
             @click="resolveAction = opt.value">
             {{ opt.label }}
           </button>
         </div>
-        <textarea v-model="resolveNote" name="resolveNote" aria-label="处理备注（选填）" rows="2" class="w-full resize-none rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="处理备注（选填）"></textarea>
+        <textarea v-model="resolveNote" name="resolveNote" aria-label="处理备注（选填）" rows="2" class="w-full resize-none rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="处理备注（选填）"></textarea>
       </div>
       <template #footer>
-        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all dark:text-zinc-400" @click="resolveTarget = null">取消</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all dark:text-zinc-400" @click="resolveTarget = null">取消</button>
         <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all" @click="doResolve">确认处理</button>
       </template>
     </AdminModal>
@@ -161,8 +161,7 @@ async function load(p?: number): Promise<void> {
   loading.value = true
   page.value = p || 1
   try {
-    const res = await getReports({ page: page.value, pageSize })
-    const data: any = res && res.data ? res.data : res
+    const data: any = await getReports({ page: page.value, pageSize })
     reports.value = data.items || data.list || []
     total.value = data.totalCount !== undefined ? data.totalCount : (data.total || reports.value.length)
   } catch (e) {

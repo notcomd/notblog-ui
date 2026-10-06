@@ -43,52 +43,54 @@
       <div class="grid grid-cols-2 gap-4">
         <label class="block">
           <span class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">菜单名称</span>
-          <input v-model="form.menuName" name="menuName" aria-label="菜单名称" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="如：用户管理" />
+          <input v-model="form.menuName" name="menuName" aria-label="菜单名称" class="w-full h-10 px-3.5 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="如：用户管理" />
         </label>
         <label class="block">
           <span class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">类型</span>
-          <select v-model.number="form.menuType" name="menuType" aria-label="菜单类型" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all">
+          <select v-model.number="form.menuType" name="menuType" aria-label="菜单类型" class="w-full h-10 px-3 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all">
             <option :value="1">目录</option>
             <option :value="2">菜单项</option>
           </select>
         </label>
         <label class="block">
           <span class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">父级</span>
-          <select v-model="form.parentId" name="parentId" aria-label="父级菜单" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all">
+          <select v-model="form.parentId" name="parentId" aria-label="父级菜单" class="w-full h-10 px-3 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all">
             <option value="">无（根菜单）</option>
             <option v-for="p in parentOptions" :key="p.menuId" :value="p.menuId">{{ '— '.repeat(p.depth) + p.menuName }}</option>
           </select>
         </label>
         <label class="block">
           <span class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">图标</span>
-          <select v-model="form.icon" name="icon" aria-label="菜单图标" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all">
+          <select v-model="form.icon" name="icon" aria-label="菜单图标" class="w-full h-10 px-3 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all">
             <option value="">默认</option>
             <option v-for="key in iconKeys" :key="key" :value="key">{{ key }}</option>
           </select>
         </label>
         <label class="block">
           <span class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">路由路径</span>
-          <input v-model="form.url" name="url" aria-label="路由路径" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="如 /admin/users（目录可留空）" />
+          <input v-model="form.url" name="url" aria-label="路由路径" class="w-full h-10 px-3.5 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="如 /admin/users（目录可留空）" />
         </label>
         <label class="block">
           <span class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">排序号（同级升序）</span>
-          <input v-model.number="form.sortOrder" type="number" name="sortOrder" aria-label="排序号" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+          <input v-model.number="form.sortOrder" type="number" name="sortOrder" aria-label="排序号" class="w-full h-10 px-3.5 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
         </label>
         <label class="block">
           <span class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">可见所需权限码（可空）</span>
-          <input v-model="form.requiredPermissionCode" name="requiredPermissionCode" aria-label="可见所需权限码" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="如 api:identity:manage" />
+          <input v-model="form.requiredPermissionCode" name="requiredPermissionCode" aria-label="可见所需权限码" class="w-full h-10 px-3.5 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="如 api:identity:manage" />
         </label>
         <label class="block">
           <span class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">可见所需角色（逗号分隔，可空）</span>
-          <input v-model="form.requiredRole" name="requiredRole" aria-label="可见所需角色" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="如 Root,Administrator" />
+          <input v-model="form.requiredRole" name="requiredRole" aria-label="可见所需角色" class="w-full h-10 px-3.5 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="如 Root,Administrator" />
         </label>
-        <label class="flex items-center gap-2 col-span-2">
+        <!-- 启用开关仅编辑态可控：CreateMenuCommand 无 IsEnabled 字段，新建恒为「启用」 -->
+        <label v-if="editing" class="flex items-center gap-2 col-span-2">
           <input v-model="form.isEnabled" type="checkbox" class="accent-amber-500" name="isEnabled" aria-label="启用菜单" />
           <span class="text-sm text-zinc-600 dark:text-zinc-300">启用（停用后不参与侧栏渲染）</span>
         </label>
+        <p v-else class="col-span-2 text-xs text-zinc-400">新建菜单默认为「启用」；如需停用，请创建后在列表中关闭。</p>
       </div>
       <template #footer>
-        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all" @click="editOpen = false">取消</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all" @click="editOpen = false">取消</button>
         <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all" @click="save">{{ editing ? '保存' : '创建' }}</button>
       </template>
     </AdminModal>
@@ -254,10 +256,11 @@ async function save(): Promise<void> {
     url: form.value.url.trim(),
     icon: form.value.icon,
     sortOrder: Number(form.value.sortOrder) || 0,
-    isEnabled: form.value.isEnabled,
     requiredPermissionCode: form.value.requiredPermissionCode.trim(),
     requiredRole: form.value.requiredRole.trim()
   }
+  // IsEnabled 只存在于 UpdateMenuCommand：CreateMenuCommand 无此字段（会被忽略），故创建时不发送
+  if (editing.value) payload.isEnabled = form.value.isEnabled
 
   try {
     if (editing.value) {

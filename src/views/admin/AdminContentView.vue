@@ -12,18 +12,18 @@
 
     <!-- 筛选栏 -->
     <div class="flex flex-wrap items-center gap-3">
-      <select v-model="status" name="status" aria-label="按状态筛选内容" class="h-10 px-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none">
+      <select v-model="status" name="status" aria-label="按状态筛选内容" class="h-10 px-3 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none">
         <option value="Pending">待审核</option>
         <option value="All">全部</option>
         <option value="Approved">已通过</option>
         <option value="Rejected">已驳回</option>
       </select>
-      <select v-model="sortBy" name="sortBy" aria-label="排序方式" class="h-10 px-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none">
+      <select v-model="sortBy" name="sortBy" aria-label="排序方式" class="h-10 px-3 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none">
         <option value="latest">最新发布</option>
         <option value="reports">最多举报</option>
       </select>
-      <input v-model="keyword" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="按内容标题 / 作者昵称检索" @keyup.enter="load(1)" />
-      <button class="h-10 px-4 rounded-[5%] border border-white/50 bg-white/60 text-sm text-zinc-600 transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-700/70" @click="load(1)">筛选</button>
+      <input v-model="keyword" class="h-10 w-64 px-4 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="按内容标题 / 作者昵称检索" @keyup.enter="load(1)" />
+      <button class="h-10 px-4 rounded-[5%] bg-transparent text-sm text-zinc-600 transition-colors hover:bg-black/[0.04] ring-1 ring-inset ring-zinc-200/70 dark:text-zinc-300 dark:hover:bg-white/[0.06] dark:ring-zinc-800" @click="load(1)">筛选</button>
       <span class="text-xs text-zinc-400 ml-auto">高举报内容自动置顶（红色警示边框）</span>
     </div>
 
@@ -32,7 +32,7 @@
       <div
         v-for="t in items"
         :key="t.tweetGuid"
-        class="flex flex-wrap items-center gap-4 border-b border-zinc-200/60 p-4 transition-colors hover:bg-black/[0.03] dark:border-zinc-800/60 dark:hover:bg-white/[0.045]"
+        class="flex flex-wrap items-center gap-4 border-b border-black/[0.06] p-4 transition-colors hover:bg-black/[0.03] dark:border-white/[0.08] dark:hover:bg-white/[0.045]"
         :class="(t.reportCount || 0) > 0 ? 'ring-1 ring-inset ring-red-400/50' : ''"
       >
         <!-- 封面缩略图 -->
@@ -60,7 +60,7 @@
         <!-- 操作 -->
         <div class="flex gap-1.5 shrink-0">
           <button class="h-9 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 px-3 text-xs font-medium text-white transition-all hover:opacity-90 active:scale-95" @click="openAudit(t)">审核</button>
-          <button class="h-9 rounded-[5%] bg-white/60 px-3 text-xs text-zinc-600 transition-colors hover:bg-white/80 active:scale-95 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-700/70" @click="openBlock(t)">屏蔽</button>
+          <button class="h-9 rounded-[5%] px-3 text-xs text-zinc-600 transition-colors hover:bg-black/[0.04] active:scale-95 dark:text-zinc-300 dark:hover:bg-white/[0.06]" @click="openBlock(t)">屏蔽</button>
           <button class="h-9 rounded-[5%] bg-red-500/10 px-3 text-xs text-red-500 transition-colors hover:bg-red-500/20 active:scale-95" @click="openDelete(t)">删除</button>
         </div>
       </div>
@@ -70,9 +70,9 @@
         暂无符合条件的内容
       </div>
       <div class="flex items-center justify-center gap-2 pt-2">
-        <button class="px-4 h-9 rounded-[5%] text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 disabled:opacity-30 transition-all" :disabled="page <= 1" @click="load(page - 1)">上一页</button>
+        <button class="px-4 h-9 rounded-[5%] text-sm text-zinc-600 dark:text-zinc-300 disabled:opacity-30 transition-all" :disabled="page <= 1" @click="load(page - 1)">上一页</button>
         <span class="text-xs text-zinc-400">{{ page }} / {{ totalPages }}（共 {{ total }} 条）</span>
-        <button class="px-4 h-9 rounded-[5%] text-sm bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 disabled:opacity-30 transition-all" :disabled="page >= totalPages" @click="load(page + 1)">下一页</button>
+        <button class="px-4 h-9 rounded-[5%] text-sm text-zinc-600 dark:text-zinc-300 disabled:opacity-30 transition-all" :disabled="page >= totalPages" @click="load(page + 1)">下一页</button>
       </div>
     </div>
 
@@ -91,24 +91,23 @@
               <span v-if="(auditTarget.reportCount || 0) > 0" class="text-xs px-2 py-1 rounded-full bg-red-500/15 text-red-500"><svg class="w-3 h-3 inline-block align-[-1px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> {{ auditTarget.reportCount }} 次举报</span>
             </div>
             <!-- 驳回理由 -->
-            <input v-model="rejectReason" name="rejectReason" aria-label="驳回理由（选填，将反馈给发布者）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="驳回理由（选填，将反馈给发布者）" />
+            <input v-model="rejectReason" name="rejectReason" aria-label="驳回理由（选填，将反馈给发布者）" class="w-full h-10 px-3.5 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="驳回理由（选填，将反馈给发布者）" />
           </div>
         </div>
       </div>
       <template #footer>
-        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all dark:text-zinc-400" @click="auditTarget = null">取消</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all dark:text-zinc-400" @click="auditTarget = null">取消</button>
         <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all" @click="doReject">驳回</button>
         <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-emerald-500 to-teal-500 text-white active:scale-95 transition-all" @click="doApprove"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> 通过</button>
       </template>
     </AdminModal>
 
-    <!-- 屏蔽确认 -->
+    <!-- 屏蔽确认（后端置为驳回并写审计日志，不接受原因） -->
     <AdminModal v-if="blockTarget" title="屏蔽内容" @close="blockTarget = null">
-      <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3">屏蔽后该内容全站不可见（不删除），确定屏蔽「{{ blockTarget.content.slice(0, 30) }}」？</p>
-      <input v-model="blockReason" name="blockReason" aria-label="屏蔽原因（必填）" placeholder="屏蔽原因（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+      <p class="text-sm text-zinc-500 dark:text-zinc-400">屏蔽后该内容全站不可见（不删除），确定屏蔽「{{ blockTarget.content.slice(0, 30) }}」？</p>
       <template #footer>
-        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all dark:text-zinc-400" @click="blockTarget = null">取消</button>
-        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-50" :disabled="!blockReason.trim()" @click="doBlock">确认屏蔽</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all dark:text-zinc-400" @click="blockTarget = null">取消</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all" @click="doBlock">确认屏蔽</button>
       </template>
     </AdminModal>
 
@@ -163,7 +162,6 @@ const total = ref(0)
 const auditTarget = ref<any>(null)
 const rejectReason = ref('')
 const blockTarget = ref<any>(null)
-const blockReason = ref('')
 const deleteTarget = ref<any>(null)
 
 const totalPages = computed<number>(() => Math.max(1, Math.ceil(total.value / pageSize)))
@@ -192,10 +190,10 @@ async function load(p: number): Promise<void> {
     // 博客 Tab：Markdown 服务审核（真实端点 GET /api/markdown + approve/reject）
     // 图文/视频 Tab：AuditApi 待审推文（GET /api/audit/tweets/pending，后端仅接收 page/pageSize；
     // 状态/排序/类型为本地展示控制，不参与服务端查询）
-    const res = await (tab.value === 'blog'
+    const res: any = await (tab.value === 'blog'
       ? getMarkdownDocs({ page: page.value, pageSize, keyword: keyword.value })
       : getPendingTweets({ page: page.value, pageSize }))
-    const data = res && res.data ? res.data : res
+    const data: any = res && res.data ? res.data : res
     // 博客 Tab 返回裸数组（List<MarkdownSummaryResponse>）；图文/视频 Tab 返回 PagedResult{items,totalCount}
     let list = Array.isArray(data) ? data : (data.items || data.list || [])
     if (tab.value === 'blog') {
@@ -255,17 +253,16 @@ async function doReject(): Promise<void> {
 
 function openBlock(t: any): void {
   blockTarget.value = t
-  blockReason.value = ''
 }
 
 async function doBlock(): Promise<void> {
   try {
-    await blockTweet(blockTarget.value.tweetGuid, blockReason.value)
+    await blockTweet(blockTarget.value.tweetGuid)
     toast.push('内容已屏蔽（全站不可见）', 'success')
     blockTarget.value = null
     load(page.value)
-  } catch (e) {
-    toast.push('操作失败', 'error')
+  } catch (e: any) {
+    toast.push(e?.message || '操作失败', 'error')
   }
 }
 

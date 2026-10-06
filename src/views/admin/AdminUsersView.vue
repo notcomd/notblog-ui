@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-zinc-800 dark:text-zinc-100">用户管理</h1>
         <p class="text-sm text-zinc-400 mt-1">用户列表与管控</p>
       </div>
-      <button disabled title="功能暂不可用" class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white/60 cursor-not-allowed transition-all" @click="showAdd = true">＋ 添加用户</button>
+      <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90 active:scale-95 transition-all" @click="showAdd = true">＋ 添加用户</button>
     </div>
 
     <AdminTable
@@ -23,14 +23,8 @@
       @page-change="load($event)"
     >
       <template #toolbar>
-        <input v-model="keyword" name="keyword" aria-label="搜索用户名、ID或邮箱" class="h-10 w-64 px-4 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="搜索用户名 / ID / 邮箱" @keyup.enter="load(1)" />
-        <select v-model="status" name="status" aria-label="按状态筛选用户" class="h-10 px-3 rounded-[5%] bg-white/60 dark:bg-zinc-800/60 border border-white/50 dark:border-white/10 text-sm outline-none" @change="load(1)">
-          <option value="all">全部状态</option>
-          <option value="Normal">正常</option>
-          <option value="Banned">已封禁</option>
-          <option value="Online">在线中</option>
-        </select>
-        <button class="h-10 px-3 rounded-[5%] border border-white/50 bg-white/60 text-sm text-zinc-600 transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-700/70" @click="load(1)">搜索</button>
+        <input v-model="keyword" name="keyword" aria-label="搜索用户名、ID或邮箱" class="h-10 w-64 px-4 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" placeholder="搜索用户名 / 邮箱 / 手机号" @keyup.enter="load(1)" />
+        <button class="h-10 px-3 rounded-[5%] bg-transparent text-sm text-zinc-600 transition-colors hover:bg-black/[0.04] ring-1 ring-inset ring-zinc-200/70 dark:text-zinc-300 dark:hover:bg-white/[0.06] dark:ring-zinc-800" @click="load(1)">搜索</button>
         <div v-if="selected.length" class="flex items-center gap-2 ml-2">
           <span class="text-xs text-zinc-400">已选 {{ selected.length }} 项</span>
           <button disabled title="功能暂不可用" class="h-8 px-3 rounded-[5%] text-xs bg-red-500/10 text-red-500/50 cursor-not-allowed transition-colors" @click="batchBan">批量封禁</button>
@@ -40,7 +34,7 @@
 
       <template #cell-userName="{ row }">
         <div class="flex items-center gap-2.5">
-          <img v-if="row.imageCover" :src="row.imageCover" alt="" class="w-9 h-9 rounded-full object-cover border border-white/60 dark:border-white/10" @error="hideImg" />
+          <img v-if="row.imageCover" :src="row.imageCover" alt="" class="w-9 h-9 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/10" @error="hideImg" />
           <span v-else class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs">{{ (row.userName || '?').slice(0, 1) }}</span>
           <div>
             <div class="font-medium text-zinc-700 dark:text-zinc-200">{{ row.userName }}</div>
@@ -57,31 +51,23 @@
         <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ relativeTime(row.createDatetime) }}</span>
       </template>
 
-      <template #cell-lastOnline="{ row }">
-        <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ row.lastOnline ? relativeTime(row.lastOnline) : '离线' }}</span>
-      </template>
-
       <template #actions="{ row }">
         <button class="px-2.5 h-8 rounded-[5%] text-xs text-amber-600 hover:bg-amber-500/10 transition-colors" @click="viewUser(row)">查看</button>
-        <button v-if="row.status !== 'Banned'" disabled title="功能暂不可用" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500/50 cursor-not-allowed transition-colors" @click="banUser(row)">封禁</button>
-        <button disabled title="功能暂不可用" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500/50 cursor-not-allowed transition-colors" @click="deleteUser(row)">删除</button>
+        <button v-if="row.status !== 'Banned'" class="px-2.5 h-8 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10 transition-colors" @click="banUser(row)">封禁</button>
+        <button class="px-2.5 h-8 rounded-[5%] text-xs text-red-500 hover:bg-red-500/10 transition-colors" @click="deleteUser(row)">删除</button>
       </template>
     </AdminTable>
 
-    <!-- 添加用户 -->
+    <!-- 添加用户（后端仅接受邮箱 + 初始密码，角色固定 User） -->
     <AdminModal v-if="showAdd" title="添加用户" @close="showAdd = false">
       <div class="space-y-3">
-        <input v-model="addForm.userName" name="username" autocomplete="username" aria-label="用户名（必填）" placeholder="用户名（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
-        <input v-model="addForm.userEmail" name="email" autocomplete="email" aria-label="邮箱（必填）" placeholder="邮箱（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
-        <input v-model="addForm.password" type="password" name="password" autocomplete="new-password" aria-label="初始密码（必填）" placeholder="初始密码（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
-        <select v-model="addForm.role" name="role" aria-label="用户角色" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none">
-          <option value="Member">普通用户</option>
-          <option value="Admin">管理员</option>
-        </select>
+        <input v-model="addForm.userEmail" name="email" autocomplete="email" aria-label="邮箱（必填）" placeholder="邮箱（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+        <input v-model="addForm.password" type="password" name="password" autocomplete="new-password" aria-label="初始密码（必填，至少 8 位）" placeholder="初始密码（必填，至少 8 位）" class="w-full h-10 px-3.5 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
+        <p class="text-xs leading-relaxed text-zinc-400">新账号默认角色为「普通用户」，用户名默认与邮箱一致；如需提权请在角色管理中调整。</p>
       </div>
       <template #footer>
-        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all dark:text-zinc-400" @click="showAdd = false">取消</button>
-        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all" :disabled="!addForm.userName || !addForm.userEmail || !addForm.password" @click="submitAdd">创建</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all dark:text-zinc-400" @click="showAdd = false">取消</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-50" :disabled="!addForm.userEmail || addForm.password.length < 8" @click="submitAdd">创建</button>
       </template>
     </AdminModal>
 
@@ -97,54 +83,37 @@
           </div>
           <span class="ml-auto text-xs px-2 py-1 rounded-full font-medium" :class="statusClass(viewing.status)">{{ statusText(viewing.status) }}</span>
         </div>
-        <div class="grid grid-cols-3 gap-3 text-center">
-          <div class="rounded-[5%] bg-white/60 dark:bg-zinc-800/60 py-3">
-            <div class="text-lg font-bold text-zinc-800 dark:text-zinc-100">{{ viewing.postCount || 0 }}</div>
-            <div class="text-[11px] text-zinc-400">发布内容</div>
+        <div class="grid grid-cols-2 gap-3 text-center">
+          <div class="rounded-[5%] py-3">
+            <div class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ relativeTime(viewing.createDatetime) }}</div>
+            <div class="text-[11px] text-zinc-400 mt-0.5">注册时间</div>
           </div>
-          <div class="rounded-[5%] bg-white/60 dark:bg-zinc-800/60 py-3">
-            <div class="text-lg font-bold text-zinc-800 dark:text-zinc-100">{{ viewing.commentCount || 0 }}</div>
-            <div class="text-[11px] text-zinc-400">评论</div>
+          <div class="rounded-[5%] py-3">
+            <div class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ viewing.phone || '未绑定' }}</div>
+            <div class="text-[11px] text-zinc-400 mt-0.5">手机号</div>
           </div>
-          <div class="rounded-[5%] bg-white/60 dark:bg-zinc-800/60 py-3">
-            <div class="text-lg font-bold text-zinc-800 dark:text-zinc-100">{{ relativeTime(viewing.createDatetime) }}</div>
-            <div class="text-[11px] text-zinc-400">注册时间</div>
-          </div>
-        </div>
-        <div v-if="viewing.banReason" class="px-4 py-3 rounded-[5%] bg-red-500/10 text-sm text-red-500">
-          <svg class="w-3.5 h-3.5 inline-block align-[-2px] mr-1 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>封禁原因：{{ viewing.banReason }}
         </div>
       </div>
     </AdminModal>
 
-    <!-- 封禁（二次确认 + 原因 + 时长） -->
+    <!-- 封禁（二次确认；后端为锁定至远期，不接受原因/时长） -->
     <AdminModal v-if="banTarget" title="封禁用户" @close="banTarget = null">
-      <div class="space-y-3">
-        <p class="text-sm text-zinc-500 dark:text-zinc-400">确定封禁 <b>{{ banTarget.userName }}</b> 吗？封禁后该用户无法登录，已发布内容全部隐藏。</p>
-        <select v-model="banDuration" name="banDuration" aria-label="封禁时长" class="w-full h-10 px-3 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none">
-          <option value="7d">7 天</option>
-          <option value="30d">30 天</option>
-          <option value="forever">永久</option>
-        </select>
-        <input v-model="banReason" name="banReason" aria-label="封禁原因（必填）" placeholder="封禁原因（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 text-sm outline-none focus:ring-2 focus:ring-red-500/50 transition-all" />
-      </div>
+      <p class="text-sm text-zinc-500 dark:text-zinc-400">确定封禁 <b>{{ banTarget.userName }}</b> 吗？封禁后该用户将无法登录，已发布内容不再对外可见。</p>
       <template #footer>
-        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all dark:text-zinc-400" @click="banTarget = null">取消</button>
-        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-red-500 to-rose-500 text-white active:scale-95 transition-all disabled:opacity-50" :disabled="!banReason.trim()" @click="submitBan(banReason)">确认封禁</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all dark:text-zinc-400" @click="banTarget = null">取消</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-red-500 to-rose-500 text-white active:scale-95 transition-all" @click="submitBan">确认封禁</button>
       </template>
     </AdminModal>
 
-    <!-- 删除确认 -->
+    <!-- 删除确认（后端为永久停用，逻辑同封禁；删除原因后端不接收） -->
     <ConfirmDialog
       v-if="deleteTarget"
       danger
-      title="彻底删除用户"
-      :message="'确定彻底删除 ' + deleteTarget.userName + ' 吗？将删除该用户所有数据（含内容、评论、文件），不可恢复！'"
-      confirm-text="永久删除"
-      require-reason
-      reason-placeholder="删除原因（必填）"
+      title="永久停用用户"
+      :message="'确定永久停用 ' + deleteTarget.userName + ' 吗？该账号将被锁定并无法再登录，不可恢复！'"
+      confirm-text="永久停用"
       @close="deleteTarget = null"
-      @confirm="(reason) => submitDelete(reason)"
+      @confirm="submitDelete"
     />
   </div>
 </template>
@@ -168,7 +137,6 @@ const columns = [
   { key: 'userGuid', label: '用户 ID' },
   { key: 'userName', label: '头像 / 昵称' },
   { key: 'createDatetime', label: '注册时间', cellClass: 'text-xs text-zinc-500 dark:text-zinc-400' },
-  { key: 'lastOnline', label: '最后在线' },
   { key: 'status', label: '状态' }
 ]
 
@@ -178,35 +146,30 @@ const page = ref(1)
 const pageSize = 10
 const total = ref(0)
 const keyword = ref('')
-const status = ref('all')
 const selected = ref<any[]>([])
 
 const showAdd = ref(false)
-const addForm = ref({ userName: '', userEmail: '', password: '', role: 'Member' })
+const addForm = ref({ userEmail: '', password: '' })
 const viewing = ref<any>(null)
 const banTarget = ref<any>(null)
-const banDuration = ref('7d')
-const banReason = ref('')
 const deleteTarget = ref<any>(null)
 
 function statusClass(s: string): string {
   return {
     Normal: 'bg-emerald-400/15 text-emerald-500',
-    Banned: 'bg-red-400/15 text-red-500',
-    Online: 'bg-blue-400/15 text-amber-600'
+    Banned: 'bg-red-400/15 text-red-500'
   }[s] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
 }
 
 function statusText(s: string): string {
-  return { Normal: '正常', Banned: '已封禁', Online: '在线中' }[s] || s
+  return { Normal: '正常', Banned: '已封禁' }[s] || s
 }
 
 async function load(p?: number): Promise<void> {
   loading.value = true
   page.value = p || 1
   try {
-    const res = await getAdminUsers({ page: page.value, pageSize, keyword: keyword.value, status: status.value })
-    const data: any = res && res.data ? res.data : res
+    const data: any = await getAdminUsers({ page: page.value, pageSize, keyword: keyword.value })
     users.value = data.items || data.list || []
     total.value = data.totalCount !== undefined ? data.totalCount : (data.total || users.value.length)
   } catch (e) {
@@ -222,17 +185,16 @@ function viewUser(row: any): void {
 
 function banUser(row: any): void {
   banTarget.value = row
-  banReason.value = ''
 }
 
-async function submitBan(reason: string): Promise<void> {
+async function submitBan(): Promise<void> {
   try {
-    await banAdminUser(banTarget.value.userGuid, { reason, duration: banDuration.value })
+    await banAdminUser(banTarget.value.userGuid)
     toast.push(`已封禁 ${banTarget.value.userName}`, 'success')
     banTarget.value = null
     load(page.value)
-  } catch (e) {
-    toast.push('封禁失败', 'error')
+  } catch (e: any) {
+    toast.push(e?.message || '封禁失败', 'error')
   }
 }
 
@@ -240,14 +202,14 @@ function deleteUser(row: any): void {
   deleteTarget.value = row
 }
 
-async function submitDelete(reason: string): Promise<void> {
+async function submitDelete(): Promise<void> {
   try {
     await deleteAdminUser(deleteTarget.value.userGuid)
-    toast.push(`已删除 ${deleteTarget.value.userName} 及其全部数据`, 'success')
+    toast.push(`已永久停用 ${deleteTarget.value.userName}`, 'success')
     deleteTarget.value = null
     load(page.value)
-  } catch (e) {
-    toast.push('删除失败', 'error')
+  } catch (e: any) {
+    toast.push(e?.message || '停用失败', 'error')
   }
 }
 
@@ -256,10 +218,10 @@ async function submitAdd(): Promise<void> {
     await addAdminUser(addForm.value)
     toast.push('用户创建成功', 'success')
     showAdd.value = false
-    addForm.value = { userName: '', userEmail: '', password: '', role: 'Member' }
+    addForm.value = { userEmail: '', password: '' }
     load(1)
-  } catch (e) {
-    toast.push('创建失败', 'error')
+  } catch (e: any) {
+    toast.push(e?.message || '创建失败', 'error')
   }
 }
 

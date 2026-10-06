@@ -20,7 +20,9 @@ export const MENU_ICONS: Record<string, string> = {
   circles: `${SVG_OPEN}<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
   files: `${SVG_OPEN}<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
   announcements: `${SVG_OPEN}<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>`,
-  menus: `${SVG_OPEN}<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`
+  menus: `${SVG_OPEN}<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
+  permissions: `${SVG_OPEN}<path d="M12.65 10A6 6 0 1 0 11 12.65"/><path d="M12.65 10H21M19 10v3M16 10v2"/></svg>`,
+  security: `${SVG_OPEN}<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
 };
 
 /** 未知/空键的兜底图标（圆点） */
@@ -40,6 +42,8 @@ export const DEFAULT_ADMIN_NAV: AdminNavItem[] = [
   { path: '/admin/reports', label: '举报管理', icon: MENU_ICONS.reports },
   { path: '/admin/circles', label: '社区管理', icon: MENU_ICONS.circles },
   { path: '/admin/files', label: '文件管理', icon: MENU_ICONS.files },
-  { path: '/admin/announcements', label: '公报', icon: MENU_ICONS.announcements, badge: 'NEW' },
-  { path: '/admin/menus', label: '菜单管理', icon: MENU_ICONS.menus }
+  { path: '/admin/announcements', label: '公报', icon: MENU_ICONS.announcements },
+  { path: '/admin/menus', label: '菜单管理', icon: MENU_ICONS.menus },
+  { path: '/admin/permissions', label: '权限管理', icon: MENU_ICONS.permissions },
+  { path: '/admin/security', label: '账号安全', icon: MENU_ICONS.security }
 ];
