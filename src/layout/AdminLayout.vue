@@ -93,6 +93,22 @@
 
       <!-- 主内容 -->
       <main class="relative flex-1 min-w-0 px-6 py-6 overflow-y-auto h-[calc(100vh-4rem)]">
+        <!-- 权限不足提示条：订阅 axios 层的 403 广播（已节流去重），可关闭；无卡片描边，仅用分隔线 -->
+        <div
+          v-if="permissionNotice"
+          role="alert"
+          class="flex items-start gap-3 -mx-6 -mt-6 mb-6 px-6 py-3 bg-amber-50/70 dark:bg-amber-500/[0.08] border-b border-black/[0.06] dark:border-white/[0.08]"
+        >
+          <svg class="w-5 h-5 shrink-0 mt-0.5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+          <div class="flex-1 min-w-0 text-sm leading-relaxed text-zinc-700 dark:text-zinc-200">
+            <span class="font-semibold text-amber-600 dark:text-amber-400">权限不足</span>
+            <span class="ml-1.5">{{ permissionNotice }}</span>
+          </div>
+          <button type="button" class="shrink-0 -mt-0.5 w-7 h-7 flex items-center justify-center rounded-[5%] text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors" aria-label="关闭权限提示" @click="permissionNotice = ''">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+        </div>
+
         <router-view v-slot="{ Component }">
           <!-- 页面过渡：与用户端内容区同一套规格（不用 mode="out-in"，详见 input.css） -->
           <Transition
@@ -110,13 +126,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { getAdminStats } from '@/api/admin'
 import { getMyMenus } from '@/api/menu'
+import { onForbidden } from '@/axios'
 import { DEFAULT_ADMIN_NAV, resolveMenuIcon, type AdminNavItem } from '@/components/admin/menuIcons'
 
 const route = useRoute()
@@ -128,6 +145,10 @@ const toast = useToastStore()
 const collapsed = ref(false)
 const keyword = ref('')
 const pendingCount = ref(0)
+
+// 权限不足提示条文案（空字符串表示不展示）；由 axios 层 403 广播写入，可手动关闭
+const permissionNotice = ref('')
+let unsubscribeForbidden: (() => void) | null = null
 
 // 侧栏导航由后端菜单接口驱动（当前用户可见 + 启用）；接口失败/为空时回退内置默认项
 const navItems = ref<AdminNavItem[]>(DEFAULT_ADMIN_NAV)
@@ -177,11 +198,22 @@ function onLogout(): void {
 }
 
 onMounted(async () => {
+  // 订阅 axios 层 403 广播：任一管理请求被拒时展示可关闭的权限提示条（发送侧已节流去重，不会刷屏）
+  unsubscribeForbidden = onForbidden((message) => { permissionNotice.value = message })
+
   await loadMenus()
   try {
     const data = await getAdminStats()
     // 数据源不可用时为 null，按 0 计入待办角标（角标仅作提示，不承担准确性承诺）
     pendingCount.value = (data.pendingTweets ?? 0) + (data.pendingReports ?? 0)
   } catch (e) { /* 忽略 */ }
+})
+
+// 卸载时取消 403 订阅，避免事件监听泄漏
+onBeforeUnmount(() => {
+  if (unsubscribeForbidden) {
+    unsubscribeForbidden()
+    unsubscribeForbidden = null
+  }
 })
 </script>

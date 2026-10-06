@@ -29,6 +29,8 @@ import AdminFilesView from '@/views/admin/AdminFilesView.vue';
 import AdminAnnouncementsView from '@/views/admin/AdminAnnouncementsView.vue';
 import AdminMenusView from '@/views/admin/AdminMenusView.vue';
 import AdminPermissionsView from '@/views/admin/AdminPermissionsView.vue';
+import AdminRolesView from '@/views/admin/AdminRolesView.vue';
+import AdminRoleGroupsView from '@/views/admin/AdminRoleGroupsView.vue';
 import AdminSecurityView from '@/views/admin/AdminSecurityView.vue';
 
 // 旧版页面（保留但退出主导航）
@@ -108,6 +110,8 @@ const routes: RouteRecordRaw[] = [
       { path: 'announcements', name: 'AdminAnnouncements', component: AdminAnnouncementsView },
       { path: 'menus', name: 'AdminMenus', component: AdminMenusView },
       { path: 'permissions', name: 'AdminPermissions', component: AdminPermissionsView },
+      { path: 'roles', name: 'AdminRoles', component: AdminRolesView },
+      { path: 'rolegroups', name: 'AdminRoleGroups', component: AdminRoleGroupsView },
       { path: 'security', name: 'AdminSecurity', component: AdminSecurityView }
     ]
   },

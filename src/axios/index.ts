@@ -25,13 +25,22 @@ import type { ApiResponseResult } from '@/types'
 //       各 api 模块无需关心信封结构；失败时以信封 message 拒绝
 //     · 业务/HTTP 401 → 自动刷新（refresh token 单飞互斥）→ 成功后重放原请求一次
 //     · 刷新失败 / 无 refresh token / 重放仍 401 → 广播 session-expired（入口跳登录）
+//     · 403 → 广播 forbidden（管理端布局订阅后展示可关闭的权限提示条，已节流去重）
 //     · 登录 / 验证码 / 刷新等公开认证端点豁免：其 401 不代表会话失效（页面自行提示）
 // ═══════════════════════════════════════════════════════════════════════
 
 const BIZ_UNAUTHORIZED = 401
+const BIZ_FORBIDDEN = 403
 
 /** 会话失效文案 */
 const SESSION_EXPIRED_MESSAGE = '登录状态已过期，请重新登录'
+
+/**
+ * 403 权限不足的默认引导文案。
+ * 两层信息：说明「该操作需要相应权限」，并给出可执行路径「联系 Root 账号授予权限」。
+ * 仅在服务未返回中文具体原因时兜底；服务返回具体原因（如「只有圈主或管理员可以移出成员」）时优先采用原话。
+ */
+const PERMISSION_DENIED_MESSAGE = '该操作需要相应权限，请联系 Root 账号授予权限'
 
 /** 公开认证端点（401 时不做自动刷新 / 踢登录；如密码错误、验证码错误等） */
 const AUTH_PUBLIC_PATH_PATTERNS: RegExp[] = [
@@ -47,6 +56,34 @@ function isAuthPublicPath(url: string | undefined): boolean {
   if (!url) return false
   const path = url.split('?')[0]
   return AUTH_PUBLIC_PATH_PATTERNS.some(re => re.test(path))
+}
+
+// ══════════════ 权限不足（403）广播 ══════════════
+// 与 session-expired 同构：axios 层不直接依赖 router / pinia store，经 window 自定义事件单向广播，
+// 由管理端布局（AdminLayout）订阅后展示一条可关闭的权限提示条，让用户看清「这是权限问题，可由 Root 授予」，
+// 而非网络异常。仅管理端订阅，用户端页面不受影响（其自身 catch 后的 toast 行为保持不变）。
+const FORBIDDEN_EVENT = 'notblog:forbidden'
+
+/** 节流窗口（ms）：页面加载时多个并发请求会同时 403，窗口内只广播一次，避免刷屏/叠加多条提示 */
+const FORBIDDEN_THROTTLE_MS = 3000
+let lastForbiddenAt = 0
+
+/** 广播「权限不足」（同一时间窗口内去重，只发一次） */
+export function emitForbidden(message: string): void {
+  const now = Date.now()
+  if (now - lastForbiddenAt < FORBIDDEN_THROTTLE_MS) return
+  lastForbiddenAt = now
+  window.dispatchEvent(new CustomEvent<string>(FORBIDDEN_EVENT, { detail: message }))
+}
+
+/** 订阅「权限不足」事件，返回取消订阅函数 */
+export function onForbidden(handler: (message: string) => void): () => void {
+  const listener = (e: Event): void => {
+    const detail = (e as CustomEvent<string>).detail
+    handler(detail || PERMISSION_DENIED_MESSAGE)
+  }
+  window.addEventListener(FORBIDDEN_EVENT, listener)
+  return () => window.removeEventListener(FORBIDDEN_EVENT, listener)
 }
 
 /** 扩展请求配置：_retried 标记已因 401 重放过一次 */
@@ -173,18 +210,60 @@ async function handleUnauthorized(
 
 // ══════════════ 响应拦截器 ══════════════
 
-/** 从错误响应体（统一信封）提取面向用户的领域错误消息 */
-function extractDomainMessage(body: unknown): string | null {
-  if (!body || typeof body !== 'object') return null
-  const envelope = body as ApiResponseResult
-  if (isUnifiedEnvelope(envelope)) {
-    if (envelope.message) return envelope.message
-    // 部分旧端点把领域错误放在 responseData 内（如 { error, message }），作回退提取
-    const nested = envelope.responseData as { error?: string; message?: string } | null | undefined
-    if (nested?.error) return nested.error
-    if (nested?.message) return nested.message
+/** 是否只含 ASCII（用于识别英文样板文案，如中间件的 "Forbidden"） */
+function isAsciiOnly(s: string): boolean {
+  // eslint-disable-next-line no-control-regex
+  return /^[\x00-\x7F]*$/.test(s)
+}
+
+/**
+ * 从错误响应体提取面向用户的领域错误消息。
+ *
+ * 后端存在三种错误体形态，必须都能解析，否则页面只能显示 axios 的
+ * "Request failed with status code 400" 这类无信息量文案：
+ *  1. 统一信封 ApiResponseResult（Message / Markdown / Video / FileDev 部分端点）
+ *  2. 裸错误体（Identity、FileDev 未启用信封包装）：`{ error }`
+ *  3. RFC 7807 ProblemDetails（Results.Problem / 框架自动 400）：`title` / `detail` / `errors`
+ */
+function extractDomainMessage(body: unknown, status?: number): string | null {
+  let message: string | null = null
+
+  if (body && typeof body === 'object') {
+    const envelope = body as ApiResponseResult
+    if (isUnifiedEnvelope(envelope)) {
+      if (envelope.message) message = envelope.message
+      else {
+        // 部分旧端点把领域错误放在 responseData 内（如 { error, message }），作回退提取
+        const nested = envelope.responseData as { error?: string; message?: string } | null | undefined
+        message = nested?.error || nested?.message || null
+      }
+    } else {
+      const raw = body as {
+        error?: unknown
+        message?: unknown
+        detail?: unknown
+        title?: unknown
+        errors?: Record<string, unknown>
+      }
+      if (typeof raw.error === 'string' && raw.error) message = raw.error
+      else if (typeof raw.message === 'string' && raw.message) message = raw.message
+      else if (typeof raw.detail === 'string' && raw.detail) message = raw.detail
+      else if (typeof raw.title === 'string' && raw.title) message = raw.title
+      else if (raw.errors && typeof raw.errors === 'object') {
+        // 模型绑定/校验失败：{ errors: { Field: ["msg"] } } → 取首条
+        const first = Object.values(raw.errors).flat().find((v) => typeof v === 'string')
+        if (typeof first === 'string' && first) message = first
+      }
+    }
   }
-  return null
+
+  // 403 的英文样板（"Forbidden" / "Insufficient permissions"）对用户无意义，统一换中文引导；
+  // 若服务返回了中文的具体原因（如「只有圈主或管理员可以移出成员」）则原样保留。
+  if (status === 403 && (!message || isAsciiOnly(message))) {
+    return PERMISSION_DENIED_MESSAGE
+  }
+
+  return message
 }
 
 service.interceptors.response.use(
@@ -196,6 +275,10 @@ service.interceptors.response.use(
         // 信封标识失败（业务码为非 2xx）
         if (body.statusCode === BIZ_UNAUTHORIZED) {
           return handleUnauthorized(response.config as RetriableConfig, new Error(String(body.message ?? '未授权')))
+        }
+        // 信封标识 403：权限不足（业务码），广播给管理端布局展示可关闭提示条
+        if (body.statusCode === BIZ_FORBIDDEN) {
+          emitForbidden(body.message || PERMISSION_DENIED_MESSAGE)
         }
         console.warn('[api] 业务错误:', body.statusCode, body.message)
         return Promise.reject(new Error(body.message || '请求失败'))
@@ -222,8 +305,8 @@ service.interceptors.response.use(
     const { status } = error.response
     const body = error.response.data as unknown
 
-    // 信封体内的领域错误消息覆盖通用 HTTP 文案，供页面 toast 展示
-    const domainMessage = extractDomainMessage(body)
+    // 错误体里的领域消息覆盖通用 HTTP 文案，供页面 toast 展示
+    const domainMessage = extractDomainMessage(body, status)
     if (domainMessage) {
       error.message = domainMessage
       ;(error as AxiosError & { friendlyMessage?: string }).friendlyMessage = domainMessage
@@ -234,7 +317,11 @@ service.interceptors.response.use(
     if (envelopeStatus === BIZ_UNAUTHORIZED || status === 401) {
       return handleUnauthorized(config, error)
     }
-    if (status === 403) console.warn('[api] 拒绝访问:', config?.url)
+    if (status === 403) {
+      console.warn('[api] 拒绝访问:', config?.url)
+      // 广播权限不足（令牌侧节流去重）；domainMessage 在 403 下必非空
+      emitForbidden(domainMessage || PERMISSION_DENIED_MESSAGE)
+    }
     else if (status === 404) console.warn('[api] 资源不存在:', config?.url)
     else if (status >= 500) console.warn(`[api] 服务器错误 ${status}:`, config?.url)
     return Promise.reject(error)

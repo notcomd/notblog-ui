@@ -22,6 +22,8 @@ export const MENU_ICONS: Record<string, string> = {
   announcements: `${SVG_OPEN}<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>`,
   menus: `${SVG_OPEN}<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
   permissions: `${SVG_OPEN}<path d="M12.65 10A6 6 0 1 0 11 12.65"/><path d="M12.65 10H21M19 10v3M16 10v2"/></svg>`,
+  roles: `${SVG_OPEN}<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M17 11l2 2 4-4"/></svg>`,
+  rolegroups: `${SVG_OPEN}<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`,
   security: `${SVG_OPEN}<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
 };
 
@@ -45,5 +47,7 @@ export const DEFAULT_ADMIN_NAV: AdminNavItem[] = [
   { path: '/admin/announcements', label: '公报', icon: MENU_ICONS.announcements },
   { path: '/admin/menus', label: '菜单管理', icon: MENU_ICONS.menus },
   { path: '/admin/permissions', label: '权限管理', icon: MENU_ICONS.permissions },
+  { path: '/admin/roles', label: '角色管理', icon: MENU_ICONS.roles },
+  { path: '/admin/rolegroups', label: '角色组管理', icon: MENU_ICONS.rolegroups },
   { path: '/admin/security', label: '账号安全', icon: MENU_ICONS.security }
 ];
