@@ -117,17 +117,27 @@ import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { createTweet, createCirclePost, uploadImage } from '@/api/publish'
 import { uploadVideo } from '@/api/publish'
+import { updateTweet, submitTweet } from '@/api/tweet'
 import { saveDraft, removeDraft } from '@/utils/drafts'
 import { unwrap } from '@/utils/response'
+import { pickCoverUrl, pickVideoUrl } from '@/utils/media'
 import { useToastStore } from '@/stores/toast'
 
+interface ServerContent {
+  id: string
+  status: string
+  data: Record<string, any>
+}
+
 interface Props {
-  myCircles?: unknown[]
-  draft?: unknown
+  myCircles?: any[]
+  draft?: any
+  server?: ServerContent | null
 }
 const props = withDefaults(defineProps<Props>(), {
   myCircles: () => [],
-  draft: null
+  draft: null,
+  server: null
 })
 
 const router = useRouter()
@@ -144,6 +154,8 @@ const coverUploading = ref(false)
 const publishing = ref(false)
 const savingDraft = ref(false)
 const draftId = ref('')
+// 服务端已有内容 Guid：存在时「存草稿 / 发布」改调 PUT（+ submit）
+const serverId = ref('')
 const videoFileId = ref('')  // 发布用视频文件 fileId
 const videoInput = ref<HTMLInputElement | null>(null)
 const coverInput = ref<HTMLInputElement | null>(null)
@@ -232,56 +244,105 @@ async function onCoverPick(e: Event) {
 
 function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 
+// 载入服务端已有内容（编辑草稿/被驳回）
+watch(() => props.server, (s) => {
+  if (!s) return
+  serverId.value = s.id
+  content.value = s.data?.content || ''
+  visibility.value = s.data?.visibility || 'Public'
+  const urls: string[] = s.data?.mediaUrls || []
+  videoUrl.value = pickVideoUrl(urls) || ''
+  coverUrl.value = pickCoverUrl(urls) || ''
+  videoFileId.value = ''
+  coverFileId.value = ''
+}, { immediate: true })
+
 function firstLine(s?: string): string {
   const t = (s || '').trim()
   return t ? t.split('\n')[0].slice(0, 40) : ''
 }
 
-function saveAsDraft() {
+// 从创建接口响应中取出新内容 Guid
+function extractId(data: any): string {
+  if (!data) return ''
+  if (typeof data === 'string') return data
+  return String(data.data || data.tweetGuid || '')
+}
+
+// fileIds：新上传的 fileId 优先；服务端回填的媒体只有 URL（无 fileId）则跳过
+function buildFileIds(): string[] {
+  const ids: string[] = []
+  if (videoFileId.value) ids.push(videoFileId.value)
+  if (coverFileId.value) ids.push(coverFileId.value)
+  return ids
+}
+
+async function saveAsDraft() {
+  if (savingDraft.value) return
   savingDraft.value = true
+  // 本地先存一份（断网 / 误关页的离线兼存）
+  const saved = saveDraft({
+    id: draftId.value || undefined,
+    type: 'video',
+    title: firstLine(content.value),
+    content: content.value,
+    videoUrl: videoUrl.value,
+    videoFileId: videoFileId.value,
+    cover: coverUrl.value,
+    coverUrl: coverUrl.value,
+    coverFileId: coverFileId.value,
+    circleGuid: circleGuid.value,
+    visibility: visibility.value
+  })
+  draftId.value = saved.id
   try {
-    const saved = saveDraft({
-      id: draftId.value || undefined,
-      type: 'video',
-      title: firstLine(content.value),
-      content: content.value,
-      videoUrl: videoUrl.value,
-      videoFileId: videoFileId.value,
-      cover: coverUrl.value,
-      coverUrl: coverUrl.value,
-      coverFileId: coverFileId.value,
-      circleGuid: circleGuid.value,
-      visibility: visibility.value
-    })
-    draftId.value = saved.id
+    if (!content.value.trim()) {
+      toast.push('草稿已保存到本机', 'success')
+      return
+    }
+    const payload = { content: content.value.trim(), fileIds: buildFileIds(), visibility: visibility.value }
+    if (serverId.value) {
+      await updateTweet(serverId.value, payload)
+    } else {
+      const res = await createTweet({ ...payload, asDraft: true })
+      serverId.value = extractId(unwrap(res))
+    }
+    removeDraft(draftId.value); draftId.value = ''
     toast.push('草稿已保存', 'success')
+  } catch (e: any) {
+    toast.push((e?.message || '后端保存失败') + '（已保存到本机）', 'error')
   } finally {
     savingDraft.value = false
   }
 }
 
-// 发布视频：必须包含视频文件 fileId，封面 fileId 作为封面资源一并提交
+// 发布视频：新建需含视频文件 fileId；编辑已有内容时沿用服务端媒体
 async function publish() {
   if (publishing.value) return
-  if (!videoFileId.value) {
+  if (!videoFileId.value && !serverId.value) {
     toast.push('请先上传视频文件', 'error')
     return
   }
   publishing.value = true
   try {
-    const fileIds = [videoFileId.value]
-    if (coverFileId.value) fileIds.push(coverFileId.value)
-    const payload = { content: content.value.trim(), fileIds, visibility: visibility.value }
-    const res = circleGuid.value
-      ? await createCirclePost({ circleGuid: circleGuid.value, ...payload })
-      : await createTweet(payload)
-    const data = unwrap(res)
-    const newId = (data && typeof data === 'object' && (data.data || data.tweetGuid)) || data
-    toast.push(circleGuid.value ? '已发布到社区' : '视频发布成功', 'success')
+    const payload = { content: content.value.trim(), fileIds: buildFileIds(), visibility: visibility.value }
+    let newId = ''
+    if (serverId.value) {
+      await updateTweet(serverId.value, payload)
+      await submitTweet(serverId.value)
+      newId = serverId.value
+      toast.push('已提交审核', 'success')
+    } else if (circleGuid.value) {
+      newId = extractId(unwrap(await createCirclePost({ circleGuid: circleGuid.value, ...payload })))
+      toast.push('已发布到社区', 'success')
+    } else {
+      newId = extractId(unwrap(await createTweet({ ...payload, asDraft: false })))
+      toast.push('已提交审核', 'success')
+    }
     if (draftId.value) { removeDraft(draftId.value); draftId.value = '' }
     if (newId) router.push(`/posts/${newId}`)
-  } catch (e) {
-    toast.push('发布失败，请稍后重试', 'error')
+  } catch (e: any) {
+    toast.push(e?.message || '发布失败，请稍后重试', 'error')
   } finally {
     publishing.value = false
   }

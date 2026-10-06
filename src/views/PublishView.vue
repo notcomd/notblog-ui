@@ -12,10 +12,12 @@
         <p class="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">{{ subtitle }}</p>
       </header>
 
-      <!-- 按路由类型渲染对应编辑器 -->
-      <PostEditor v-if="mode === 'post'" :my-circles="myCircles" :draft="currentDraft" />
-      <VideoEditor v-else-if="mode === 'video'" :my-circles="myCircles" :draft="currentDraft" />
-      <MarkdownEditorPage v-else-if="mode === 'workspace'" :my-circles="myCircles" :draft="currentDraft" />
+      <!-- 按路由类型渲染对应编辑器；审核中/已发布内容不可进入编辑态（服务端亦已强制） -->
+      <template v-if="!blocked">
+        <PostEditor v-if="mode === 'post'" :my-circles="myCircles" :draft="currentDraft" :server="server" />
+        <VideoEditor v-else-if="mode === 'video'" :my-circles="myCircles" :draft="currentDraft" :server="server" />
+        <MarkdownEditorPage v-else-if="mode === 'workspace'" :my-circles="myCircles" :draft="currentDraft" :server="server" />
+      </template>
     </div>
   </div>
 </template>
@@ -26,22 +28,30 @@ export default { name: 'PublishView' }
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import PostEditor from '@/components/publish/PostEditor.vue'
 import VideoEditor from '@/components/publish/VideoEditor.vue'
 import MarkdownEditorPage from '@/components/publish/MarkdownEditorPage.vue'
 import { getMyCircles } from '@/api/circle'
+import { getTweetDetail } from '@/api/tweet'
+import { getMarkdownDoc, getMarkdownContent } from '@/api/markdown'
 import { getDraft } from '@/utils/drafts'
+import { unwrap } from '@/utils/response'
+import { canEdit } from '@/utils/contentStatus'
 import { useToastStore } from '@/stores/toast'
 import { useFocusStore } from '@/stores/focus'
 
 const route = useRoute()
+const router = useRouter()
 const toast = useToastStore()
 const focus = useFocusStore()
 
 const mode = ref<'post' | 'video' | 'workspace'>('post')
 const myCircles = ref<any[]>([])
 const draftId = ref('')
+// 服务端已有内容的编辑态：{ id, status, data }
+const server = ref<{ id: string; status: string; data: Record<string, any> } | null>(null)
+const blocked = ref(false)
 
 const title = computed<string>(() => ({
   post: '发图文博客',
@@ -68,6 +78,57 @@ watch(() => route.query.draft, (d) => {
   draftId.value = (d as string) || ''
   if (d) toast.push('已载入草稿', 'info')
 }, { immediate: true })
+
+// 编辑已有服务端内容：/publish?type=post|video|markdown&edit=<guid>
+// 拉取内容并回填；若状态为审核中/已发布则拦截（服务端 PUT 亦会 400）
+watch(() => route.query.edit, async (v) => {
+  const id = (v as string) || ''
+  server.value = null
+  blocked.value = false
+  if (!id) return
+  try {
+    if (mode.value === 'workspace') {
+      const [docRes, contentRes] = await Promise.all([getMarkdownDoc(id), getMarkdownContent(id)])
+      const doc: any = unwrap(docRes)
+      const status = String(doc?.status || '')
+      if (!canEdit(status)) { blockEditing(status); return }
+      server.value = {
+        id,
+        status,
+        data: {
+          title: doc?.name || '',
+          content: unwrap(contentRes) || '',
+          coverUrl: doc?.coverUrl || '',
+          visibility: doc?.auth || 'Public'
+        }
+      }
+    } else {
+      const res = await getTweetDetail(id)
+      const detail: any = unwrap(res)
+      const tweet = detail?.tweet || detail
+      const status = String(tweet?.tweetStatus || '')
+      if (!canEdit(status)) { blockEditing(status); return }
+      server.value = {
+        id,
+        status,
+        data: {
+          content: tweet?.content || '',
+          mediaUrls: tweet?.mediaUrls || [],
+          visibility: tweet?.visibility || 'Public'
+        }
+      }
+    }
+  } catch (e: any) {
+    toast.push(e?.message || '内容加载失败，无法编辑', 'error')
+    router.replace('/workspace')
+  }
+}, { immediate: true })
+
+function blockEditing(status: string): void {
+  blocked.value = true
+  toast.push(status === 'approved' ? '已发布的内容不可修改' : '审核中或已发布的内容不可修改', 'warning')
+  router.replace('/workspace')
+}
 
 onMounted(async () => {
   try {

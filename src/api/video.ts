@@ -36,6 +36,18 @@ export function searchVideo(name: string) {
   return service.get(`/api/video/blurred/${encodeURIComponent(name)}`);
 }
 
+// 我的视频（按状态分页）：GET /api/video/mine?status=&page=&pageSize=
+// status 省略 = 全部；取值 Draft/Pending/Approved/Rejected
+export function getMyVideos(params: PageParams = {}) {
+  return service.get('/api/video/mine', { params });
+}
+
+// 提交视频审核：POST /api/video/{videoGuid}/submit（草稿/被驳回 → 待审核，仅作者）
+export function submitVideo(videoGuid: string) {
+  return service.post(`/api/video/${videoGuid}/submit`);
+}
+
+// 更新视频（仅草稿/被驳回可改，否则后端 400）：PUT /api/video
 export function updateVideo(payload: VideoData) {
   return service.put('/api/video', payload);
 }

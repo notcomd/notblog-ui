@@ -119,6 +119,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 
 interface PostAuthor {
+  userGuid?: string
   userName?: string
   name?: string
   nickname?: string
@@ -167,10 +168,7 @@ function requireLogin(): boolean {
 const cover = computed(() => pickCoverUrl(props.post.mediaUrls))
 // 视频判定：优先后端字段，兜底按媒体 URL 后缀识别（后端 TweetDto 暂无 isVideo 字段）
 const isVideo = computed(() => isVideoPost(props.post))
-const authorName = computed(() => {
-  const a = props.post.author
-  return a ? (a.userName || a.name || a.nickname || '用户') : '用户'
-})
+const authorName = computed(() => auth.resolveName(props.post.author))
 // 头像：无地址或加载失败时回退到首字头像（不再用 visibility:hidden 留一个空洞）
 const avatarSrc = computed<string>(() => {
   const raw = props.post.author?.avatar || ''

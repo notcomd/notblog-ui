@@ -26,7 +26,7 @@
       <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-zinc-400">
         <span>{{ formatTime(doc.createAt) }}</span>
         <span class="text-zinc-300 dark:text-zinc-500">·</span>
-        <span>作者 {{ shortAuthor }}</span>
+        <span>作者 {{ authorName }}</span>
         <span v-if="doc.auth === 'PrivateMark' || doc.auth === 'private'" class="text-red-400">🔒 私密</span>
         <span
           v-for="t in doc.tags"
@@ -103,10 +103,12 @@ import CommentSection from '@/components/comment/CommentSection.vue'
 import { formatTime } from '@/utils/format'
 import { unwrap } from '@/utils/response'
 import { useToastStore } from '@/stores/toast'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToastStore()
+const auth = useAuthStore()
 
 /** 当前文档 Guid（vue-router 的 params 值类型为 string | string[]，统一归一化为字符串） */
 const docGuid = computed(() => String(route.params.guid ?? ''))
@@ -141,7 +143,13 @@ const favorited = ref(false)
 
 const quote = computed(() => doc.value?.quote || { LoveCount: 0, FavoriteCount: 0, ViewCount: 0 })
 const renderedContent = computed(() => renderMarkdown(content.value))
-const shortAuthor = computed(() => (doc.value ? String(doc.value.markUserGuid).slice(0, 8) : ''))
+// 作者名：后端详情仅返回 MarkUserGuid（GUID），无昵称字段；
+// 作者为当前登录用户时用本地 me 昵称映射，其余保留原截断 GUID（无处取名，不凭空编造，见 utils/author）
+const authorName = computed(() => {
+  if (!doc.value) return ''
+  const guid = String(doc.value.markUserGuid || '')
+  return auth.resolveName({ userGuid: guid, userName: guid.slice(0, 8) })
+})
 
 async function load(): Promise<void> {
   loading.value = true

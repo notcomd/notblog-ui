@@ -10,6 +10,8 @@ import {
   hasAdminRole
 } from '@/utils/auth';
 import { getMyUserInfo } from '@/api/userinfo';
+import { resolveAuthorName } from '@/utils/author';
+import type { AuthorLike } from '@/utils/author';
 import type { CurrentUser, UserInfo } from '@/types';
 
 // 从 JWT payload 解析用户信息（sub/email/name/role claims）
@@ -121,6 +123,23 @@ export const useAuthStore = defineStore('auth', () => {
    */
   const isAdmin = computed<boolean>(() => hasAdminRole(user.value?.role));
 
+  /**
+   * 当前登录用户显示名：优先本地缓存 me 的昵称（Message /api/user-info/me），
+   * 其次 JWT 用户名/邮箱。用于「作者就是自己」时把 GUID 映射为用户名。
+   */
+  const displayName = computed<string>(() => {
+    const nick = (userInfo.value?.nickName || '').trim();
+    if (nick) return nick;
+    const name = (user.value?.name || '').trim();
+    if (name && name !== '用户') return name;
+    return ((userInfo.value?.email || user.value?.email || '').trim()) || '未知用户';
+  });
+
+  /** 作者 GUID → 显示名：当前用户自己的内容用本地 me 兜底（规则见 utils/author） */
+  function resolveName(author?: AuthorLike | null): string {
+    return resolveAuthorName(author, { guid: user.value?.id, name: displayName.value });
+  }
+
   function logout() {
     removeToken();
     removeRefreshToken();
@@ -130,5 +149,16 @@ export const useAuthStore = defineStore('auth', () => {
     userInfo.value = null;
   }
 
-  return { token, user, userInfo, isLoggedIn, isAdmin, logout, refreshUserFromToken, loadUserInfo };
+  return {
+    token,
+    user,
+    userInfo,
+    isLoggedIn,
+    isAdmin,
+    displayName,
+    resolveName,
+    logout,
+    refreshUserFromToken,
+    loadUserInfo
+  };
 });

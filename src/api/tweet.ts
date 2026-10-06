@@ -69,7 +69,18 @@ export function saveDraft(payload: DraftData) {
   return service.post('/api/tweets/draft', payload);
 }
 
-// 更新推文：PUT /api/tweets/{tweetGuid}
+// 我的内容（按状态分页）：GET /api/tweets/mine?status=&page=&pageSize=
+// status 省略 = 全部；取值 Draft/Pending/Approved/Rejected
+export function getMyTweets(params: QueryParams = {}) {
+  return service.get('/api/tweets/mine', { params });
+}
+
+// 提交审核：POST /api/tweets/{tweetGuid}/submit（草稿/被驳回 → 待审核，仅作者）
+export function submitTweet(tweetGuid: string) {
+  return service.post(`/api/tweets/${tweetGuid}/submit`);
+}
+
+// 更新推文（仅草稿/被驳回可改，否则后端 400）：PUT /api/tweets/{tweetGuid}
 export function updateTweet(tweetGuid: string, payload: DraftData) {
   return service.put(`/api/tweets/${tweetGuid}`, payload);
 }

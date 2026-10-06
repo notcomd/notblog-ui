@@ -107,15 +107,22 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MarkdownEditor from '@/components/publish/MarkdownEditor.vue'
 import { uploadImage } from '@/api/publish'
-import { createMarkdownDoc } from '@/api/markdown'
+import { createMarkdownDoc, updateMarkdownDoc, submitMarkdownForReview } from '@/api/markdown'
 import { saveDraft, removeDraft } from '@/utils/drafts'
 import { unwrap } from '@/utils/response'
 import { useToastStore } from '@/stores/toast'
 import { useFocusStore } from '@/stores/focus'
 
+interface ServerContent {
+  id: string
+  status: string
+  data: Record<string, any>
+}
+
 interface Props {
   myCircles?: unknown[]
   draft?: MarkdownDraft | null
+  server?: ServerContent | null
 }
 
 interface MarkdownDraft {
@@ -134,7 +141,8 @@ interface MarkdownImage {
 }
 const props = withDefaults(defineProps<Props>(), {
   myCircles: () => [],
-  draft: null
+  draft: null,
+  server: null
 })
 
 const router = useRouter()
@@ -159,6 +167,8 @@ const coverUploading = ref(false)
 const publishing = ref(false)
 const savingDraft = ref(false)
 const draftId = ref('')
+// 服务端已有内容 Guid：存在时「存草稿 / 发布」改调 PUT（+ submit）
+const serverId = ref('')
 const mdEditorRef = ref<unknown>(null)
 
 // 进入正文编辑：校验必填项
@@ -216,20 +226,66 @@ function clearCover() {
 
 function hideImg(e: Event) { (e.target as HTMLElement).style.visibility = 'hidden' }
 
-function saveAsDraft() {
+// 载入服务端已有内容（编辑草稿/被驳回）
+watch(() => props.server, (s) => {
+  if (!s) return
+  serverId.value = s.id
+  title.value = s.data?.title || ''
+  content.value = s.data?.content || ''
+  coverUrl.value = s.data?.coverUrl || ''
+  visibility.value = s.data?.visibility === 'private' ? 'Private' : (s.data?.visibility || 'Public')
+  if (content.value.trim()) step.value = 'content'
+}, { immediate: true })
+
+// 从创建接口响应中取出新内容 Guid
+function extractId(data: any): string {
+  if (!data) return ''
+  if (typeof data === 'string') return data
+  return String(data.data || data.markDownGuid || '')
+}
+
+// 发布请求体（封面 blob 预览地址不提交）
+function buildPayload(): Record<string, unknown> {
+  const cover = coverUrl.value.startsWith('blob:') ? '' : coverUrl.value
+  return {
+    name: title.value.trim(),
+    title: title.value.trim(),
+    content: content.value.trim(),
+    coverUrl: cover,
+    auth: visibility.value === 'Private' ? 'private' : 'public'
+  }
+}
+
+async function saveAsDraft() {
+  if (savingDraft.value) return
   savingDraft.value = true
+  // 本地先存一份（断网 / 误关页的离线兼存）
+  const saved = saveDraft({
+    id: draftId.value || undefined,
+    type: 'markdown',
+    title: title.value.trim(),
+    content: content.value,
+    images: mdImages.value.map(image => image.url),
+    cover: coverUrl.value,
+    circleGuid: ''
+  })
+  draftId.value = saved.id
   try {
-    const saved = saveDraft({
-      id: draftId.value || undefined,
-      type: 'markdown',
-      title: title.value.trim(),
-      content: content.value,
-      images: mdImages.value.map(image => image.url),
-      cover: coverUrl.value,
-      circleGuid: ''
-    })
-    draftId.value = saved.id
+    if (!title.value.trim() || !content.value.trim()) {
+      toast.push('草稿已保存到本机', 'success')
+      return
+    }
+    const payload = buildPayload()
+    if (serverId.value) {
+      await updateMarkdownDoc(serverId.value, payload)
+    } else {
+      const res = await createMarkdownDoc({ ...payload, asDraft: true } as any)
+      serverId.value = extractId(unwrap(res))
+    }
+    removeDraft(draftId.value); draftId.value = ''
     toast.push('草稿已保存', 'success')
+  } catch (e: any) {
+    toast.push((e?.message || '后端保存失败') + '（已保存到本机）', 'error')
   } finally {
     savingDraft.value = false
   }
@@ -243,23 +299,23 @@ async function publish() {
   }
   publishing.value = true
   try {
-    // 封面 URL：FileDev fileUri（blob 本地预览地址不提交）
-    const cover = coverUrl.value.startsWith('blob:') ? '' : coverUrl.value
-    const payload = {
-      name: title.value.trim(),
-      title: title.value.trim(),
-      content: content.value.trim(),
-      coverUrl: cover,
-      auth: visibility.value === 'Private' ? 'private' : 'public'
+    const payload = buildPayload()
+    let newId = ''
+    if (serverId.value) {
+      // 编辑草稿/被驳回 → 更新后提交审核
+      await updateMarkdownDoc(serverId.value, payload)
+      await submitMarkdownForReview(serverId.value)
+      newId = serverId.value
+      toast.push('已提交审核', 'success')
+    } else {
+      const res = await createMarkdownDoc({ ...payload, asDraft: false } as any)
+      newId = extractId(unwrap(res))
+      toast.push('已提交审核', 'success')
     }
-    const res = await createMarkdownDoc(payload)
-    const data = unwrap(res)
-    const newId = (data && typeof data === 'object' && (data.data || data.markDownGuid)) || data
-    toast.push('文章发布成功', 'success')
     if (draftId.value) { removeDraft(draftId.value); draftId.value = '' }
     if (newId) router.push(`/markdown/${newId}`)
-  } catch (e) {
-    toast.push('发布失败，请稍后重试', 'error')
+  } catch (e: any) {
+    toast.push(e?.message || '发布失败，请稍后重试', 'error')
   } finally {
     publishing.value = false
   }

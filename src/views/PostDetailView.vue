@@ -132,10 +132,10 @@
               <div class="text-xs text-zinc-400 truncate">{{ authorBio }}</div>
             </div>
             <!-- 作者视角：编辑内容；否则关注按钮 -->
-            <button v-if="isAuthor" class="px-3.5 h-9 rounded-[5%] text-sm font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 active:scale-95 transition-all" @click="onEdit">
+            <button v-if="isAuthor" class="px-3.5 h-9 rounded-[5%] text-sm font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed" :title="canEditContent ? '编辑内容' : editLockedReason" @click="onEdit">
               <span class="flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-                编辑内容
+                {{ canEditContent ? '编辑内容' : '不可编辑' }}
               </span>
             </button>
             <button v-else class="h-9 px-4 rounded-[5%] text-sm font-medium transition-all active:scale-95" type="button"
@@ -216,6 +216,7 @@ import { useToastStore } from '@/stores/toast'
 import { submitReport } from '@/api/report'
 import { renderMarkdown, looksLikeMarkdown } from '@/utils/markdown'
 import { isVideoPost, pickVideoUrl } from '@/utils/media'
+import { canEdit, lockedReason } from '@/utils/contentStatus'
 import { compactNumber, relativeTime } from '@/utils/format'
 
 const route = useRoute()
@@ -264,10 +265,7 @@ const mediaUrls = computed<string[]>(() => (tweet.value && tweet.value.mediaUrls
 const isVideo = computed(() => isVideoPost(tweet.value))
 // 播放地址：取媒体里第一个视频地址，兜底用首图（避免封面排在 videos 前时取错）
 const videoUrl = computed(() => pickVideoUrl(mediaUrls.value) || mediaUrls.value[0] || '')
-const authorName = computed(() => {
-  const a = tweet.value && tweet.value.author
-  return a ? (a.userName || a.name || a.nickname || '用户') : '用户'
-})
+const authorName = computed(() => auth.resolveName(tweet.value && tweet.value.author))
 const authorAvatar = computed(() => (tweet.value && tweet.value.author && tweet.value.author.avatar) || '')
 const authorBio = computed(() => (tweet.value && tweet.value.author && tweet.value.author.bio) || '这个人很懒，什么都没有写')
 const authorId = computed(() => {
@@ -280,11 +278,11 @@ const isAuthor = computed(() => !!authorId.value && !!auth.user && auth.user.id 
 interface BodyBlock { type: 'quote' | 'p'; text: string }
 const bodyBlocks = computed<BodyBlock[]>(() => {
   const body: string = (tweet.value && tweet.value.body) || tweet.value.content || ''
-  return body.split('\n').map(line => {
+  return body.split('\n').map((line): BodyBlock => {
     const t = line.trim()
     if (t.startsWith('> ')) return { type: 'quote', text: t.slice(2) }
     return { type: 'p', text: line }
-  }).filter(b => b.type === 'quote' || b.text.trim())
+  }).filter((b): boolean => b.type === 'quote' || !!b.text.trim())
 })
 
 // @提及高亮
@@ -306,7 +304,7 @@ function highlightMentions(text: string): MentionSeg[] {
 async function load(): Promise<void> {
   loading.value = true
   try {
-    const res = await getTweetDetail(route.params.id)
+    const res = await getTweetDetail(String(route.params.id))
     const data: any = res && res.data ? res.data : res
     tweet.value = data.tweet || data
     detail.value = {
@@ -417,7 +415,7 @@ async function submitReportReport(): Promise<void> {
     await submitReport({
       targetType: 'Tweet',
       targetGuid: tweet.value.tweetGuid,
-      category: reportCategory.value,
+      category: reportCategory.value as unknown as string,
       reason: reportReason.value.trim() || REPORT_CATEGORIES[reportCategory.value],
       evidenceUrls: []
     })
@@ -428,8 +426,18 @@ async function submitReportReport(): Promise<void> {
   }
 }
 
+// 编辑门禁：仅草稿/被驳回可编辑；审核中/已发布不提供编辑入口
+const contentStatus = computed<string>(() => String((tweet.value && tweet.value.tweetStatus) || ''))
+const canEditContent = computed<boolean>(() => canEdit(contentStatus.value))
+const editLockedReason = computed<string>(() => lockedReason(contentStatus.value))
+
 function onEdit(): void {
-  toast.push('编辑功能开发中（Phase 7）', 'info')
+  if (!tweet.value) return
+  if (!canEditContent.value) {
+    toast.push(editLockedReason.value, 'info')
+    return
+  }
+  router.push({ path: '/publish', query: { type: isVideo.value ? 'video' : 'post', edit: tweet.value.tweetGuid } })
 }
 
 function scrollToComments(): void {

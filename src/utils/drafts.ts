@@ -1,17 +1,26 @@
 // 本地草稿箱：工作台未发布内容管理
 // 存储结构：{ id, type: 'post'|'video'|'markdown', title, content, images[], cover, circleGuid, circleName, createdAt, updatedAt }
 
+// 图片项：Markdown 草稿存纯 URL 字符串；图文/视频草稿存 { fileId, url } 对象
+type DraftImage = string | { fileId?: string; url?: string; preview?: string };
+
 interface Draft {
   id: string;
   type: 'post' | 'video' | 'markdown';
   title: string;
   content: string;
-  images?: string[];
+  images?: DraftImage[];
   cover?: string;
   circleGuid?: string;
   circleName?: string;
   createdAt?: number;
   updatedAt?: number;
+  // 视频草稿附带字段（图文草稿用不到，保持可选）
+  videoUrl?: string;
+  videoFileId?: string;
+  coverUrl?: string;
+  coverFileId?: string;
+  visibility?: string;
 }
 
 const KEY = 'qingmang_drafts';

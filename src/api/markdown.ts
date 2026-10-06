@@ -5,6 +5,8 @@ interface MarkdownDocData {
   title: string;
   content?: string;
   description?: string;
+  /** 是否存为草稿：true/缺省=草稿；false=创建后进入待审核 */
+  asDraft?: boolean;
   [key: string]: unknown;
 }
 
@@ -32,6 +34,12 @@ export function getMarkdownDoc(guid: string) {
 
 export function getMarkdownContent(guid: string) {
   return service.get(`/api/markdown/${guid}/content`);
+}
+
+// 我的内容（仅本人，可按审核状态过滤）：GET /api/markdown/mine?status=&page=&pageSize=
+// status 省略 = 全部；取值 MarkDraft/MarkPendingReview/MarkApproved/MarkRejected
+export function getMyMarkdownDocs(params: QueryParams = {}) {
+  return service.get('/api/markdown/mine', { params });
 }
 
 // ---------- 文档交互（计数） ----------

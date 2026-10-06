@@ -6,6 +6,8 @@ interface CreateTweetData {
   fileIds?: string[];
   linkUrl?: string | null;
   visibility?: string;
+  /** 是否存为草稿：true/缺省=草稿；false=创建后进入待审核 */
+  asDraft?: boolean;
 }
 
 /** 发布到社区请求体 */
@@ -25,13 +27,15 @@ interface CreateCircleData {
   maxMembers?: number;
 }
 
-// 发布图文/视频博客：POST /api/tweets { content, fileIds?, linkUrl?, visibility? } -> ApiResponse<Guid>
+// 发布图文/视频博客：POST /api/tweets { content, fileIds?, linkUrl?, visibility?, asDraft? } -> ApiResponse<Guid>
+// asDraft 缺省（undefined）→ 后端视为 true（草稿）；false → 创建后进入待审核
 export function createTweet(payload: CreateTweetData) {
   return service.post('/api/tweets', {
     content: payload.content,
     fileIds: payload.fileIds || [],
     linkUrl: payload.linkUrl || null,
-    visibility: payload.visibility || 'Public'
+    visibility: payload.visibility || 'Public',
+    ...(payload.asDraft === undefined ? {} : { asDraft: payload.asDraft })
   });
 }
 
