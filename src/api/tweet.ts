@@ -41,15 +41,13 @@ export function getTweetDetail(tweetGuid: string) {
 // 点赞/取消点赞
 export function toggleLike(tweetGuid: string, liked: boolean) {
   return liked
-    ? service.delete(`/api/tweets/${tweetGuid}/like`)
-    : service.post(`/api/tweets/${tweetGuid}/like`);
+    ? service.post(`/api/tweets/${tweetGuid}/like`) : service.delete(`/api/tweets/${tweetGuid}/like`);
 }
 
 // 收藏/取消收藏
 export function toggleFavorite(tweetGuid: string, favorited: boolean) {
   return favorited
-    ? service.delete(`/api/tweets/${tweetGuid}/favorite`)
-    : service.post(`/api/tweets/${tweetGuid}/favorite`);
+    ? service.post(`/api/tweets/${tweetGuid}/favorite`) : service.delete(`/api/tweets/${tweetGuid}/favorite`);
 }
 
 // 记录浏览（进入详情时上报）

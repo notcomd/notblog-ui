@@ -8,7 +8,7 @@
     :aria-busy="loading"
   >
     <!-- 区块标题 -->
-    <div class="mb-5 flex items-center gap-3">
+    <!-- <div class="mb-5 flex items-center gap-3">
       <div class="flex h-10 w-10 items-center justify-center rounded-[5%] bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
@@ -19,7 +19,7 @@
         <h2 class="font-display text-lg font-bold text-zinc-800 dark:text-zinc-100">视频</h2>
         <p class="mt-0.5 text-xs text-zinc-400">最新发布的视频作品</p>
       </div>
-    </div>
+    </div> -->
 
     <!-- 加载中：骨架 -->
     <div v-if="loading" class="grid grid-cols-2 gap-5 sm:grid-cols-3" role="status">
