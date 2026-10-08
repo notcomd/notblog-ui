@@ -10,7 +10,7 @@ import {
   hasAdminRole
 } from '@/utils/auth';
 import { getMyUserInfo } from '@/api/userinfo';
-import { resolveAuthorName } from '@/utils/author';
+import { authorGuid, displayAuthorName, resolveAuthorName } from '@/utils/author';
 import type { AuthorLike } from '@/utils/author';
 import type { CurrentUser, UserInfo } from '@/types';
 
@@ -140,6 +140,19 @@ export const useAuthStore = defineStore('auth', () => {
     return resolveAuthorName(author, { guid: user.value?.id, name: displayName.value });
   }
 
+  /**
+   * 作者显示名（含异步补取，供列表/详情直接渲染）：
+   * 自己 → 本地 me 昵称；后端已给真实昵称 → 直接用；只有 GUID → 按 GUID 异步取昵称。
+   * 异步未就绪 / 失败时返回 fallback（响应式缓存，拿到后自动重渲染）。
+   */
+  function resolveDisplayName(author?: AuthorLike | null, fallback = '未知用户'): string {
+    const guid = authorGuid(author);
+    if (guid && user.value?.id && String(user.value.id).toLowerCase() === guid.toLowerCase()) {
+      return displayName.value;
+    }
+    return displayAuthorName(guid, author?.userName || author?.nickName || author?.nickname || author?.name, fallback);
+  }
+
   function logout() {
     removeToken();
     removeRefreshToken();
@@ -157,6 +170,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin,
     displayName,
     resolveName,
+    resolveDisplayName,
     logout,
     refreshUserFromToken,
     loadUserInfo

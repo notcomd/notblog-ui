@@ -133,7 +133,7 @@ const commentCfg: any = {
   replier: (parentId, payload) => replyMarkdownReview(docGuid.value, parentId, payload),
   like: (id) => likeMarkdownReview(docGuid.value, id),
   unlike: (id) => unlikeMarkdownReview(docGuid.value, id),
-  authorName: (r) => (r.userId ? '用户 ' + String(r.userId).slice(0, 8) : '用户'),
+  authorName: (r) => auth.resolveDisplayName({ userGuid: r.userId }, '用户'),
   authorId: (r) => r.userId
 }
 const content = ref('')
@@ -143,12 +143,12 @@ const favorited = ref(false)
 
 const quote = computed(() => doc.value?.quote || { LoveCount: 0, FavoriteCount: 0, ViewCount: 0 })
 const renderedContent = computed(() => renderMarkdown(content.value))
-// 作者名：后端详情仅返回 MarkUserGuid（GUID），无昵称字段；
-// 作者为当前登录用户时用本地 me 昵称映射，其余保留原截断 GUID（无处取名，不凭空编造，见 utils/author）
+// 作者名：后端详情仅返回 MarkUserGuid（GUID），无昵称字段。
+// 自己 → 本地 me 昵称；其它用户 → 按 GUID 异步取昵称（缓存 + 去重 + 并发上限），
+// 未就绪先显示兜底，拿到后自动替换，不再显示 GUID 片段（见 utils/author、stores/auth）
 const authorName = computed(() => {
   if (!doc.value) return ''
-  const guid = String(doc.value.markUserGuid || '')
-  return auth.resolveName({ userGuid: guid, userName: guid.slice(0, 8) })
+  return auth.resolveDisplayName({ userGuid: String(doc.value.markUserGuid || '') })
 })
 
 async function load(): Promise<void> {

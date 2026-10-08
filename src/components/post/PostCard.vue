@@ -168,7 +168,8 @@ function requireLogin(): boolean {
 const cover = computed(() => pickCoverUrl(props.post.mediaUrls))
 // 视频判定：优先后端字段，兜底按媒体 URL 后缀识别（后端 TweetDto 暂无 isVideo 字段）
 const isVideo = computed(() => isVideoPost(props.post))
-const authorName = computed(() => auth.resolveName(props.post.author))
+// 作者名：真实昵称优先；只有 GUID（如圈子帖 CommunityPostDto）时按 GUID 异步补取昵称
+const authorName = computed(() => auth.resolveDisplayName(props.post.author))
 // 头像：无地址或加载失败时回退到首字头像（不再用 visibility:hidden 留一个空洞）
 const avatarSrc = computed<string>(() => {
   const raw = props.post.author?.avatar || ''

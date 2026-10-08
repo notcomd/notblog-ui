@@ -101,6 +101,28 @@
             {{ s.label }}
           </button>
         </div>
+
+        <!-- 批量提交审核：仅当存在草稿/被驳回项时出现；提交中展示进度 -->
+        <div v-if="selectableCount" class="ml-auto flex items-center gap-2">
+          <span v-if="batchRunning" class="font-numeric text-xs text-zinc-400">提交中 {{ batchDone }}/{{ batchTotal }}</span>
+          <template v-else>
+            <button
+              type="button"
+              class="inline-flex h-8 items-center rounded-[5%] px-3 text-xs font-medium text-zinc-500 transition-colors hover:bg-black/[0.04] dark:text-zinc-400 dark:hover:bg-white/[0.06]"
+              @click="toggleSelectAll"
+            >
+              {{ allSelected ? '取消全选' : '全选可提交' }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-8 items-center gap-1 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 px-3.5 text-xs font-medium text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+              :disabled="!selectedKeys.size"
+              @click="askBatchSubmit"
+            >
+              批量提交审核<span v-if="selectedKeys.size" class="font-numeric">（{{ selectedKeys.size }}）</span>
+            </button>
+          </template>
+        </div>
       </div>
 
       <!-- 加载态 -->
@@ -121,6 +143,21 @@
             :key="it.key"
             class="flex items-center gap-4 rounded-[5%] border-b border-black/[0.06] px-2 py-3 transition-colors hover:bg-black/[0.04] dark:border-white/[0.08] dark:hover:bg-white/[0.06]"
           >
+            <!-- 多选：仅草稿 / 被驳回可批量提交审核 -->
+            <label
+              v-if="canEdit(it.statusRaw)"
+              class="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center"
+              :title="selectedKeys.has(it.key) ? '取消选择' : '选择'"
+            >
+              <input
+                type="checkbox"
+                class="h-4 w-4 cursor-pointer accent-amber-500"
+                :checked="selectedKeys.has(it.key)"
+                :aria-label="'选择 ' + (it.title || '未命名内容')"
+                @change="toggleSelect(it.key)"
+              />
+            </label>
+
             <!-- 缩略图 / 类型徽标 -->
             <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[5%] text-white" :class="metaOf(it.type).seal">
               <img v-if="it.cover" :src="it.cover" alt="" class="h-full w-full object-cover" @error="hideImg" />
@@ -210,6 +247,16 @@
       @close="deleteTarget = null"
       @confirm="doDelete"
     />
+
+    <!-- 批量提交审核确认 -->
+    <ConfirmDialog
+      v-if="batchConfirm"
+      title="批量提交审核"
+      :message="'将提交 ' + selectedKeys.size + ' 条内容进入审核队列，确定继续吗？'"
+      confirm-text="提交审核"
+      @close="batchConfirm = false"
+      @confirm="doBatchSubmit"
+    />
   </div>
 </template>
 
@@ -223,10 +270,11 @@ import { useRouter } from 'vue-router'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 import { getDrafts, removeDraft } from '@/utils/drafts'
 import { getMyTweets, submitTweet, deleteTweet } from '@/api/tweet'
+import { getMyVideos, submitVideo, deleteVideo } from '@/api/video'
 import { getMyMarkdownDocs, submitMarkdownForReview, deleteMarkdownDoc } from '@/api/markdown'
 import { unwrap } from '@/utils/response'
 import { relativeTime, toMillis } from '@/utils/format'
-import { isVideoPost, pickCoverUrl } from '@/utils/media'
+import { pickCoverUrl } from '@/utils/media'
 import { useToastStore } from '@/stores/toast'
 import {
   STATUS_FILTERS,
@@ -317,6 +365,13 @@ const loading = ref(false)
 const activeType = ref<TypeFilter>('all')
 const statusFilter = ref<ContentStatus | ''>('')
 
+// ===== 批量提交审核：选中集合 + 进度/结果反馈（纯前端循环，逐条调用各自提交端点） =====
+const selectedKeys = ref<Set<string>>(new Set())
+const batchConfirm = ref(false)
+const batchRunning = ref(false)
+const batchDone = ref(0)
+const batchTotal = ref(0)
+
 function metaOf(type: string) {
   return types.find((t) => t.type === type) || types[0]
 }
@@ -331,6 +386,26 @@ const filteredItems = computed(() =>
   items.value.filter((i) => activeType.value === 'all' || i.type === activeType.value)
 )
 
+// 可批量提交（草稿 / 被驳回）的当前筛选结果
+const eligibleItems = computed(() => filteredItems.value.filter((i) => canEdit(i.statusRaw)))
+const selectableCount = computed(() => eligibleItems.value.length)
+const allSelected = computed(
+  () => selectableCount.value > 0 && eligibleItems.value.every((i) => selectedKeys.value.has(i.key))
+)
+
+function toggleSelect(key: string): void {
+  const next = new Set(selectedKeys.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  selectedKeys.value = next
+}
+
+function toggleSelectAll(): void {
+  selectedKeys.value = allSelected.value
+    ? new Set()
+    : new Set(eligibleItems.value.map((i) => i.key))
+}
+
 function countOfType(key: TypeFilter): number {
   const serverCount = items.value.filter((i) => key === 'all' || i.type === key).length
   // 状态筛选为「非草稿」时本机草稿不计入
@@ -343,36 +418,52 @@ function isRejected(raw?: string | null): boolean {
   return normalizeStatus(raw) === 'rejected'
 }
 
-// ===== 数据加载：图文/视频（Message）+ Markdown 两种「我的内容」合并 =====
+// ===== 数据加载：图文（Message）+ 视频（Video 服务）+ Markdown 三种「我的内容」合并 =====
 async function load(): Promise<void> {
   loading.value = true
   try {
-    const tweetParams: Record<string, unknown> = { page: 1, pageSize: 50 }
     const msgStatus = toMessageStatus(statusFilter.value)
-    if (msgStatus) tweetParams.status = msgStatus
-    const mdParams: Record<string, unknown> = { page: 1, pageSize: 50 }
     const mdStatus = toMarkdownStatus(statusFilter.value)
+    const tweetParams: Record<string, unknown> = { page: 1, pageSize: 50 }
+    if (msgStatus) tweetParams.status = msgStatus
+    // 视频状态枚举与 Message 同名（Draft/Pending/Approved/Rejected），可复用同一映射
+    const videoParams: Record<string, unknown> = { page: 1, pageSize: 50 }
+    if (msgStatus) videoParams.status = msgStatus
+    const mdParams: Record<string, unknown> = { page: 1, pageSize: 50 }
     if (mdStatus) mdParams.status = mdStatus
 
-    const [tweetsRes, mdRes] = await Promise.all([
+    const [tweetsRes, videosRes, mdRes] = await Promise.all([
       getMyTweets(tweetParams),
+      getMyVideos(videoParams),
       getMyMarkdownDocs(mdParams)
     ])
     const tw: any = unwrap(tweetsRes)
     const tweetList: any[] = Array.isArray(tw) ? tw : (tw?.items || tw?.list || [])
+    const vd: any = unwrap(videosRes)
+    const videoList: any[] = Array.isArray(vd) ? vd : (vd?.items || vd?.list || [])
     const mdRaw: any = unwrap(mdRes)
     const mdList: any[] = Array.isArray(mdRaw) ? mdRaw : (mdRaw?.items || mdRaw?.list || [])
 
     const mapped: ContentItem[] = [
       ...tweetList.map((t: any): ContentItem => ({
         key: 'tw-' + t.tweetGuid,
-        type: isVideoPost(t) ? 'video' : 'post',
+        type: 'post',
         id: String(t.tweetGuid),
         title: firstLine(t.content),
         cover: pickCoverUrl(t.mediaUrls),
         statusRaw: String(t.tweetStatus || ''),
         rejectReason: rejectReasonOf(t),
         time: t.publishTime || t.createTime
+      })),
+      ...videoList.map((v: any): ContentItem => ({
+        key: 'vd-' + v.videoGuid,
+        type: 'video',
+        id: String(v.videoGuid),
+        title: v.videoName || '',
+        cover: v.videoCover || '',
+        statusRaw: String(v.status || ''),
+        rejectReason: rejectReasonOf(v),
+        time: v.createTime
       })),
       ...mdList.map((m: any): ContentItem => ({
         key: 'md-' + m.markDownGuid,
@@ -386,6 +477,9 @@ async function load(): Promise<void> {
       }))
     ]
     items.value = mapped.sort((a, b) => toMillis(b.time) - toMillis(a.time))
+    // 清理已不存在于列表中的选择（切换筛选/刷新后避免残留选中项）
+    const present = new Set(mapped.map((m) => m.key))
+    selectedKeys.value = new Set([...selectedKeys.value].filter((k) => present.has(k)))
     localDrafts.value = getDrafts()
   } catch (e: any) {
     toast.push(e?.message || '加载我的内容失败', 'error')
@@ -419,19 +513,60 @@ function editItem(it: ContentItem): void {
 
 function viewItem(it: ContentItem): void {
   if (it.type === 'markdown') router.push(`/markdown/${it.id}`)
+  else if (it.type === 'video') router.push(`/videos/${it.id}`)
   else router.push(`/posts/${it.id}`)
+}
+
+// 逐条提交审核：推文 / Markdown / 视频 各自端点
+async function submitByType(it: ContentItem): Promise<void> {
+  if (it.type === 'markdown') await submitMarkdownForReview(it.id)
+  else if (it.type === 'video') await submitVideo(it.id)
+  else await submitTweet(it.id)
 }
 
 async function submitItem(it: ContentItem): Promise<void> {
   try {
-    // 图文 / 视频在本应用均为 Message 推文（视频帖 = 含视频媒体的推文）
-    if (it.type === 'markdown') await submitMarkdownForReview(it.id)
-    else await submitTweet(it.id)
+    await submitByType(it)
     toast.push('已提交审核', 'success')
     load()
   } catch (e: any) {
     toast.push(e?.message || '提交审核失败，请稍后重试', 'error')
   }
+}
+
+// 批量提交：二次确认后逐条调用，实时反馈进度，结束后汇总结果并刷新
+function askBatchSubmit(): void {
+  if (!selectedKeys.value.size || batchRunning.value) return
+  batchConfirm.value = true
+}
+
+async function doBatchSubmit(): Promise<void> {
+  batchConfirm.value = false
+  const targets = items.value.filter((i) => selectedKeys.value.has(i.key))
+  if (!targets.length) return
+  batchRunning.value = true
+  batchDone.value = 0
+  batchTotal.value = targets.length
+  let ok = 0
+  const failures: string[] = []
+  for (const it of targets) {
+    try {
+      await submitByType(it)
+      ok += 1
+    } catch (e: any) {
+      failures.push(`${it.title || '未命名内容'}：${e?.message || '提交失败'}`)
+    }
+    batchDone.value += 1
+  }
+  batchRunning.value = false
+  selectedKeys.value = new Set()
+  if (failures.length) {
+    const shown = failures.slice(0, 2).join('；')
+    toast.push(`已提交 ${ok}/${targets.length}，${failures.length} 条失败：${shown}${failures.length > 2 ? ' 等' : ''}`, 'error')
+  } else {
+    toast.push(`已提交 ${ok}/${targets.length}`, 'success')
+  }
+  load()
 }
 
 function askRemove(it: ContentItem): void {
@@ -458,6 +593,7 @@ async function doDelete(): Promise<void> {
   }
   try {
     if (target.type === 'markdown') await deleteMarkdownDoc(target.id)
+    else if (target.type === 'video') await deleteVideo(target.id)
     else await deleteTweet(target.id)
     toast.push('内容已删除', 'success')
     load()

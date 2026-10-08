@@ -1,3 +1,8 @@
+import { reactive } from 'vue';
+import { getToken } from '@/utils/auth';
+import { unwrap } from '@/utils/response';
+import { getUserProfile } from '@/api/chat';
+
 // 作者名解析：把「后端只给出 GUID / GUID 片段」的作者位统一解析为可显示的用户名。
 //
 // 背景：部分后端 DTO 没有昵称字段，映射时会用作者 GUID 的前 8 位充当名称
@@ -12,6 +17,7 @@ export interface AuthorLike {
   /** 用户 GUID（评论 / 关注等 DTO） */
   userId?: string | null;
   /** 用户 GUID（备用字段名） */
+  
   guid?: string | null;
   /** 用户 GUID（备用字段名） */
   id?: string | null;
@@ -73,4 +79,116 @@ export function resolveAuthorName(
   if (curGuid && curName && guid && curGuid.toLowerCase() === guid.toLowerCase()) return curName;
 
   return raw || fallback;
+}
+
+// ============================================================
+// 异步补取昵称：部分后端 DTO 只有作者 GUID（Markdown MarkUserGuid、
+// CommunityPostDto.AuthorGuid、VideoReviewResponse.UserGuid、CommentDto 空 UserName 等），
+// 后端无用户查询机制无法填昵称。方案 A：前端按 GUID 调 Message 的
+// GET /api/users/{userGuid}（UserProfileDto.nickName）取昵称。
+// ============================================================
+
+/** 昵称缓存：GUID(小写) → 昵称。只写成功结果；失败不写，允许后续重试 */
+const authorNameCache = reactive<Record<string, string>>({});
+
+/** 在途请求：GUID(小写) → Promise。并发去重：同一 GUID 的多个调用共享同一个请求 */
+const inflight = new Map<string, Promise<string>>();
+
+/** 并发上限：列表场景多行同时展开时，最多同时打这么多请求，其余排队，避免瞬时请求风暴 */
+const MAX_CONCURRENT_FETCH = 4;
+let activeFetches = 0;
+const waitQueue: Array<() => void> = [];
+
+function acquireSlot(): Promise<void> {
+  if (activeFetches < MAX_CONCURRENT_FETCH) {
+    activeFetches++;
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve) => {
+    waitQueue.push(() => {
+      activeFetches++;
+      resolve();
+    });
+  });
+}
+
+function releaseSlot(): void {
+  activeFetches--;
+  const next = waitQueue.shift();
+  if (next) next();
+}
+
+/** 真正发起一次请求：取 UserProfileDto.nickName。全程静默，失败返回空串（不算成功，不缓存） */
+async function fetchAuthorName(guid: string): Promise<string> {
+  await acquireSlot();
+  try {
+    const dto = unwrap(await getUserProfile(guid)) as { nickName?: string | null } | null;
+    const name = String(dto?.nickName || '').trim();
+    if (name && !looksLikeGuid(name)) {
+      authorNameCache[guid.toLowerCase()] = name;
+      return name;
+    }
+    return '';
+  } catch {
+    // 静默降级：网络错误 / 403 / 404 均不抛出、不缓存，交由调用方兜底
+    return '';
+  } finally {
+    releaseSlot();
+  }
+}
+
+/**
+ * 按 GUID 异步解析作者昵称。
+ * - 缓存命中直接返回；
+ * - 同一 GUID 的并发调用共享同一个在途 Promise（去重，不重复打接口）；
+ * - 全局并发上限，超出排队；
+ * - 失败 / 拿不到昵称 → 返回 fallback（不抛出、不缓存失败，允许重试）；
+ * - GUID 为空、非完整 GUID（含「GUID 前 8 位」这类占位）或游客（无 token）→ 不发请求，直接兜底。
+ */
+export function resolveAuthorNameAsync(
+  guid?: string | null,
+  fallback = '未知用户'
+): Promise<string> {
+  const g = String(guid || '').trim();
+  if (!g || !looksLikeGuid(g) || !getToken()) return Promise.resolve(fallback);
+  const key = g.toLowerCase();
+  const cached = authorNameCache[key];
+  if (cached) return Promise.resolve(cached);
+  let pending = inflight.get(key);
+  if (!pending) {
+    pending = fetchAuthorName(g).then((name) => {
+      inflight.delete(key);
+      return name || fallback;
+    });
+    inflight.set(key, pending);
+  }
+  return pending;
+}
+
+/**
+ * 组件模板用（响应式）：命中缓存返回昵称，否则返回 fallback 并触发一次后台解析。
+ * 读取的是响应式缓存，解析成功后引用该值的组件会自动重渲染，无需等待 Promise。
+ */
+export function authorNameOf(guid?: string | null, fallback = '未知用户'): string {
+  const g = String(guid || '').trim();
+  if (!g || !looksLikeGuid(g)) return fallback;
+  const cached = authorNameCache[g.toLowerCase()];
+  if (cached) return cached;
+  // fallback 传空串：失败时不把「未知用户」写进缓存，由调用方的 fallback 兜底
+  void resolveAuthorNameAsync(g, '');
+  return fallback;
+}
+
+/**
+ * 组件模板用：综合「同步优先值 + 异步补取」。
+ * syncName 是可用的真实昵称（非 GUID、非 GUID 片段占位）时直接用，否则按 guid 异步解析。
+ */
+export function displayAuthorName(
+  guid?: string | null,
+  syncName?: string | null,
+  fallback = '未知用户'
+): string {
+  const raw = String(syncName || '').trim();
+  if (raw && !looksLikeGuid(raw) && !isGuidPlaceholder(raw, guid)) return raw;
+  return authorNameOf(guid, fallback);
 }

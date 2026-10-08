@@ -171,7 +171,7 @@
             </svg>
             <span>{{ compactNumber(tweet.likeCount) }}</span>
           </button>
-          <button class="flex flex-col items-center gap-1 text-sm transition-all active:scale-90" type="button" :class="detail.isFavorited ? 'text-amber-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-amber-500'" :aria-label="detail.isFavorited ? '取消收藏' : '收藏'" @click="onFavorite">
+          <button v-if="!isVideoPage" class="flex flex-col items-center gap-1 text-sm transition-all active:scale-90" type="button" :class="detail.isFavorited ? 'text-amber-500' : 'text-zinc-500 dark:text-zinc-400 hover:text-amber-500'" :aria-label="detail.isFavorited ? '取消收藏' : '收藏'" @click="onFavorite">
             <svg class="w-6 h-6" :class="detail.isFavorited ? 'fill-current' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
               <path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" />
             </svg>
@@ -209,6 +209,14 @@ import { useRoute, useRouter } from 'vue-router'
 import CommentSection from '@/components/comment/CommentSection.vue'
 import VideoPlayer from '@/components/video/VideoPlayer.vue'
 import { getTweetDetail, toggleLike, toggleFavorite, recordView, shareTweet } from '@/api/tweet'
+import {
+  getVideoDetail,
+  videoStreamUrl,
+  likeVideo,
+  addVideoReview,
+  getVideoReviews,
+  getVideoReviewReplies
+} from '@/api/video'
 import { getComments, addComment, deleteComment, getReplies } from '@/api/comment'
 import { getFollowing, follow, unfollow } from '@/api/follow'
 import { useAuthStore } from '@/stores/auth'
@@ -216,6 +224,7 @@ import { useToastStore } from '@/stores/toast'
 import { submitReport } from '@/api/report'
 import { renderMarkdown, looksLikeMarkdown } from '@/utils/markdown'
 import { isVideoPost, pickVideoUrl } from '@/utils/media'
+import { themeAvatar } from '@/utils/avatar'
 import { canEdit, lockedReason } from '@/utils/contentStatus'
 import { compactNumber, relativeTime } from '@/utils/format'
 
@@ -226,8 +235,13 @@ const toast = useToastStore()
 
 const tweet = ref<any>(null)
 
+// 路由区分：/videos/:id 走 Video 服务（videoGuid），/posts/:id 走推文（Message）
+const isVideoPage = computed<boolean>(
+  () => route.name === 'VideoDetail' || route.path.startsWith('/videos/')
+)
+
 // 评论配置（通用评论组件，tweets 后端：分页 + 排序 + 回复折叠）
-const commentCfg: any = {
+const tweetCommentCfg: any = {
   idField: 'commentGuid',
   contentField: 'content',
   timeField: 'createTime',
@@ -245,11 +259,41 @@ const commentCfg: any = {
     const list = (data && (data.items || data.list)) || []
     return { items: list, total: (data && (data.totalCount ?? data.total)) || list.length, hasMore: list.length >= 20 }
   },
-  authorName: (c) => (c.user && c.user.userName) || '用户',
+  authorName: (c) => auth.resolveDisplayName({ userGuid: c.user && c.user.userGuid, userName: c.user && c.user.userName }, '用户'),
   authorId: (c) => c.user && c.user.userGuid,
   like: null,
   unlike: null
 }
+
+// 视频评论配置（Video 服务 videoreview）：扁平数组返回，DTO 只给 UserGuid 无昵称，按 GUID 异步补取昵称
+const videoCommentCfg: any = {
+  idField: 'videoReviewGuid',
+  contentField: 'videoReviewBody',
+  timeField: 'createAt',
+  likeCountField: 'like',
+  sortable: false,
+  replyMode: 'fold',
+  images: false,
+  loader: () => getVideoReviews(String(route.params.id)),
+  creator: (payload) =>
+    addVideoReview({
+      userGuid: (auth.user && auth.user.id) || '',
+      videoGuid: String(route.params.id),
+      body: payload.content,
+      rootReview: payload.parentGuid || null
+    }),
+  replyLoader: (id) => getVideoReviewReplies(id),
+  parseList: (data) => {
+    const list = Array.isArray(data) ? data : ((data && (data.items || data.list)) || [])
+    return { items: list, total: list.length, hasMore: false }
+  },
+  authorName: (c) => auth.resolveDisplayName({ userGuid: c.userGuid }, '用户'),
+  authorId: (c) => c.userGuid,
+  like: null,
+  unlike: null
+}
+
+const commentCfg = computed<any>(() => (isVideoPage.value ? videoCommentCfg : tweetCommentCfg))
 
 const isMarkdown = computed(() => !!tweet.value && looksLikeMarkdown(tweet.value.content))
 const renderedMarkdown = computed(() => (tweet.value ? renderMarkdown(tweet.value.content) : ''))
@@ -261,12 +305,20 @@ const commentSection = ref<any>(null)
 const mediaFailed = ref(false)
 
 const mediaUrls = computed<string[]>(() => (tweet.value && tweet.value.mediaUrls) || [])
-// 视频判定：优先后端 isVideo，兜底按媒体地址后缀识别（后端 TweetDto 暂无该字段，曾因此让视频帖走图文轮播而无法播放）
-const isVideo = computed(() => isVideoPost(tweet.value))
-// 播放地址：取媒体里第一个视频地址，兜底用首图（避免封面排在 videos 前时取错）
-const videoUrl = computed(() => pickVideoUrl(mediaUrls.value) || mediaUrls.value[0] || '')
-const authorName = computed(() => auth.resolveName(tweet.value && tweet.value.author))
-const authorAvatar = computed(() => (tweet.value && tweet.value.author && tweet.value.author.avatar) || '')
+// 视频判定：/videos 路由恒为视频；推文帖优先后端 isVideo，兜底按媒体地址后缀识别
+const isVideo = computed(() => isVideoPage.value || isVideoPost(tweet.value))
+// 播放地址：视频页走 Video 流接口（支持 Range）；推文帖取媒体里第一个视频地址，兜底首图
+const videoUrl = computed(() => {
+  if (isVideoPage.value) return videoStreamUrl(String(route.params.id))
+  return pickVideoUrl(mediaUrls.value) || mediaUrls.value[0] || ''
+})
+const authorName = computed(() => auth.resolveDisplayName(tweet.value && tweet.value.author))
+const authorAvatar = computed(() => {
+  const raw = (tweet.value && tweet.value.author && tweet.value.author.avatar) || ''
+  if (raw) return raw
+  // 视频详情 DTO 无作者资料：回退首字头像，避免留一个空白圆
+  return isVideoPage.value ? themeAvatar(authorName.value.charAt(0) || '用') : ''
+})
 const authorBio = computed(() => (tweet.value && tweet.value.author && tweet.value.author.bio) || '这个人很懒，什么都没有写')
 const authorId = computed(() => {
   const a = tweet.value && tweet.value.author
@@ -303,18 +355,45 @@ function highlightMentions(text: string): MentionSeg[] {
 
 async function load(): Promise<void> {
   loading.value = true
+  isFollowing.value = false
   try {
-    const res = await getTweetDetail(String(route.params.id))
-    const data: any = res && res.data ? res.data : res
-    tweet.value = data.tweet || data
-    detail.value = {
-      isLiked: !!(data.isLiked !== undefined ? data.isLiked : tweet.value.isLiked),
-      isFavorited: !!(data.isFavorited !== undefined ? data.isFavorited : tweet.value.isFavorited),
-      isCoined: !!data.isCoined
-    }
-    // 记录浏览：需登录。访客访问不发送，避免必然 401 的无效请求（且原先无 catch 会产生未处理拒绝）
-    if (auth.isLoggedIn() && tweet.value?.tweetGuid) {
-      recordView(tweet.value.tweetGuid).catch(() => { /* 浏览计数失败不影响阅读 */ })
+    if (isVideoPage.value) {
+      // 视频详情：走 Video 服务（videoGuid）
+      const res = await getVideoDetail(String(route.params.id))
+      const d: any = res && res.data ? res.data : res
+      if (!d || !d.videoGuid) { tweet.value = null; return }
+      tweet.value = {
+        tweetGuid: d.videoGuid,
+        videoGuid: d.videoGuid,
+        content: d.videoName || '未命名视频',
+        body: d.briefIntroduction || '',
+        mediaUrls: d.videoFileUri ? [d.videoFileUri] : [],
+        isVideo: true,
+        videoTags: d.videoTags || [],
+        visibility: d.visibility === 'VideoPublic' ? 'Public' : 'Private',
+        tweetStatus: d.status || '',
+        publishTime: d.createTime,
+        createTime: d.createTime,
+        viewCount: 0,
+        likeCount: 0,
+        favoriteCount: 0,
+        commentCount: 0,
+        author: { userGuid: d.authorGuid }
+      }
+      detail.value = { isLiked: false, isFavorited: false, isCoined: false }
+    } else {
+      const res = await getTweetDetail(String(route.params.id))
+      const data: any = res && res.data ? res.data : res
+      tweet.value = data.tweet || data
+      detail.value = {
+        isLiked: !!(data.isLiked !== undefined ? data.isLiked : tweet.value.isLiked),
+        isFavorited: !!(data.isFavorited !== undefined ? data.isFavorited : tweet.value.isFavorited),
+        isCoined: !!data.isCoined
+      }
+      // 记录浏览：需登录。访客访问不发送，避免必然 401 的无效请求（且原先无 catch 会产生未处理拒绝）
+      if (auth.isLoggedIn() && tweet.value?.tweetGuid) {
+        recordView(tweet.value.tweetGuid).catch(() => { /* 浏览计数失败不影响阅读 */ })
+      }
     }
     // 关注状态：拉取我关注的人列表比对（后端暂无 is-following 端点）；需登录，访客跳过
     if (auth.isLoggedIn() && authorId.value) {
@@ -341,7 +420,13 @@ async function onLike(): Promise<void> {
   detail.value.isLiked = liked
   tweet.value.likeCount = Math.max(0, prev + (liked ? 1 : -1))
   try {
-    await toggleLike(tweet.value.tweetGuid, liked)
+    if (isVideoPage.value) {
+      const res = await likeVideo(String(route.params.id), 'upvote', liked)
+      const v: any = res && res.data !== undefined ? res.data : res
+      if (v && typeof v.newCount === 'number') tweet.value.likeCount = v.newCount
+    } else {
+      await toggleLike(tweet.value.tweetGuid, liked)
+    }
   } catch (e) {
     detail.value.isLiked = !liked
     tweet.value.likeCount = prev
@@ -381,7 +466,7 @@ async function onShare(): Promise<void> {
   try {
     await shareTweet(tweet.value.tweetGuid)
   } catch (e) { /* 后端失败不影响复制 */ }
-  const url = window.location.origin + '/posts/' + tweet.value.tweetGuid
+  const url = window.location.origin + (isVideoPage.value ? '/videos/' : '/posts/') + tweet.value.tweetGuid
   try {
     await navigator.clipboard.writeText(url)
   } catch (e) {
@@ -413,7 +498,7 @@ async function submitReportReport(): Promise<void> {
   try {
     // 真实端点：POST /api/reports（Message）
     await submitReport({
-      targetType: 'Tweet',
+      targetType: (isVideoPage.value ? 'Video' : 'Tweet') as 'Tweet',
       targetGuid: tweet.value.tweetGuid,
       category: reportCategory.value as unknown as string,
       reason: reportReason.value.trim() || REPORT_CATEGORIES[reportCategory.value],
@@ -437,7 +522,8 @@ function onEdit(): void {
     toast.push(editLockedReason.value, 'info')
     return
   }
-  router.push({ path: '/publish', query: { type: isVideo.value ? 'video' : 'post', edit: tweet.value.tweetGuid } })
+  // 视频（Video 服务）编辑走 /publish?type=video；推文帖统一走图文编辑器
+  router.push({ path: '/publish', query: { type: isVideoPage.value ? 'video' : 'post', edit: tweet.value.tweetGuid } })
 }
 
 function scrollToComments(): void {
@@ -484,7 +570,8 @@ function onKeydown(e: KeyboardEvent): void {
   if (e.key === 'Escape') goBack()
 }
 
-watch(() => route.params.id, () => {
+// 同时监听路由名（/posts ↔ /videos 切换时 params.id 可能相同，仅看 id 不会重新加载）
+watch(() => [route.name, route.params.id], () => {
   activeMedia.value = 0
   load()
 })

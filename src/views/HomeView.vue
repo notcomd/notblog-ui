@@ -21,6 +21,9 @@
       >立即登录</router-link>
     </div>
 
+    <!-- 视频区块：视频发布已不再进入 Message 时间线，这里补回展示（独立拉取、独立降级） -->
+    <VideoSection />
+
     <PostGrid :loader="loader" :empty-text="emptyText" :empty-title="emptyTitle" />
   </div>
 </template>
@@ -33,6 +36,7 @@ export default { name: 'HomeView' }
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import PostGrid from '@/components/post/PostGrid.vue'
+import VideoSection from '@/components/video/VideoSection.vue'
 import { getTimeline, getTrending } from '@/api/tweet'
 import { useAuthStore } from '@/stores/auth'
 import { useFeedTabStore } from '@/stores/feedTab'
@@ -48,7 +52,11 @@ watch(() => route.query.tab, (raw) => feedTab.syncFromQuery(raw), { immediate: t
 
 // 不按 Tab 加 key：PostGrid 内部会在 loader 变化时先让旧卡片退场再拉新数据，
 // 强行 remount 会跳过退场动画（内容瞬间清空），也会丢掉无限滚动的已加载页
-const loader = computed(() => (feedTab.tab === 'latest' ? getTimeline : getTrending))
+// 包一层以匹配 PostGrid 的 (page, pageSize) 加载器签名（直接传 API 函数参数类型不兼容）
+const loader = computed(() => {
+  const fn = feedTab.tab === 'latest' ? getTimeline : getTrending
+  return (params: { page: number; pageSize: number }): Promise<unknown> => fn(params)
+})
 
 // 空态文案：访客看的是公开的「热门」，无需登录即可浏览，
 // 因此不再把「登录」说成看内容的前提（登录只解锁互动与关注流）。

@@ -68,6 +68,13 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true }
       },
       {
+        // 视频详情（Video 服务）：与推文帖（/posts/:id）区分，id 为 videoGuid
+        path: 'videos/:id',
+        name: 'VideoDetail',
+        component: PostDetailView,
+        meta: { requiresAuth: true }
+      },
+      {
         path: 'markdown/:guid',
         name: 'MarkdownDetail',
         component: MarkdownDetailView,

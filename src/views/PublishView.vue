@@ -34,6 +34,7 @@ import VideoEditor from '@/components/publish/VideoEditor.vue'
 import MarkdownEditorPage from '@/components/publish/MarkdownEditorPage.vue'
 import { getMyCircles } from '@/api/circle'
 import { getTweetDetail } from '@/api/tweet'
+import { getVideoDetail } from '@/api/video'
 import { getMarkdownDoc, getMarkdownContent } from '@/api/markdown'
 import { getDraft } from '@/utils/drafts'
 import { unwrap } from '@/utils/response'
@@ -100,6 +101,25 @@ watch(() => route.query.edit, async (v) => {
           content: unwrap(contentRes) || '',
           coverUrl: doc?.coverUrl || '',
           visibility: doc?.auth || 'Public'
+        }
+      }
+    } else if (mode.value === 'video') {
+      // 视频走 Video 服务：详情回填名称/简介/封面（编辑不重传视频文件）
+      const res = await getVideoDetail(id)
+      const v: any = unwrap(res)
+      const status = String(v?.status || '')
+      if (!canEdit(status)) { blockEditing(status); return }
+      const content = [v?.videoName || '', v?.briefIntroduction || ''].filter(Boolean).join('\n')
+      server.value = {
+        id,
+        status,
+        data: {
+          content,
+          videoName: v?.videoName || '',
+          briefIntroduction: v?.briefIntroduction || '',
+          tags: v?.videoTags || [],
+          coverUrl: v?.videoCover || '',
+          videoFileUri: v?.videoFileUri || ''
         }
       }
     } else {

@@ -47,7 +47,8 @@ export function getCircle(circleGuid: string) {
 }
 
 // 社区动态流：GET /api/circles/{circleGuid}/posts -> ApiResponse<PagedResult<CommunityPostDto>>
-// CommunityPostDto 缺作者信息，转换为 PostCard 兼容结构
+// CommunityPostDto 只有 AuthorGuid（无昵称），转换为 PostCard 兼容结构；
+// 昵称留给 PostCard 按 GUID 异步补取（见 utils/author），此处不编造「社区成员」以免短路真实昵称
 export function getCirclePosts(circleGuid: string, params: QueryParams = {}) {
   const req = service.get(`/api/circles/${circleGuid}/posts`, { params });
   return req.then((res) => {
@@ -69,7 +70,7 @@ function mapCommunityPost(p: any) {
     isVideo: false,
     author: {
       userGuid: p.authorGuid,
-      userName: '社区成员',
+      userName: '',
       avatar: ''
     },
     content: p.content,
