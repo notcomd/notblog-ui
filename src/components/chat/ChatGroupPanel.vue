@@ -305,8 +305,9 @@ function onGroupResultClick(g: any) {
 }
 
 // ===== 群管理（mode === 'manage'） =====
-// 后端群管理接口均为真实端点（见 api/chat.ts）；成员昵称/头像 GroupMemberDto 不返回，
-// 需按 userId 走 UsersApi 补取（chat.loadProfiles）。角色：0=群主 1=管理员 2=成员。
+// 后端群管理接口均为真实端点（见 api/chat.ts）；GroupMemberDto 现返回 userName/userAvatar
+// （用户账号昵称/头像），缺失时才按 userId 走 UsersApi 补取（chat.loadProfiles）。
+// 角色：0=群主 1=管理员 2=成员。
 const ROLE_LABEL: Record<number, string> = { 0: '群主', 1: '管理员', 2: '成员' }
 
 const loading = ref(false)
@@ -338,14 +339,26 @@ const groupAvatarUrl = computed(() => {
   return (g && typeof g.avatarUrl === 'string' && g.avatarUrl) || groupIconAvatar()
 })
 
-/** 成员渲染项：昵称/头像按 资料缓存(profiles) → 好友 → 群内昵称 → 占位 的优先级解析 */
+/**
+ * 成员渲染项：昵称/头像解析链（语义取舍见下）。
+ * - 昵称：群昵称 m.nickname（群内自定义昵称，存在时最贴合群语境，优先展示）
+ *         → 后端账号昵称 m.userName → 好友缓存 friendName → 资料缓存 profiles.name → 占位。
+ * - 头像：后端 m.userAvatar 优先 → 好友头像 → 资料缓存头像 → 首字头像兜底（不空白/不破图）。
+ * 说明：群昵称与账号昵称不同，群昵称存在时优先展示群昵称；头像则始终取后端 m.userAvatar。
+ */
 const memberRows = computed(() =>
   members.value.map((m) => {
     const uid = String(m.userId)
     const f = chat.friends.find((x) => String(x.friendId) === uid)
     const p = chat.profiles[uid]
-    const display = (f && f.friendName) || (p && p.name) || m.nickname || (uid === me.value ? '我' : '成员')
+    const display =
+      m.nickname ||
+      m.userName ||
+      (f && f.friendName) ||
+      (p && p.name) ||
+      (uid === me.value ? '我' : '成员')
     const avatar =
+      (typeof m.userAvatar === 'string' && m.userAvatar) ||
       (f && typeof f.friendAvatar === 'string' && f.friendAvatar) ||
       (p && p.avatar) ||
       charAvatar(String(display).charAt(0) || '友', uid === me.value ? '#f59e0b' : '#a1a1aa')
@@ -419,7 +432,12 @@ async function loadMembers(): Promise<void> {
     const data = unwrap(await getGroupMembers(gid))
     const list = (data && (data.items || data.list || data)) || []
     members.value = Array.isArray(list) ? list : []
-    const ids = members.value.map((m) => String(m.userId)).filter(Boolean)
+    // 请求节制：后端已同时返回 userName/userAvatar 的成员无需再逐条走 UsersApi 补取；
+    // 仅对字段缺失（后端回退为 null）的成员补取，避免大群请求风暴
+    const ids = members.value
+      .filter((m) => !(m.userName && m.userAvatar))
+      .map((m) => String(m.userId))
+      .filter(Boolean)
     if (ids.length) chat.loadProfiles(ids)
   } catch (e: any) {
     membersError.value = true

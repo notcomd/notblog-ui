@@ -3,7 +3,7 @@
        需要本节点作为其定位参照 -->
   <section class="relative" :aria-busy="loading">
     <!-- 3列瀑布流（桌面常显） -->
-    <!-- 瀑布流：columns 多列交错（视频 1:1 与图文 9:16 混排无空隙，视觉更自然） -->
+    <!-- 瀑布流：columns 多列交错（所有卡片封面统一 4:3，列间无空隙，视觉更自然） -->
     <!-- 卡片入场由 anime.js 驱动（见 script 的 playCardsIn），故不再用 CSS staggered 类 -->
     <div ref="gridEl" class="columns-3 gap-5">
       <div v-for="(post, i) in posts" :key="keyOf(post, i)" class="break-inside-avoid mb-5">
@@ -11,15 +11,15 @@
       </div>
     </div>
 
-    <!-- 加载中：骨架屏（与真实栅格同宽同列，形状模拟图文/视频交错比例）。
-         只在尚无内容时铺满呈现；已有内容时改用下方轻量指示，避免整页高度暴涨 -->
+    <!-- 加载中：骨架屏（与真实栅格同宽同列，封面比例与真实卡片一致为 4:3，
+         避免加载完成时高度跳变）。只在尚无内容时铺满呈现；已有内容时改用下方轻量指示，避免整页高度暴涨 -->
     <Transition name="qm-skel">
       <div v-if="showSkeleton" class="columns-3 gap-5" role="status">
         <span class="sr-only">正在加载内容…</span>
         <div v-for="i in 6" :key="i" class="break-inside-avoid mb-5" aria-hidden="true">
           <!-- 逐张错开微光相位（--qm-shimmer-delay 由 .qm-shimmer::after 读取） -->
           <div class="overflow-hidden qm-shimmer" :style="{ '--qm-shimmer-delay': `${(i - 1) * 0.12}s` }">
-            <div class="bg-zinc-200/70 dark:bg-zinc-800/70" :class="compactCard || i % 4 === 3 ? 'aspect-square' : 'aspect-[9/16]'"></div>
+            <div class="bg-zinc-200/70 dark:bg-zinc-800/70 aspect-[4/3]"></div>
             <div class="p-4 space-y-2">
               <div class="flex items-center gap-2">
                 <div class="w-8 h-8 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70"></div>
@@ -117,8 +117,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 // 卡片组件（默认散文/视频推文卡）
 const cardComponent = computed<Component>(() => props.card || PostCard)
-// 传入统一混合卡时（1:1 封面）骨架屏也用方形比例，避免加载完成时高度跳变
-const compactCard = computed<boolean>(() => !!props.card && props.card !== PostCard)
 
 const posts = ref<unknown[]>([])
 const loading = ref(false)

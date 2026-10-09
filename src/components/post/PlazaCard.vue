@@ -6,14 +6,15 @@
         class="block scroll-mt-20 rounded-[5%] p-1.5 card-lift"
         @click="navigate"
       >
-        <!-- 封面：三类内容统一 1:1 比例（比原先图文 9:16 / 视频 1:1 更矮，整卡高度约降四成） -->
-        <div class="relative w-full aspect-square overflow-hidden rounded-[5%] bg-zinc-100 dark:bg-zinc-800">
+        <!-- 封面：三类内容统一 4:3 比例（上一轮 1:1 在 3 列栅格下封面仍高约 450px、整卡约 540px，
+             仍显突兀；收敛到 4:3 后封面约 340px、整卡约 430px） -->
+        <div class="relative w-full aspect-[4/3] overflow-hidden rounded-[5%] bg-zinc-100 dark:bg-zinc-800">
           <img
             v-if="coverUrl && !coverFailed"
             :src="coverUrl"
             alt=""
             width="720"
-            height="720"
+            height="540"
             class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
             loading="lazy"
             @error="coverFailed = true"

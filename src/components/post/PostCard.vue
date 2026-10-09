@@ -22,14 +22,14 @@
         class="block scroll-mt-20"
         @click="navigate"
       >
-        <!-- 封面区：图文 9:16 竖图 / 视频 1:1 -->
-        <div class="relative w-full overflow-hidden" :class="isVideo ? 'aspect-square' : 'aspect-[9/16]'">
+        <!-- 封面区：与广场混合卡统一为 4:3（原先图文 9:16 竖图单卡近 950px，是各信息流里最高的卡片） -->
+        <div class="relative w-full overflow-hidden aspect-[4/3]">
           <img
             v-if="cover"
             :src="cover"
             alt=""
             width="720"
-            height="1280"
+            height="540"
             class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
             loading="lazy"
             @error="onCoverError"
@@ -114,6 +114,7 @@ import { animate } from 'animejs'
 import { compactNumber, relativeTime } from '@/utils/format'
 import { isVideoPost, pickCoverUrl } from '@/utils/media'
 import { themeAvatar } from '@/utils/avatar'
+import { authorAvatarOf, authorGuid as readAuthorGuid } from '@/utils/author'
 import { toggleLike, toggleFavorite } from '@/api/tweet'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
@@ -168,12 +169,28 @@ function requireLogin(): boolean {
 const cover = computed(() => pickCoverUrl(props.post.mediaUrls))
 // 视频判定：优先后端字段，兜底按媒体 URL 后缀识别（后端 TweetDto 暂无 isVideo 字段）
 const isVideo = computed(() => isVideoPost(props.post))
+// 作者 GUID：嵌套 author 优先（推文 TweetDto.Author）；圈子帖只给扁平 authorGuid
+// （CommunityPostDto，见 api/circle 的 mapCommunityPost 映射）
+const authorId = computed<string>(() => readAuthorGuid(props.post.author) || String(props.post.authorGuid || ''))
 // 作者名：真实昵称优先；只有 GUID（如圈子帖 CommunityPostDto）时按 GUID 异步补取昵称
-const authorName = computed(() => auth.resolveDisplayName(props.post.author))
-// 头像：无地址或加载失败时回退到首字头像（不再用 visibility:hidden 留一个空洞）
+// （复用 utils/author 的缓存 + 在途去重 + 并发上限）
+const authorName = computed<string>(() =>
+  auth.resolveDisplayName(readAuthorGuid(props.post.author) ? props.post.author : { userGuid: authorId.value })
+)
+// 头像：同步地址 → 自己（本地 me）→ 按 GUID 解析（同一份作者资料缓存）→ 首字头像兜底，
+// 失败绝不留空白或破图
 const avatarSrc = computed<string>(() => {
-  const raw = props.post.author?.avatar || ''
-  if (raw && !avatarBroken.value) return raw
+  if (!avatarBroken.value) {
+    const raw = props.post.author?.avatar || ''
+    if (raw) return raw
+    const uid = authorId.value
+    if (uid) {
+      const selfId = auth.user?.id ? String(auth.user.id).toLowerCase() : ''
+      if (selfId && selfId === uid.toLowerCase() && auth.user?.avatar) return auth.user.avatar
+      const resolved = authorAvatarOf(uid)
+      if (resolved) return resolved
+    }
+  }
   return themeAvatar(authorName.value.charAt(0) || '用')
 })
 const timeText = computed(() => relativeTime(props.post.publishTime || props.post.createTime))

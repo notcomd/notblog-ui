@@ -47,8 +47,8 @@ export function getCircle(circleGuid: string) {
 }
 
 // 社区动态流：GET /api/circles/{circleGuid}/posts -> ApiResponse<PagedResult<CommunityPostDto>>
-// CommunityPostDto 只有 AuthorGuid（无昵称），转换为 PostCard 兼容结构；
-// 昵称留给 PostCard 按 GUID 异步补取（见 utils/author），此处不编造「社区成员」以免短路真实昵称
+// CommunityPostDto 现含 Author（UserBriefDto{userGuid,userName,avatar}）；映射为 PostCard 兼容结构时
+// 透传后端真实作者，仅在缺失时回退扁平 authorGuid。昵称/头像缺失仍由 PostCard 按 GUID 异步补取（utils/author）。
 export function getCirclePosts(circleGuid: string, params: QueryParams = {}) {
   const req = service.get(`/api/circles/${circleGuid}/posts`, { params });
   return req.then((res) => {
@@ -65,13 +65,17 @@ export function getCircleSession(circleGuid: string) {
 }
 
 function mapCommunityPost(p: any) {
+  const a = p?.author || {};
   return {
     ...p,
     isVideo: false,
+    // 后端 CommunityPostDto.Author = UserBriefDto{userGuid,userName,avatar}；透传真实值，
+    // 仅在 author 缺失/字段为空时回退扁平 authorGuid（下游 PostCard 会按 GUID 异步补昵称/头像）
     author: {
-      userGuid: p.authorGuid,
-      userName: '',
-      avatar: ''
+      ...a,
+      userGuid: a.userGuid || a.userId || p.authorGuid,
+      userName: a.userName || a.nickName || a.nickname || a.name || '',
+      avatar: a.avatar || ''
     },
     content: p.content,
     publishTime: p.publishTime || p.createTime
