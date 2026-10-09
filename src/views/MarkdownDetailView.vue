@@ -26,7 +26,17 @@
       <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-zinc-400">
         <span>{{ formatTime(doc.createAt) }}</span>
         <span class="text-zinc-300 dark:text-zinc-500">·</span>
-        <span>作者 {{ authorName }}</span>
+        <span class="inline-flex items-center gap-1.5">
+          <img
+            :src="authorAvatar"
+            alt=""
+            width="20"
+            height="20"
+            class="h-5 w-5 shrink-0 rounded-full object-cover"
+            @error="avatarFailed = true"
+          />
+          作者 {{ authorName }}
+        </span>
         <span v-if="doc.auth === 'PrivateMark' || doc.auth === 'private'" class="text-red-400">🔒 私密</span>
         <span
           v-for="t in doc.tags"
@@ -102,6 +112,8 @@ import { renderMarkdown } from '@/utils/markdown'
 import CommentSection from '@/components/comment/CommentSection.vue'
 import { formatTime } from '@/utils/format'
 import { unwrap } from '@/utils/response'
+import { themeAvatar } from '@/utils/avatar'
+import { authorAvatarOf } from '@/utils/author'
 import { useToastStore } from '@/stores/toast'
 import { useAuthStore } from '@/stores/auth'
 
@@ -151,12 +163,27 @@ const authorName = computed(() => {
   return auth.resolveDisplayName({ userGuid: String(doc.value.markUserGuid || '') })
 })
 
+// 作者头像：详情只有作者 GUID，按 GUID 解析（缓存 + 去重 + 并发上限；自己用本地 me 头像），
+// 拿不到或加载失败回退首字头像，不留空白。
+const avatarFailed = ref(false)
+const authorAvatar = computed<string>(() => {
+  const guid = doc.value ? String(doc.value.markUserGuid || '') : ''
+  if (!avatarFailed.value && guid) {
+    const selfId = auth.user?.id ? String(auth.user.id).toLowerCase() : ''
+    if (selfId && selfId === guid.toLowerCase() && auth.user?.avatar) return auth.user.avatar
+    const resolved = authorAvatarOf(guid)
+    if (resolved) return resolved
+  }
+  return themeAvatar(authorName.value.charAt(0) || '用')
+})
+
 async function load(): Promise<void> {
   loading.value = true
   doc.value = null
   content.value = ''
   liked.value = false
   favorited.value = false
+  avatarFailed.value = false
   try {
     const [docRes, contentRes] = await Promise.all([
       getMarkdownDoc(docGuid.value),

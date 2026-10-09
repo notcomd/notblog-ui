@@ -12,7 +12,7 @@ import {
 } from '@/api/chat';
 import { unwrap } from '@/utils/response';
 import { toMillis } from '@/utils/format';
-import { charAvatar, groupAvatar } from '@/utils/avatar';
+import { charAvatar, groupIconAvatar } from '@/utils/avatar';
 import { useAuthStore } from '@/stores/auth';
 import { connectSignalR, isConnected } from '@/socket/signalr';
 
@@ -504,17 +504,20 @@ export const useChatStore = defineStore('chat', () => {
     return (f && f.friendName) || '会话';
   }
 
-  /** 会话头像：会话头像 → 群头像 → 单聊对端好友头像 → 群组占位图（不返回空串，避免破图留白） */
+  /** 会话头像（语义化兜底，杜绝空白/破图）：会话头像 → 群头像/群图标 → 单聊对端头像 → 对端首字头像 */
   function sessionAvatar(session: SessionDto | null | undefined): string {
-    if (!session) return groupAvatar();
+    if (!session) return groupIconAvatar();
     if (session.avatarUrl) return session.avatarUrl;
     if (session.groupId) {
       const g = groupById(session.groupId);
       if (g && g.avatarUrl) return String(g.avatarUrl);
+      // 群聊一律用「群图标」，不再错用某个成员好友头像
+      return groupIconAvatar();
     }
     const f = friendById(peerIdOf(session.sessionId));
     if (f && typeof f.friendAvatar === 'string' && f.friendAvatar) return f.friendAvatar;
-    return groupAvatar();
+    // 单聊兜底：对端名称首字头像（对端未知时用「友」）
+    return charAvatar(sessionTitle(session).charAt(0) || '友', '#a1a1aa');
   }
 
   /** 单聊对端是否在线（群聊无「对端」概念 → false） */

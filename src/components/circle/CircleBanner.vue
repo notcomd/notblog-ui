@@ -43,27 +43,17 @@
     </div>
 
     <!-- 邀请码弹窗（普通成员生成邀请码后展示） -->
-    <Teleport to="body">
-      <div v-if="inviteCodeOpen" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/30" @click.self="inviteCodeOpen = false">
-        <div class="qm-surface p-6 w-[400px] max-w-[calc(100vw-2rem)]">
-          <div class="flex items-start justify-between mb-1">
-            <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-100">社区邀请码</h3>
-            <button aria-label="关闭" class="w-8 h-8 rounded-[5%] flex items-center justify-center text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]" @click="inviteCodeOpen = false">
-              <svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-            </button>
-          </div>
-          <p class="text-xs text-zinc-400 mb-4">邀请好友加入「{{ name }}」，输入邀请码即可加入</p>
-          <div class="rounded-[5%] border border-dashed border-amber-400/50 py-6 px-4 mb-4 text-center">
-            <code class="text-2xl font-mono font-bold tracking-[0.3em] text-amber-600 dark:text-amber-300">{{ latestInviteCode }}</code>
-            <div class="text-[10px] text-zinc-400 mt-1">有效期 7 天</div>
-          </div>
-          <div class="flex justify-end gap-2">
-            <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors" @click="inviteCodeOpen = false">关闭</button>
-            <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90 active:scale-95 transition-all" @click="copyInviteCode">复制邀请码</button>
-          </div>
-        </div>
+    <BaseModal :open="inviteCodeOpen" title="社区邀请码" width="w-[400px]" body-class="p-6" @close="inviteCodeOpen = false">
+      <p class="text-xs text-zinc-400 mb-4">邀请好友加入「{{ name }}」，输入邀请码即可加入</p>
+      <div class="rounded-[5%] border border-dashed border-amber-400/50 py-6 px-4 text-center">
+        <code class="text-2xl font-mono font-bold tracking-[0.3em] text-amber-600 dark:text-amber-300">{{ latestInviteCode }}</code>
+        <div class="text-[10px] text-zinc-400 mt-1">有效期 7 天</div>
       </div>
-    </Teleport>
+      <template #footer>
+        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors" @click="inviteCodeOpen = false">关闭</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90 active:scale-95 transition-all" @click="copyInviteCode">复制邀请码</button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -71,6 +61,7 @@
 // 社区头部：通栏出血封面（图片/视频/渐变兜底）+ 悬浮身份信息与操作
 // 分类 tab 已移交 CircleWorkspace（吸顶需要它是滚动容器的直接子节点）
 import { computed, ref } from 'vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import { generateCircleInvitation } from '@/api/circle'
 import { useToastStore } from '@/stores/toast'
 

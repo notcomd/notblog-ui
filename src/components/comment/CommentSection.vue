@@ -90,7 +90,7 @@
     </div>
   <!-- 删除评论确认 -->
     <ConfirmDialog
-      v-if="deleteTarget"
+      :open="!!deleteTarget"
       danger
       title="删除评论"
       :message="'确定删除这条评论吗？删除后不可恢复。'"

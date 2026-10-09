@@ -76,6 +76,11 @@ export function submitMarkdownForReview(guid: string) {
   return service.post(`/api/markdown/${guid}/submit`);
 }
 
+// 管理端待审核列表（MarkPendingReview，仅管理员；裸数组，无分页元信息）：GET /api/markdown/pending
+export function getPendingMarkdownDocs(params: QueryParams = {}) {
+  return service.get('/api/markdown/pending', { params });
+}
+
 export function approveMarkdown(guid: string) {
   return service.post(`/api/markdown/${guid}/approve`);
 }

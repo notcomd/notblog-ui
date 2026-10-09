@@ -60,8 +60,9 @@
         <!-- 操作 -->
         <div class="flex gap-1.5 shrink-0">
           <button class="h-9 rounded-[5%] bg-gradient-to-r from-amber-400 to-orange-500 px-3 text-xs font-medium text-white transition-all hover:opacity-90 active:scale-95" @click="openAudit(t)">审核</button>
-          <button class="h-9 rounded-[5%] px-3 text-xs text-zinc-600 transition-colors hover:bg-black/[0.04] active:scale-95 dark:text-zinc-300 dark:hover:bg-white/[0.06]" @click="openBlock(t)">屏蔽</button>
-          <button class="h-9 rounded-[5%] bg-red-500/10 px-3 text-xs text-red-500 transition-colors hover:bg-red-500/20 active:scale-95" @click="openDelete(t)">删除</button>
+          <!-- 屏蔽/删除仅图文有对应端点（Message /api/audit/tweets/*），视频/博文仅提供通过/驳回 -->
+          <button v-if="tab === 'image'" class="h-9 rounded-[5%] px-3 text-xs text-zinc-600 transition-colors hover:bg-black/[0.04] active:scale-95 dark:text-zinc-300 dark:hover:bg-white/[0.06]" @click="openBlock(t)">屏蔽</button>
+          <button v-if="tab === 'image'" class="h-9 rounded-[5%] bg-red-500/10 px-3 text-xs text-red-500 transition-colors hover:bg-red-500/20 active:scale-95" @click="openDelete(t)">删除</button>
         </div>
       </div>
       <div v-if="loading" class="py-10 text-center text-sm text-zinc-400">加载中…</div>
@@ -134,8 +135,8 @@ export default { name: 'AdminContentView' }
 import { computed, onMounted, reactive, ref } from 'vue'
 import AdminModal from '@/components/admin/AdminModal.vue'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
-import { getPendingTweets, approveTweet, rejectTweet, blockTweet, deleteTweet } from '@/api/admin'
-import { getMarkdownDocs, approveMarkdown, rejectMarkdown } from '@/api/markdown'
+import { getPendingTweets, approveTweet, rejectTweet, blockTweet, deleteTweet, getVideoAuditList, approveVideo, rejectVideo } from '@/api/admin'
+import { getPendingMarkdownDocs, approveMarkdown, rejectMarkdown } from '@/api/markdown'
 
 import { useToastStore } from '@/stores/toast'
 import { relativeTime } from '@/utils/format'
@@ -166,16 +167,34 @@ const deleteTarget = ref<any>(null)
 
 const totalPages = computed<number>(() => Math.max(1, Math.ceil(total.value / pageSize)))
 
+/** 各服务状态枚举 → 图文口径（Pending/Approved/Rejected/Draft）；Markdown 带 Mark 前缀，Video 与图文同形 */
+const STATUS_ALIAS: Record<string, string> = {
+  Pending: 'Pending',
+  MarkPendingReview: 'Pending',
+  Approved: 'Approved',
+  MarkApproved: 'Approved',
+  Rejected: 'Rejected',
+  MarkRejected: 'Rejected',
+  Draft: 'Draft',
+  MarkDraft: 'Draft'
+}
+const STATUS_TEXT: Record<string, string> = { Pending: '待审核', Approved: '已通过', Rejected: '已驳回', Draft: '草稿' }
+const STATUS_CLASS: Record<string, string> = {
+  Pending: 'bg-amber-400/15 text-amber-600 dark:text-amber-400',
+  Approved: 'bg-emerald-400/15 text-emerald-500',
+  Rejected: 'bg-red-400/15 text-red-500',
+  Draft: 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
+}
+const STATUS_FALLBACK_CLASS = 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
+
+/** 状态徽标样式：先按别名归一化，再取配色（未知值走中性色） */
 function statusClass(s: string): string {
-  return {
-    Pending: 'bg-amber-400/15 text-amber-600 dark:text-amber-400',
-    Approved: 'bg-emerald-400/15 text-emerald-500',
-    Rejected: 'bg-red-400/15 text-red-500'
-  }[s] || 'bg-zinc-400/15 text-zinc-500 dark:text-zinc-400'
+  return STATUS_CLASS[STATUS_ALIAS[s] || s] || STATUS_FALLBACK_CLASS
 }
 
+/** 状态徽标文案：先按别名归一化，未知值原样回显 */
 function statusText(s: string): string {
-  return { Pending: '待审核', Approved: '已通过', Rejected: '已驳回' }[s] || s
+  return STATUS_TEXT[STATUS_ALIAS[s] || s] || s
 }
 
 function switchTab(t: string): void {
@@ -187,30 +206,47 @@ async function load(p: number): Promise<void> {
   loading.value = true
   page.value = p || 1
   try {
-    // 博客 Tab：Markdown 服务审核（真实端点 GET /api/markdown + approve/reject）
-    // 图文/视频 Tab：AuditApi 待审推文（GET /api/audit/tweets/pending，后端仅接收 page/pageSize；
-    // 状态/排序/类型为本地展示控制，不参与服务端查询）
-    const res: any = await (tab.value === 'blog'
-      ? getMarkdownDocs({ page: page.value, pageSize, keyword: keyword.value })
-      : getPendingTweets({ page: page.value, pageSize }))
+    // 各 Tab 各自查询对应服务的「待审核」队列（与图文口径一致）：
+    //   图文 → Message  GET /api/audit/tweets/pending（PagedResult{tweetStatus}）
+    //   视频 → Video    GET /api/video/audit/list?status=Pending（PagedResult{status}）
+    //   博客 → Markdown GET /api/markdown/pending（裸数组，状态 MarkPendingReview）
+    // 状态/排序/类型为本地展示控制，不参与服务端查询（图文端点仅接收 page/pageSize）
+    let res: any
+    if (tab.value === 'video') {
+      res = await getVideoAuditList({ status: 'Pending', page: page.value, pageSize })
+    } else if (tab.value === 'blog') {
+      res = await getPendingMarkdownDocs({ page: page.value, pageSize })
+    } else {
+      res = await getPendingTweets({ page: page.value, pageSize })
+    }
     const data: any = res && res.data ? res.data : res
-    // 博客 Tab 返回裸数组（List<MarkdownSummaryResponse>）；图文/视频 Tab 返回 PagedResult{items,totalCount}
-    let list = Array.isArray(data) ? data : (data.items || data.list || [])
+    // 博客返回裸数组（List<MarkdownSummaryResponse>）；图文/视频返回 PagedResult{items,totalCount}
+    let list: any[] = Array.isArray(data) ? data : (data.items || data.list || [])
     if (tab.value === 'blog') {
-      // 博客 DTO 字段名与推文不同，统一映射为表格/审核弹窗使用的字段
+      // 博客 DTO 字段名与推文不同，统一映射为列表/审核弹窗使用的字段名
       list = list.map((m: any) => ({
-        ...m,
         tweetGuid: m.markDownGuid,
         content: m.name,
         createTime: m.createAt,
-        tweetStatus: m.status
+        tweetStatus: m.status,
+        mediaUrls: m.coverUrl ? [m.coverUrl] : []
+      }))
+    } else if (tab.value === 'video') {
+      // 视频 DTO（MyVideoDto）：videoGuid/videoName/videoCover/status
+      list = list.map((v: any) => ({
+        tweetGuid: v.videoGuid,
+        content: v.videoName,
+        createTime: v.createTime,
+        tweetStatus: v.status,
+        mediaUrls: v.videoCover ? [v.videoCover] : [],
+        isVideo: true
       }))
     }
     if (sortBy.value === 'reports') list = [...list].sort((a, b) => (b.reportCount || 0) - (a.reportCount || 0))
     items.value = list
     total.value = data.totalCount !== undefined ? data.totalCount : (data.total || items.value.length)
-  } catch (e) {
-    console.error('加载内容失败:', e)
+  } catch (e: any) {
+    toast.push(e?.message || '加载内容失败', 'error')
   } finally {
     loading.value = false
   }
@@ -223,7 +259,9 @@ function openAudit(t: any): void {
 
 async function doApprove(): Promise<void> {
   try {
-    if (tab.value === 'blog') {
+    if (tab.value === 'video') {
+      await approveVideo(auditTarget.value.tweetGuid)
+    } else if (tab.value === 'blog') {
       await approveMarkdown(auditTarget.value.tweetGuid)
     } else {
       await approveTweet(auditTarget.value.tweetGuid)
@@ -231,14 +269,16 @@ async function doApprove(): Promise<void> {
     toast.push('已通过审核', 'success')
     auditTarget.value = null
     load(page.value)
-  } catch (e) {
-    toast.push('操作失败', 'error')
+  } catch (e: any) {
+    toast.push(e?.message || '操作失败', 'error')
   }
 }
 
 async function doReject(): Promise<void> {
   try {
-    if (tab.value === 'blog') {
+    if (tab.value === 'video') {
+      await rejectVideo(auditTarget.value.tweetGuid, rejectReason.value)
+    } else if (tab.value === 'blog') {
       await rejectMarkdown(auditTarget.value.tweetGuid, rejectReason.value)
     } else {
       await rejectTweet(auditTarget.value.tweetGuid, rejectReason.value)
@@ -246,8 +286,8 @@ async function doReject(): Promise<void> {
     toast.push('已驳回（理由已反馈发布者）', 'success')
     auditTarget.value = null
     load(page.value)
-  } catch (e) {
-    toast.push('操作失败', 'error')
+  } catch (e: any) {
+    toast.push(e?.message || '操作失败', 'error')
   }
 }
 
@@ -276,8 +316,8 @@ async function doDelete(reason: string): Promise<void> {
     toast.push('内容已永久删除', 'success')
     deleteTarget.value = null
     load(page.value)
-  } catch (e) {
-    toast.push('操作失败', 'error')
+  } catch (e: any) {
+    toast.push(e?.message || '操作失败', 'error')
   }
 }
 

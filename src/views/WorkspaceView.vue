@@ -250,7 +250,7 @@
 
     <!-- 批量提交审核确认 -->
     <ConfirmDialog
-      v-if="batchConfirm"
+      :open="batchConfirm"
       title="批量提交审核"
       :message="'将提交 ' + selectedKeys.size + ' 条内容进入审核队列，确定继续吗？'"
       confirm-text="提交审核"

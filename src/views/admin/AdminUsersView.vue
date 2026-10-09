@@ -59,7 +59,7 @@
     </AdminTable>
 
     <!-- 添加用户（后端仅接受邮箱 + 初始密码，角色固定 User） -->
-    <AdminModal v-if="showAdd" title="添加用户" @close="showAdd = false">
+    <AdminModal :open="showAdd" title="添加用户" @close="showAdd = false">
       <div class="space-y-3">
         <input v-model="addForm.userEmail" name="email" autocomplete="email" aria-label="邮箱（必填）" placeholder="邮箱（必填）" class="w-full h-10 px-3.5 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />
         <input v-model="addForm.password" type="password" name="password" autocomplete="new-password" aria-label="初始密码（必填，至少 8 位）" placeholder="初始密码（必填，至少 8 位）" class="w-full h-10 px-3.5 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/50 transition-all" />

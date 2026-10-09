@@ -2,6 +2,7 @@ import { reactive } from 'vue';
 import { getToken } from '@/utils/auth';
 import { unwrap } from '@/utils/response';
 import { getUserProfile } from '@/api/chat';
+import { getMarkdownDoc } from '@/api/markdown';
 
 // 作者名解析：把「后端只给出 GUID / GUID 片段」的作者位统一解析为可显示的用户名。
 //
@@ -82,17 +83,24 @@ export function resolveAuthorName(
 }
 
 // ============================================================
-// 异步补取昵称：部分后端 DTO 只有作者 GUID（Markdown MarkUserGuid、
-// CommunityPostDto.AuthorGuid、VideoReviewResponse.UserGuid、CommentDto 空 UserName 等），
-// 后端无用户查询机制无法填昵称。方案 A：前端按 GUID 调 Message 的
-// GET /api/users/{userGuid}（UserProfileDto.nickName）取昵称。
+// 异步补取作者资料（昵称 + 头像）：部分后端 DTO 只有作者 GUID（Markdown MarkUserGuid、
+// CommunityPostDto.AuthorGuid、VideoDetailDto.AuthorGuid、VideoReviewResponse.UserGuid、
+// CommentDto 空 UserName 等），后端无用户查询机制无法填昵称/头像。方案 A：前端按 GUID 调
+// Message 的 GET /api/users/{userGuid}（UserProfileDto.nickName + avatarUrl）一次取回两者，
+// 昵称与头像共用同一份缓存/在途请求/并发上限。
 // ============================================================
 
-/** 昵称缓存：GUID(小写) → 昵称。只写成功结果；失败不写，允许后续重试 */
-const authorNameCache = reactive<Record<string, string>>({});
+/** 作者资料（一次 GUID 查询的落地结果） */
+export interface AuthorProfile {
+  name: string;
+  avatar: string;
+}
+
+/** 作者资料缓存：GUID(小写) → { name, avatar }。只写请求成功的结果；失败不写，允许后续重试 */
+const authorProfileCache = reactive<Record<string, AuthorProfile>>({});
 
 /** 在途请求：GUID(小写) → Promise。并发去重：同一 GUID 的多个调用共享同一个请求 */
-const inflight = new Map<string, Promise<string>>();
+const inflight = new Map<string, Promise<AuthorProfile | null>>();
 
 /** 并发上限：列表场景多行同时展开时，最多同时打这么多请求，其余排队，避免瞬时请求风暴 */
 const MAX_CONCURRENT_FETCH = 4;
@@ -118,23 +126,42 @@ function releaseSlot(): void {
   if (next) next();
 }
 
-/** 真正发起一次请求：取 UserProfileDto.nickName。全程静默，失败返回空串（不算成功，不缓存） */
-async function fetchAuthorName(guid: string): Promise<string> {
+/** 真正发起一次请求：取 UserProfileDto.nickName + avatarUrl。全程静默，失败返回 null（不算成功，不缓存） */
+async function fetchAuthorProfile(guid: string): Promise<AuthorProfile | null> {
   await acquireSlot();
   try {
-    const dto = unwrap(await getUserProfile(guid)) as { nickName?: string | null } | null;
-    const name = String(dto?.nickName || '').trim();
-    if (name && !looksLikeGuid(name)) {
-      authorNameCache[guid.toLowerCase()] = name;
-      return name;
-    }
-    return '';
+    const dto = unwrap(await getUserProfile(guid)) as
+      | { nickName?: string | null; avatarUrl?: string | null }
+      | null;
+    const rawName = String(dto?.nickName || '').trim();
+    const profile: AuthorProfile = {
+      // GUID 片段占位不入缓存（等同未取到昵称）
+      name: rawName && !looksLikeGuid(rawName) ? rawName : '',
+      avatar: String(dto?.avatarUrl || '').trim()
+    };
+    authorProfileCache[guid.toLowerCase()] = profile;
+    return profile;
   } catch {
     // 静默降级：网络错误 / 403 / 404 均不抛出、不缓存，交由调用方兜底
-    return '';
+    return null;
   } finally {
     releaseSlot();
   }
+}
+
+/** 取作者资料（缓存 → 在途去重 → 排队发请求）。失败返回 null，不写缓存，允许后续重试 */
+function authorProfileOf(guid: string): Promise<AuthorProfile | null> {
+  const key = guid.toLowerCase();
+  const cached = authorProfileCache[key];
+  if (cached) return Promise.resolve(cached);
+  let pending = inflight.get(key);
+  if (!pending) {
+    pending = fetchAuthorProfile(guid).finally(() => {
+      inflight.delete(key);
+    });
+    inflight.set(key, pending);
+  }
+  return pending;
 }
 
 /**
@@ -145,24 +172,28 @@ async function fetchAuthorName(guid: string): Promise<string> {
  * - 失败 / 拿不到昵称 → 返回 fallback（不抛出、不缓存失败，允许重试）；
  * - GUID 为空、非完整 GUID（含「GUID 前 8 位」这类占位）或游客（无 token）→ 不发请求，直接兜底。
  */
-export function resolveAuthorNameAsync(
+export async function resolveAuthorNameAsync(
   guid?: string | null,
   fallback = '未知用户'
 ): Promise<string> {
   const g = String(guid || '').trim();
-  if (!g || !looksLikeGuid(g) || !getToken()) return Promise.resolve(fallback);
-  const key = g.toLowerCase();
-  const cached = authorNameCache[key];
-  if (cached) return Promise.resolve(cached);
-  let pending = inflight.get(key);
-  if (!pending) {
-    pending = fetchAuthorName(g).then((name) => {
-      inflight.delete(key);
-      return name || fallback;
-    });
-    inflight.set(key, pending);
-  }
-  return pending;
+  if (!g || !looksLikeGuid(g) || !getToken()) return fallback;
+  const profile = await authorProfileOf(g);
+  return (profile && profile.name) || fallback;
+}
+
+/**
+ * 按 GUID 异步解析作者头像地址（与昵称共用同一份缓存 / 在途请求 / 并发上限，不额外打接口）。
+ * 失败 / 无头像 / 游客 → 返回 fallback（由调用方回退首字头像）。
+ */
+export async function resolveAuthorAvatarAsync(
+  guid?: string | null,
+  fallback = ''
+): Promise<string> {
+  const g = String(guid || '').trim();
+  if (!g || !looksLikeGuid(g) || !getToken()) return fallback;
+  const profile = await authorProfileOf(g);
+  return (profile && profile.avatar) || fallback;
 }
 
 /**
@@ -172,10 +203,23 @@ export function resolveAuthorNameAsync(
 export function authorNameOf(guid?: string | null, fallback = '未知用户'): string {
   const g = String(guid || '').trim();
   if (!g || !looksLikeGuid(g)) return fallback;
-  const cached = authorNameCache[g.toLowerCase()];
-  if (cached) return cached;
+  const cached = authorProfileCache[g.toLowerCase()];
+  if (cached) return cached.name || fallback;
   // fallback 传空串：失败时不把「未知用户」写进缓存，由调用方的 fallback 兜底
   void resolveAuthorNameAsync(g, '');
+  return fallback;
+}
+
+/**
+ * 组件模板用（响应式）：命中缓存返回头像地址，否则返回 fallback 并触发一次后台解析。
+ * 拿不到头像（无 token / 失败 / 该用户无头像）返回 fallback，由调用方回退首字头像。
+ */
+export function authorAvatarOf(guid?: string | null, fallback = ''): string {
+  const g = String(guid || '').trim();
+  if (!g || !looksLikeGuid(g)) return fallback;
+  const cached = authorProfileCache[g.toLowerCase()];
+  if (cached) return cached.avatar || fallback;
+  void resolveAuthorAvatarAsync(g, '');
   return fallback;
 }
 
@@ -191,4 +235,58 @@ export function displayAuthorName(
   const raw = String(syncName || '').trim();
   if (raw && !looksLikeGuid(raw) && !isGuidPlaceholder(raw, guid)) return raw;
   return authorNameOf(guid, fallback);
+}
+
+// ============================================================
+// Markdown 作者补取：文章「列表」摘要（MarkdownSummaryResponse）不含任何作者字段，
+// 只有详情（MarkdownResponse.markUserGuid）才有作者 GUID。故按文档 GUID 先取作者 GUID，
+// 再复用上面的按 GUID 解析头像/昵称。同样走缓存 + 在途去重 + 全局并发上限，避免请求风暴。
+// ============================================================
+
+/** 文档 GUID(小写) → 作者 GUID。只写成功结果；失败不写，允许后续重试 */
+const markdownAuthorGuidCache = reactive<Record<string, string>>({});
+
+/** 在途请求：文档 GUID(小写) → Promise */
+const markdownInflight = new Map<string, Promise<string>>();
+
+/** 真正发起一次请求：取 MarkdownResponse.markUserGuid。全程静默，失败返回空串（不缓存） */
+async function fetchMarkdownAuthorGuid(markGuid: string): Promise<string> {
+  await acquireSlot();
+  try {
+    const dto = unwrap(await getMarkdownDoc(markGuid)) as { markUserGuid?: string | null } | null;
+    const guid = String(dto?.markUserGuid || '').trim();
+    if (guid) markdownAuthorGuidCache[markGuid.toLowerCase()] = guid;
+    return guid;
+  } catch {
+    return '';
+  } finally {
+    releaseSlot();
+  }
+}
+
+/** 按文档 GUID 解析作者 GUID（缓存 + 在途去重 + 并发上限）。失败/无 token → 空串 */
+export function resolveMarkdownAuthorGuidAsync(markGuid?: string | null): Promise<string> {
+  const g = String(markGuid || '').trim();
+  if (!g || !getToken()) return Promise.resolve('');
+  const key = g.toLowerCase();
+  const cached = markdownAuthorGuidCache[key];
+  if (cached) return Promise.resolve(cached);
+  let pending = markdownInflight.get(key);
+  if (!pending) {
+    pending = fetchMarkdownAuthorGuid(g).finally(() => {
+      markdownInflight.delete(key);
+    });
+    markdownInflight.set(key, pending);
+  }
+  return pending;
+}
+
+/** 组件模板用（响应式）：命中缓存返回作者 GUID，否则返回空串并触发一次后台解析 */
+export function markdownAuthorGuidOf(markGuid?: string | null): string {
+  const g = String(markGuid || '').trim();
+  if (!g) return '';
+  const cached = markdownAuthorGuidCache[g.toLowerCase()];
+  if (cached) return cached;
+  void resolveMarkdownAuthorGuidAsync(g);
+  return '';
 }

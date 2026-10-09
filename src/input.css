@@ -316,6 +316,40 @@ html[data-theme='dark'] .qm-shimmer::after {
   }
 }
 
+/* ===== 统一弹窗基座（BaseModal）：遮罩淡入 + 面板轻微位移/缩放（全站弹窗一致） ===== */
+.qm-modal-enter-active,
+.qm-modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.qm-modal-enter-from,
+.qm-modal-leave-to {
+  opacity: 0;
+}
+
+.qm-modal-enter-active .qm-modal-panel,
+.qm-modal-leave-active .qm-modal-panel {
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.22s ease;
+}
+
+.qm-modal-enter-from .qm-modal-panel,
+.qm-modal-leave-to .qm-modal-panel {
+  transform: translateY(8px) scale(0.98);
+  opacity: 0;
+}
+
+/* 减弱动态偏好：仅保留淡入淡出，不做位移/缩放 */
+@media (prefers-reduced-motion: reduce) {
+  .qm-modal-enter-active .qm-modal-panel,
+  .qm-modal-leave-active .qm-modal-panel {
+    transition: opacity 0.15s ease;
+  }
+  .qm-modal-enter-from .qm-modal-panel,
+  .qm-modal-leave-to .qm-modal-panel {
+    transform: none;
+  }
+}
+
 /* 减弱动态偏好：禁用全部装饰动画与上浮位移，仅保留不透明度过渡 */
 @media (prefers-reduced-motion: reduce) {
   .card-lift,

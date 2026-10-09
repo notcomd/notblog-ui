@@ -184,7 +184,7 @@
     </div>
 
     <!-- ===== 新建 / 编辑角色组 ===== -->
-    <AdminModal v-if="editOpen" :title="editing ? '编辑角色组' : '新建角色组'" width="w-[560px]" @close="editOpen = false">
+    <AdminModal :open="editOpen" :title="editing ? '编辑角色组' : '新建角色组'" width="w-[560px]" @close="editOpen = false">
       <div class="grid grid-cols-1 gap-y-4">
         <label class="block">
           <span class="mb-1.5 block text-[11px] text-zinc-500 dark:text-zinc-400">组名称</span>

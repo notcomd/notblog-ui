@@ -80,27 +80,30 @@
       </button>
     </div>
 
-    <!-- 裁剪面板（Teleport 到 body；头像 1:1 / 封面自由比例） -->
-    <Teleport to="body">
-      <div v-if="cropOpen" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
-        <div class="qm-surface w-[min(92vw,560px)] p-5">
-          <div class="text-sm font-bold text-zinc-800 dark:text-zinc-100">{{ cropMode === 'avatar' ? '裁剪头像' : '裁剪封面' }}</div>
-          <p class="text-xs text-zinc-400 mt-1 mb-3">{{ cropMode === 'avatar' ? '拖拽 / 滚轮调整裁剪区域（1:1 方形）' : '拖拽 / 滚轮调整裁剪区域（自由比例）' }}</p>
-          <div class="rounded-[5%] overflow-hidden bg-zinc-900">
-            <img ref="cropImg" :src="cropSrc" alt="" class="max-h-[320px] w-full object-contain" />
-          </div>
-          <div class="flex justify-end gap-2 mt-4">
-            <button class="px-4 h-9 rounded-[5%] text-sm text-zinc-500 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors" :disabled="cropUploading" @click="closeCrop">取消</button>
-            <button class="px-5 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90 active:scale-95 transition-all disabled:opacity-60" :disabled="cropUploading" @click="confirmCrop">{{ cropUploading ? '上传中…' : '裁剪并上传' }}</button>
-          </div>
-        </div>
+    <!-- 裁剪面板：头像 1:1 / 封面自由比例 -->
+    <BaseModal
+      v-if="cropOpen"
+      :title="cropMode === 'avatar' ? '裁剪头像' : '裁剪封面'"
+      width="w-[560px]"
+      :close-on-overlay="false"
+      body-class="p-5"
+      @close="closeCrop"
+    >
+      <p class="text-xs text-zinc-400 mb-3">{{ cropMode === 'avatar' ? '拖拽 / 滚轮调整裁剪区域（1:1 方形）' : '拖拽 / 滚轮调整裁剪区域（自由比例）' }}</p>
+      <div class="rounded-[5%] overflow-hidden bg-zinc-900">
+        <img ref="cropImg" :src="cropSrc" alt="" class="max-h-[320px] w-full object-contain" />
       </div>
-    </Teleport>
+      <template #footer>
+        <button class="px-4 h-9 rounded-[5%] text-sm text-zinc-500 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors" :disabled="cropUploading" @click="closeCrop">取消</button>
+        <button class="px-5 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:opacity-90 active:scale-95 transition-all disabled:opacity-60" :disabled="cropUploading" @click="confirmCrop">{{ cropUploading ? '上传中…' : '裁剪并上传' }}</button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
 import { createCircle, uploadCircleFile } from '@/api/circle'

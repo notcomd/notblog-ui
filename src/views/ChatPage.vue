@@ -4,7 +4,13 @@
     <!-- 会话列表：常显 -->
     <ChatSidebar class="flex" />
     <!-- 右侧主视窗：默认是会话，也可切换为群聊/好友的功能面板（由本页按路由 query 决定） -->
-    <ChatConversation class="flex-1" :panel-mode="panelMode" @close-panel="closePanel" />
+    <ChatConversation
+      class="flex-1"
+      :panel-mode="panelMode"
+      :panel-group-id="panelGroupId"
+      @close-panel="closePanel"
+      @open-group-manage="openGroupManage"
+    />
   </div>
 </template>
 
@@ -33,6 +39,7 @@ const chat = useChatStore()
 const PANEL_MODES: Record<string, string> = {
   createGroup: 'group-create',
   searchGroup: 'group-search',
+  manageGroup: 'group-manage',
   addFriend: 'friend-add',
   searchFriend: 'friend-search'
 }
@@ -40,6 +47,12 @@ const PANEL_MODES: Record<string, string> = {
 const panelMode = computed<string>(() => {
   const a = route.query.action
   return (typeof a === 'string' && PANEL_MODES[a]) || ''
+})
+
+/** 群管理面板的目标群 ID（来自 ?group=，仅 group-manage 模式使用） */
+const panelGroupId = computed<string>(() => {
+  const g = route.query.group
+  return typeof g === 'string' ? g : ''
 })
 
 // 唯一的「路由 → 会话」入口。
@@ -52,5 +65,11 @@ watch(() => route.params.sessionId, (id) => {
 /** 关闭功能面板：清掉 action，回到普通会话视图 */
 function closePanel(): void {
   router.replace({ path: '/chat' })
+}
+
+/** 打开群管理面板（会话头部「群管理」按钮触发）；群 ID 走 query 下发给 ChatConversation */
+function openGroupManage(groupId: string): void {
+  if (!groupId) return
+  router.push({ path: '/chat', query: { action: 'manageGroup', group: groupId } })
 }
 </script>

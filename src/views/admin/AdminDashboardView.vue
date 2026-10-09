@@ -79,7 +79,7 @@
     </div>
 
     <!-- 在线用户弹窗：一次快照 + 手动刷新（非轮询，故不标「实时」） -->
-    <AdminModal v-if="showOnline" title="在线用户" width="w-[560px]" @close="showOnline = false">
+    <AdminModal :open="showOnline" title="在线用户" width="w-[560px]" @close="showOnline = false">
       <!-- 概览条：人数 / 数据源状态 + 刷新 -->
       <div class="flex items-center justify-between gap-3 pb-3.5 border-b border-black/[0.06] dark:border-white/[0.08]">
         <div class="flex items-center gap-2 min-w-0">

@@ -92,7 +92,7 @@
       </aside>
 
       <!-- 主内容 -->
-      <main class="relative flex-1 min-w-0 px-6 py-6 overflow-y-auto h-[calc(100vh-4rem)]">
+      <main data-scroll-container class="relative flex-1 min-w-0 px-6 py-6 overflow-y-auto h-[calc(100vh-4rem)]">
         <!-- 权限不足提示条：订阅 axios 层的 403 广播（已节流去重），可关闭；无卡片描边，仅用分隔线 -->
         <div
           v-if="permissionNotice"

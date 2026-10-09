@@ -324,11 +324,14 @@ async function save() {
   if (!props.current || !name.value.trim()) return
   saving.value = true
   try {
+    // PUT /api/circles/{guid} 是整体替换语义：未携带的 avatarUrl/coverUrl 会被后端置空。
+    // 本面板打开时预览会重置为空，若只发送「本次改动的字段」，保存（如仅改简介）会静默清空已上传的封面/头像。
+    // 因此这里始终回填「当前值」（本次新上传优先，否则沿用 current 上的既有地址）。
     const payload = {
       name: name.value.trim(),
       description: desc.value.trim(),
-      ...(avatarPreview.value ? { avatarUrl: avatarPreview.value } : {}),
-      ...(coverPreview.value ? { coverUrl: coverPreview.value } : {})
+      avatarUrl: avatarPreview.value || props.current.avatarUrl || '',
+      coverUrl: coverPreview.value || props.current.coverUrl || ''
     }
     try {
       await updateCircle(props.current.circleGuid, payload)

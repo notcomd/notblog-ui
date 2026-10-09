@@ -43,46 +43,45 @@
       </template>
     </AdminTable>
 
-    <!-- 详情侧滑面板 -->
-    <div v-if="viewing" class="fixed inset-0 z-[75] bg-black/40" @click="viewing = null">
-      <div class="absolute right-0 top-0 bottom-0 w-[480px] bg-white dark:bg-zinc-800 border-l border-zinc-200/70 dark:border-white/10 shadow-2xl rounded-l-[5%] rounded-r-none flex flex-col">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-black/[0.06] dark:border-white/[0.08]">
-          <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100">举报详情 #{{ viewing.reportGuid }}</h3>
-          <button class="w-8 h-8 rounded-[5%] flex items-center justify-center text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors" @click="viewing = null" aria-label="关闭举报详情"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <!-- 详情侧滑面板（右侧抽屉） -->
+    <BaseModal
+      v-if="viewing"
+      variant="right"
+      :title="'举报详情 #' + viewing.reportGuid"
+      width="w-[480px]"
+      body-class="p-5 space-y-4"
+      @close="viewing = null"
+    >
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="rounded-[5%] p-3">
+          <div class="text-[11px] text-zinc-400">举报目标</div>
+          <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">{{ viewing.targetTitle }}</div>
         </div>
-        <div class="flex-1 overflow-y-auto overscroll-contain p-5 space-y-4">
-          <div class="grid grid-cols-2 gap-3 text-sm">
-            <div class="rounded-[5%] p-3">
-              <div class="text-[11px] text-zinc-400">举报目标</div>
-              <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">{{ viewing.targetTitle }}</div>
-            </div>
-            <div class="rounded-[5%] p-3">
-              <div class="text-[11px] text-zinc-400">目标类型</div>
-              <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">{{ viewing.targetType === 'User' ? '用户' : '内容' }}</div>
-            </div>
-            <div class="rounded-[5%] p-3">
-              <div class="text-[11px] text-zinc-400">举报类型</div>
-              <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">{{ categoryText(viewing.category) }}</div>
-            </div>
-            <div class="rounded-[5%] p-3">
-              <div class="text-[11px] text-zinc-400">举报人</div>
-              <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">匿名用户</div>
-            </div>
-            <div class="rounded-[5%] p-3 col-span-2">
-              <div class="text-[11px] text-zinc-400">举报原因</div>
-              <div class="text-zinc-700 dark:text-zinc-200 mt-1">{{ viewing.reportReason }}</div>
-            </div>
-            <div class="rounded-[5%] p-3 col-span-2">
-              <div class="text-[11px] text-zinc-400">提交时间</div>
-              <div class="text-zinc-700 dark:text-zinc-200 mt-1">{{ relativeTime(viewing.createTime) }}</div>
-            </div>
-          </div>
-          <div v-if="viewing.reviewNote" class="px-4 py-3 rounded-[5%] bg-emerald-500/10 text-sm text-emerald-600 dark:text-emerald-400">
-            处理备注：{{ viewing.reviewNote }}
-          </div>
+        <div class="rounded-[5%] p-3">
+          <div class="text-[11px] text-zinc-400">目标类型</div>
+          <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">{{ viewing.targetType === 'User' ? '用户' : '内容' }}</div>
+        </div>
+        <div class="rounded-[5%] p-3">
+          <div class="text-[11px] text-zinc-400">举报类型</div>
+          <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">{{ categoryText(viewing.category) }}</div>
+        </div>
+        <div class="rounded-[5%] p-3">
+          <div class="text-[11px] text-zinc-400">举报人</div>
+          <div class="font-medium text-zinc-700 dark:text-zinc-200 mt-1">匿名用户</div>
+        </div>
+        <div class="rounded-[5%] p-3 col-span-2">
+          <div class="text-[11px] text-zinc-400">举报原因</div>
+          <div class="text-zinc-700 dark:text-zinc-200 mt-1">{{ viewing.reportReason }}</div>
+        </div>
+        <div class="rounded-[5%] p-3 col-span-2">
+          <div class="text-[11px] text-zinc-400">提交时间</div>
+          <div class="text-zinc-700 dark:text-zinc-200 mt-1">{{ relativeTime(viewing.createTime) }}</div>
         </div>
       </div>
-    </div>
+      <div v-if="viewing.reviewNote" class="px-4 py-3 rounded-[5%] bg-emerald-500/10 text-sm text-emerald-600 dark:text-emerald-400">
+        处理备注：{{ viewing.reviewNote }}
+      </div>
+    </BaseModal>
 
     <!-- 标记处理弹窗 -->
     <AdminModal v-if="resolveTarget" title="标记处理" @close="resolveTarget = null">
@@ -113,6 +112,7 @@ export default { name: 'AdminReportsView' }
 import { computed, onMounted, ref } from 'vue'
 import AdminTable from '@/components/admin/AdminTable.vue'
 import AdminModal from '@/components/admin/AdminModal.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import { getReports, resolveReport } from '@/api/admin'
 import { useToastStore } from '@/stores/toast'
 import { relativeTime } from '@/utils/format'

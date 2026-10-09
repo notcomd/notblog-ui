@@ -176,7 +176,9 @@ export function createGroup(payload: QueryParams) {
   return service.post('/api/groups', payload);
 }
 
-// 群成员列表：GET /api/groups/{id}/members
+// 群成员列表：GET /api/groups/{id}/members -> ApiResponse<GroupMemberDto[]>
+// GroupMemberDto { memberId, groupId, userId, nickname, role, joinTime, isMuted, isBanned }
+// ⚠️ 不含 userName/userAvatar：成员昵称头像需按 userId 走 /api/users/{id} 补取（store.loadProfiles）
 export function getGroupMembers(id: string) {
   return service.get(`/api/groups/${id}/members`);
 }
@@ -184,6 +186,32 @@ export function getGroupMembers(id: string) {
 // 群搜索：GET /api/groups/search
 export function searchGroups(params: QueryParams = {}) {
   return service.get('/api/groups/search', { params });
+}
+
+// 群详情：GET /api/groups/{id} -> ApiResponse<GroupDto{ groupId, groupName, ownerId, memberCount, isPublic, ... }>
+export function getGroup(id: string) {
+  return service.get(`/api/groups/${id}`);
+}
+
+// 更新群信息（群名/简介）：PUT /api/groups/{id}/info（需群主/管理员权限，后端校验）
+export function updateGroupInfo(id: string, payload: { groupName: string; description?: string }) {
+  return service.put(`/api/groups/${id}/info`, payload);
+}
+
+// 解散群组：DELETE /api/groups/{id}（仅群主，后端校验）
+export function dismissGroup(id: string) {
+  return service.delete(`/api/groups/${id}`);
+}
+
+// 添加群成员：POST /api/groups/{id}/members { userId, role }（role: 0=Owner 1=Admin 2=Member，需邀请权限）
+export function addGroupMember(id: string, userId: string, role = 2) {
+  return service.post(`/api/groups/${id}/members`, { userId, role });
+}
+
+// 移除群成员 / 退出群聊：DELETE /api/groups/{id}/members/{userId}
+// 普通成员仅可移除自己（退出群聊）；移除他人需群主/管理员；群主不可被移除（须先转让或解散）
+export function removeGroupMember(id: string, userId: string) {
+  return service.delete(`/api/groups/${id}/members/${userId}`);
 }
 
 // ==================== 聊天附件上传 ====================

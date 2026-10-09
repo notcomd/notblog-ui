@@ -134,44 +134,35 @@
       </div>
     </div>
 
-    <!-- 头像裁剪面板（Teleport 到 body，避免被卡片 overflow-hidden 裁剪；固定 1:1 方形） -->
-    <Teleport to="body">
-      <div v-if="avatarCropOpen" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-zinc-800 rounded-[5%] w-[min(92vw,480px)] p-5">
-          <div class="text-sm font-bold text-zinc-800 dark:text-zinc-100">裁剪头像</div>
-          <p class="text-xs text-zinc-400 mt-1 mb-3">拖拽 / 滚轮调整裁剪区域（1:1 方形）</p>
-          <div class="rounded-[5%] overflow-hidden bg-zinc-900">
-            <img ref="avatarCropImg" :src="avatarCropSrc" alt="" class="max-h-[320px] w-full object-contain" />
-          </div>
-          <div class="flex justify-end gap-2 mt-4">
-            <button type="button" class="px-4 h-9 rounded-[5%] text-sm text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors" :disabled="avatarUploading" @click="closeAvatarCrop">取消</button>
-            <button type="button" class="px-5 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-60" :disabled="avatarUploading" @click="confirmAvatarCrop">{{ avatarUploading ? '上传中…' : '裁剪并上传' }}</button>
-          </div>
-        </div>
+    <!-- 头像裁剪面板（固定 1:1 方形；表单类弹窗禁用点遮罩关闭，避免误关丢失裁剪） -->
+    <BaseModal v-if="avatarCropOpen" title="裁剪头像" width="w-[480px]" :close-on-overlay="false" body-class="p-5" @close="closeAvatarCrop">
+      <p class="text-xs text-zinc-400 mb-3">拖拽 / 滚轮调整裁剪区域（1:1 方形）</p>
+      <div class="rounded-[5%] overflow-hidden bg-zinc-900">
+        <img ref="avatarCropImg" :src="avatarCropSrc" alt="" class="max-h-[320px] w-full object-contain" />
       </div>
-    </Teleport>
+      <template #footer>
+        <button type="button" class="px-4 h-9 rounded-[5%] text-sm text-zinc-500 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors" :disabled="avatarUploading" @click="closeAvatarCrop">取消</button>
+        <button type="button" class="px-5 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-60" :disabled="avatarUploading" @click="confirmAvatarCrop">{{ avatarUploading ? '上传中…' : '裁剪并上传' }}</button>
+      </template>
+    </BaseModal>
 
     <!-- 封面裁剪面板（更换封面为图片时先裁切：按封面显示区域比例，保证填充后不变形、不露空） -->
-    <Teleport to="body">
-      <div v-if="coverCropOpen" class="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-zinc-800 rounded-[5%] w-[min(94vw,880px)] p-5">
-          <div class="text-sm font-bold text-zinc-800 dark:text-zinc-100">裁剪封面</div>
-          <p class="text-xs text-zinc-400 mt-1 mb-3">拖拽 / 滚轮调整裁剪区域（比例与封面显示区域一致，裁剪后图片将填满封面）</p>
-          <div class="rounded-[5%] overflow-hidden bg-zinc-900">
-            <img ref="coverCropImg" :src="coverCropSrc" alt="" class="max-h-[360px] w-full object-contain" />
-          </div>
-          <div class="flex justify-end gap-2 mt-4">
-            <button type="button" class="px-4 h-9 rounded-[5%] text-sm text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors" :disabled="coverUploading" @click="closeCoverCrop">取消</button>
-            <button type="button" class="px-5 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-60" :disabled="coverUploading" @click="confirmCoverCrop">{{ coverUploading ? '上传中…' : '裁剪并上传' }}</button>
-          </div>
-        </div>
+    <BaseModal v-if="coverCropOpen" title="裁剪封面" width="w-[880px]" :close-on-overlay="false" body-class="p-5" @close="closeCoverCrop">
+      <p class="text-xs text-zinc-400 mb-3">拖拽 / 滚轮调整裁剪区域（比例与封面显示区域一致，裁剪后图片将填满封面）</p>
+      <div class="rounded-[5%] overflow-hidden bg-zinc-900">
+        <img ref="coverCropImg" :src="coverCropSrc" alt="" class="max-h-[360px] w-full object-contain" />
       </div>
-    </Teleport>
+      <template #footer>
+        <button type="button" class="px-4 h-9 rounded-[5%] text-sm text-zinc-500 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors" :disabled="coverUploading" @click="closeCoverCrop">取消</button>
+        <button type="button" class="px-5 h-9 rounded-[5%] text-sm font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white active:scale-95 transition-all disabled:opacity-60" :disabled="coverUploading" @click="confirmCoverCrop">{{ coverUploading ? '上传中…' : '裁剪并上传' }}</button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
 import { uploadAvatar } from '@/api/auth'

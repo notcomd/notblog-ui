@@ -71,7 +71,7 @@
     </div>
 
     <!-- 封禁社区（后端即解散，不接受原因） -->
-    <AdminModal v-if="banCircleOpen" title="封禁社区" @close="banCircleOpen = false">
+    <AdminModal :open="banCircleOpen" title="封禁社区" @close="banCircleOpen = false">
       <p class="text-sm text-zinc-500 dark:text-zinc-400">封禁后「{{ current.name }}」将被解散并对全站不可见，成员会话同步失效，不可恢复。确定封禁？</p>
       <template #footer>
         <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all dark:text-zinc-400" @click="banCircleOpen = false">取消</button>
@@ -80,7 +80,7 @@
     </AdminModal>
 
     <!-- 转让社区 -->
-    <AdminModal v-if="transferOpen" title="转让社区" @close="transferOpen = false">
+    <AdminModal :open="transferOpen" title="转让社区" @close="transferOpen = false">
       <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-3">将「{{ current ? current.name : '' }}」转让给新创建者（仅限现有成员）：</p>
       <select v-model="newOwner" name="newOwner" aria-label="选择新创建者" class="w-full h-10 px-3 rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 text-sm outline-none">
         <option value="">选择新创建者...</option>

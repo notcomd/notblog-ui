@@ -106,6 +106,10 @@
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
           </button>
           <div v-if="sessionMenuTarget === s.sessionId" class="absolute right-0 top-full mt-1 w-36 qm-surface p-1.5 z-50">
+            <button v-if="s.groupId" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" type="button" @click="openGroupManage(s)">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              群管理
+            </button>
             <button class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" type="button" @click="togglePin(s)">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg>
               {{ s.isPinned ? '取消置顶' : '置顶' }}
@@ -150,6 +154,10 @@
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
         设为已读
       </button>
+      <button v-if="ctxMenu.s.groupId" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" type="button" @click="onCtxGroupManage">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        群管理
+      </button>
       <button v-if="!isNotify(ctxMenu.s)" class="w-full flex items-center gap-2 px-2.5 py-2 rounded-[5%] text-xs text-zinc-600 dark:text-zinc-300 hover:bg-white/70 dark:hover:bg-zinc-800/70" type="button" @click="onCtxPin">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg>
         {{ ctxMenu.s.isPinned ? '取消置顶' : '置顶' }}
@@ -166,7 +174,7 @@
 // 会话侧边栏：会话/好友/群聊列表、通知列表、会话操作。
 // 添加/搜索好友与创建/搜索群聊都在右侧栏以面板呈现（按路由 query 切换），本组件只负责入口跳转。
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { charAvatar } from '@/utils/avatar'
+import { charAvatar, groupIconAvatar } from '@/utils/avatar'
 import { clockTime } from '@/utils/format'
 import { useRouter } from 'vue-router'
 import { useChatStore, type SessionDto } from '@/stores/chat'
@@ -332,7 +340,8 @@ async function markNotifyRead(n: SessionItem) {
 function openRowContextMenu(s: SessionItem, e: MouseEvent) {
   sessionMenuTarget.value = null
   if (!canMarkRead(s) && isNotify(s)) return
-  const itemCount = canMarkRead(s) ? (isNotify(s) ? 1 : 3) : 2
+  const base = canMarkRead(s) ? (isNotify(s) ? 1 : 3) : 2
+  const itemCount = base + (s.groupId ? 1 : 0)
   const menuW = 160
   const menuH = itemCount * 36 + 12
   ctxMenu.value = {
@@ -405,16 +414,32 @@ function onCtxPin() {
   if (s) void togglePin(s)
 }
 
+/** 群管理入口：跳转到会话页并打开群管理面板（成员/改群名/退出/解散都在面板内完成，含确认与 toast） */
+function openGroupManage(s: SessionItem) {
+  sessionMenuTarget.value = null
+  ctxMenu.value = null
+  if (!s.groupId) return
+  router.push({ path: '/chat', query: { action: 'manageGroup', group: String(s.groupId) } })
+}
+
+function onCtxGroupManage() {
+  const s = ctxMenu.value?.s
+  ctxMenu.value = null
+  if (s) openGroupManage(s)
+}
+
 function onCtxDelete() {
   const s = ctxMenu.value?.s
   ctxMenu.value = null
   if (s) void removeSession(s)
 }
 
-/** 会话头像加载失败：换群组占位图，避免留下空洞 */
+/** 会话头像加载失败：群聊回退群图标，单聊回退对端首字头像，避免留下空洞/破图 */
 function onAvatarError(s: SessionItem, e: Event): void {
   const el = e.target as HTMLImageElement
-  const fallback = charAvatar(chat.sessionTitle(s).charAt(0) || '会', '#a1a1aa')
+  const fallback = s.groupId
+    ? groupIconAvatar()
+    : charAvatar(chat.sessionTitle(s).charAt(0) || '友', '#a1a1aa')
   if (el.src !== fallback) el.src = fallback
 }
 

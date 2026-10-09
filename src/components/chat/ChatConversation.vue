@@ -4,7 +4,8 @@
     <!-- 功能面板：与消息视图共用右侧栏位（由 ChatPage 按路由 query 下发 panelMode） -->
     <ChatGroupPanel
       v-if="panel.startsWith('group-')"
-      :mode="panel === 'group-create' ? 'create' : 'search'"
+      :mode="panel === 'group-create' ? 'create' : panel === 'group-manage' ? 'manage' : 'search'"
+      :group-id="panelGroupId"
       @close="emit('close-panel')"
     />
     <ChatFriendPanel
@@ -46,6 +47,10 @@
         <button v-if="active && active.groupId"
           class="h-8 px-3 rounded-[5%] text-xs bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300"
           type="button" :aria-expanded="memberOpen" @click="memberOpen = !memberOpen">成员</button>
+        <!-- 群管理：打开群管理面板（成员/改群名/退出/解散） -->
+        <button v-if="active && active.groupId"
+          class="h-8 px-3 rounded-[5%] text-xs bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
+          type="button" @click="emit('open-group-manage', String(active.groupId))">群管理</button>
         <!-- 进行中的房间入口（群组） -->
         <button v-if="active && active.groupId"
           class="relative h-8 px-3 rounded-[5%] text-xs bg-white/60 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
@@ -91,7 +96,7 @@
       <div v-if="memberOpen"
         class="px-5 py-3 border-b border-zinc-200/60 dark:border-zinc-700/60 max-h-48 overflow-y-auto overscroll-contain">
         <div v-for="m in members" :key="m.id" class="flex items-center gap-2 py-1 text-sm text-zinc-600 dark:text-zinc-300">
-          <img :src="m.avatar || charAvatar(m.name.charAt(0), '#a1a1aa')" alt="" width="28" height="28" class="w-7 h-7 rounded-[10px] object-cover" @error="onAvatarError" />
+          <img :src="m.avatar || charAvatar(m.name.charAt(0) || '友', '#a1a1aa')" alt="" width="28" height="28" class="w-7 h-7 rounded-[10px] object-cover" @error="onAvatarError" />
           <span class="truncate">{{ m.name }}</span>
           <span class="ml-auto w-2 h-2 rounded-full shrink-0" :class="m.online ? 'bg-emerald-500' : 'bg-zinc-300 dark:bg-zinc-600'" :title="m.online ? '在线' : '离线'"></span>
         </div>
@@ -169,8 +174,11 @@ import RoomJoinDialog from '@/components/chat/RoomJoinDialog.vue'
 
 // panelMode：右侧栏位的模式（'' = 会话；group-*/friend-* = 功能面板），由页面按路由下发。
 // 本组件不依赖路由（社区页内嵌时不会传该 prop，自然走会话视图）。
-const props = defineProps<{ panelMode?: string }>()
-const emit = defineEmits<{ (e: 'close-panel'): void }>()
+const props = defineProps<{ panelMode?: string; panelGroupId?: string }>()
+const emit = defineEmits<{
+  (e: 'close-panel'): void
+  (e: 'open-group-manage', groupId: string): void
+}>()
 
 /** 归一为字符串，避免内嵌场景未传 prop 时对 undefined 调 startsWith */
 const panel = computed(() => props.panelMode || '')

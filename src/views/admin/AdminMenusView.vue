@@ -39,7 +39,7 @@
     </AdminTable>
 
     <!-- 新建 / 编辑菜单 -->
-    <AdminModal v-if="editOpen" :title="editing ? '编辑菜单' : '新建菜单'" width="w-[720px]" @close="editOpen = false">
+    <AdminModal :open="editOpen" :title="editing ? '编辑菜单' : '新建菜单'" width="w-[720px]" @close="editOpen = false">
       <div class="grid grid-cols-2 gap-4">
         <label class="block">
           <span class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">菜单名称</span>

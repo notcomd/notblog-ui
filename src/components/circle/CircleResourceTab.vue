@@ -19,16 +19,17 @@
     <p class="mt-5 text-[11px] text-zinc-400">资源来自社区动态中的媒体</p>
 
     <!-- 大图预览 -->
-    <div v-if="previewIndex >= 0" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/70" @click="previewIndex = -1">
+    <BaseModal v-if="previewIndex >= 0" bare :show-close="false" @close="previewIndex = -1">
       <img :src="resources[previewIndex]?.url" alt="" class="max-h-[85vh] max-w-[85vw] rounded-[5%] object-contain" />
-      <button aria-label="关闭预览" class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70" @click="previewIndex = -1"><svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
+      <button aria-label="关闭预览" class="fixed right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70" @click="previewIndex = -1"><svg aria-hidden="true" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </BaseModal>
   </div>
 </template>
 
 <script setup lang="ts">
 // 社区资源：circleLoader 拉取社区动态，提取媒体（图片 + 视频封面）去重展示
 import { ref, watch } from 'vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import { getCirclePosts } from '@/api/circle'
 import { isVideoUrl } from '@/utils/media'
 

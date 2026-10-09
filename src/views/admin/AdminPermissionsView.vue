@@ -86,7 +86,7 @@
     </AdminTable>
 
     <!-- ===== 新建 / 编辑 ===== -->
-    <AdminModal v-if="editOpen" :title="editing ? '编辑权限' : '新建权限'" width="w-[680px]" @close="editOpen = false">
+    <AdminModal :open="editOpen" :title="editing ? '编辑权限' : '新建权限'" width="w-[680px]" @close="editOpen = false">
       <div class="grid grid-cols-2 gap-x-5 gap-y-4">
         <label class="col-span-2 block sm:col-span-1">
           <span class="mb-1.5 block text-[11px] text-zinc-500 dark:text-zinc-400">权限名称</span>

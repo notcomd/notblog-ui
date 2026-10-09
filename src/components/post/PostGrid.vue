@@ -7,7 +7,7 @@
     <!-- 卡片入场由 anime.js 驱动（见 script 的 playCardsIn），故不再用 CSS staggered 类 -->
     <div ref="gridEl" class="columns-3 gap-5">
       <div v-for="(post, i) in posts" :key="keyOf(post, i)" class="break-inside-avoid mb-5">
-        <PostCard :post="post" />
+        <component :is="cardComponent" :post="post" />
       </div>
     </div>
 
@@ -19,7 +19,7 @@
         <div v-for="i in 6" :key="i" class="break-inside-avoid mb-5" aria-hidden="true">
           <!-- 逐张错开微光相位（--qm-shimmer-delay 由 .qm-shimmer::after 读取） -->
           <div class="overflow-hidden qm-shimmer" :style="{ '--qm-shimmer-delay': `${(i - 1) * 0.12}s` }">
-            <div class="bg-zinc-200/70 dark:bg-zinc-800/70" :class="i % 4 === 3 ? 'aspect-square' : 'aspect-[9/16]'"></div>
+            <div class="bg-zinc-200/70 dark:bg-zinc-800/70" :class="compactCard || i % 4 === 3 ? 'aspect-square' : 'aspect-[9/16]'"></div>
             <div class="p-4 space-y-2">
               <div class="flex items-center gap-2">
                 <div class="w-8 h-8 rounded-full bg-zinc-200/70 dark:bg-zinc-800/70"></div>
@@ -86,6 +86,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onActivated, onMounted, onUnmounted, ref, watch } from 'vue'
+import type { Component } from 'vue'
 import { animate, stagger } from 'animejs'
 import PostCard from './PostCard.vue'
 
@@ -104,6 +105,8 @@ interface FeedData {
 interface Props {
   // 数据加载函数：(page, size) => Promise<{ list, total, page, size }>
   loader: (params: LoaderParams) => Promise<unknown>
+  // 卡片组件：默认图文/视频推文卡（PostCard）；广场混排传入统一的三类混合卡
+  card?: Component
   emptyText?: string
   emptyTitle?: string
 }
@@ -111,6 +114,11 @@ const props = withDefaults(defineProps<Props>(), {
   emptyText: '还没有内容，快来发布第一条吧～',
   emptyTitle: '这里还很安静'
 })
+
+// 卡片组件（默认散文/视频推文卡）
+const cardComponent = computed<Component>(() => props.card || PostCard)
+// 传入统一混合卡时（1:1 封面）骨架屏也用方形比例，避免加载完成时高度跳变
+const compactCard = computed<boolean>(() => !!props.card && props.card !== PostCard)
 
 const posts = ref<unknown[]>([])
 const loading = ref(false)

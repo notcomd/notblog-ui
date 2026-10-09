@@ -42,7 +42,7 @@
       rows="1"
       name="messageInput"
       aria-label="消息输入"
-      class="flex-1 resize-none rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3 py-2.5 text-sm outline-none max-h-[120px]"
+      class="flex-1 resize-none rounded-[5%] bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3 py-2.5 text-sm outline-none min-h-[44px] max-h-[160px] overflow-y-auto leading-relaxed"
       placeholder="输入消息，Enter 发送，Shift+Enter 换行"
       @keydown.enter.exact.prevent="onEnter"
       @input="onInput"
@@ -79,6 +79,8 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024
 const MAX_FILE_SIZE = 50 * 1024 * 1024
+// 自适应高度上限：内容超出后输入框内部滚动（不无限撑开），与模板 max-h-[160px] 保持一致
+const DRAFT_MAX_HEIGHT = 160
 const EMOJIS: string[] = ['😀','😄','😁','😆','😅','😂','🙂','😉','😊','😍','😘','😜','🤗','🤔','😐','😴','😢','😭','😡','🥺','👍','👌','🙏','👏','💪','🎉','🔥','❤️','💡','🌟','☕','🍔','🍺','🌈','✅','❌','⏰','📌','🚀','🎁']
 
 let typingTimer: ReturnType<typeof setTimeout> | null = null
@@ -177,7 +179,7 @@ function notifyTyping(): void {
 
 function autoGrow(el: HTMLElement): void {
   el.style.height = 'auto'
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px'
+  el.style.height = Math.min(el.scrollHeight, DRAFT_MAX_HEIGHT) + 'px'
 }
 
 function resetDraftHeight(): void {
@@ -185,7 +187,7 @@ function resetDraftHeight(): void {
     const el = draftBox.value
     if (!el) return
     el.style.height = 'auto'
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px'
+    el.style.height = Math.min(el.scrollHeight, DRAFT_MAX_HEIGHT) + 'px'
   })
 }
 

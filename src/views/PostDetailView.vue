@@ -17,22 +17,19 @@
     </div>
 
     <!-- 举报弹窗 -->
-    <div v-if="reportOpen" class="fixed inset-0 z-[85] flex items-center justify-center bg-black/40" @click.self="reportOpen = false">
-      <div class="qm-surface p-6 w-[min(440px,92vw)] max-h-[90vh] overflow-y-auto overscroll-contain">
-        <h3 class="text-base font-bold text-zinc-800 dark:text-zinc-100 mb-1">举报内容</h3>
-        <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">请选择举报类型，我们会尽快核实处理</p>
-        <div class="grid grid-cols-3 gap-2 mb-4">
-          <button v-for="(c, i) in REPORT_CATEGORIES" :key="i" type="button" :aria-pressed="reportCategory === i" class="py-2.5 rounded-xl text-sm font-medium transition-all"
-            :class="reportCategory === i ? 'bg-gradient-to-r from-red-400 to-rose-500 text-white shadow' : 'bg-white/60 dark:bg-zinc-800/60 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'"
-            @click="reportCategory = i">{{ c }}</button>
-        </div>
-        <textarea v-model="reportReason" rows="2" name="reportReason" aria-label="举报补充说明" class="w-full resize-none rounded-xl bg-white/70 dark:bg-zinc-800/70 border border-white/60 dark:border-white/10 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-red-400/50 transition-all" placeholder="补充说明（选填）"></textarea>
-        <div class="flex justify-end gap-2 mt-4">
-          <button class="px-4 h-10 rounded-xl text-sm text-zinc-500 hover:bg-white/60 dark:hover:bg-zinc-800/60 transition-all" @click="reportOpen = false">取消</button>
-          <button class="px-4 h-10 rounded-xl text-sm font-medium bg-gradient-to-r from-red-400 to-rose-500 text-white active:scale-95 transition-all" @click="submitReportReport">提交举报</button>
-        </div>
+    <BaseModal :open="reportOpen" title="举报内容" width="w-[440px]" body-class="p-6" @close="reportOpen = false">
+      <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">请选择举报类型，我们会尽快核实处理</p>
+      <div class="grid grid-cols-3 gap-2 mb-4">
+        <button v-for="(c, i) in REPORT_CATEGORIES" :key="i" type="button" :aria-pressed="reportCategory === i" class="py-2.5 rounded-[5%] text-sm font-medium transition-all"
+          :class="reportCategory === i ? 'bg-gradient-to-r from-red-400 to-rose-500 text-white shadow' : 'text-zinc-500 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] hover:text-zinc-700 dark:hover:text-zinc-200'"
+          @click="reportCategory = i">{{ c }}</button>
       </div>
-    </div>
+      <textarea v-model="reportReason" rows="2" name="reportReason" aria-label="举报补充说明" class="w-full resize-none rounded-[5%] bg-transparent ring-1 ring-inset ring-zinc-200/70 dark:ring-zinc-800 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-red-400/50 transition-all" placeholder="补充说明（选填）"></textarea>
+      <template #footer>
+        <button class="px-4 h-10 rounded-[5%] text-sm text-zinc-500 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all" @click="reportOpen = false">取消</button>
+        <button class="px-4 h-10 rounded-[5%] text-sm font-medium bg-gradient-to-r from-red-400 to-rose-500 text-white active:scale-95 transition-all" @click="submitReportReport">提交举报</button>
+      </template>
+    </BaseModal>
 
     <!-- 加载骨架 -->
     <div v-if="loading" class="grid grid-cols-5 gap-6" role="status">
@@ -126,7 +123,7 @@
         <!-- 发布者信息卡片 -->
         <div class="glass-card p-5">
           <div class="flex items-center gap-3">
-            <img :src="authorAvatar" alt="" class="w-12 h-12 rounded-full object-cover border-2 border-white/60 dark:border-white/10 cursor-pointer hover:scale-105 transition-transform" role="link" tabindex="0" aria-label="查看作者主页" @error="hideAvatar" @click="goAuthor" @keydown.enter.prevent="goAuthor" @keydown.space.prevent="goAuthor" />
+            <img :src="authorAvatar" alt="" class="w-12 h-12 rounded-full object-cover border-2 border-white/60 dark:border-white/10 cursor-pointer hover:scale-105 transition-transform" role="link" tabindex="0" aria-label="查看作者主页" @error="avatarFailed = true" @click="goAuthor" @keydown.enter.prevent="goAuthor" @keydown.space.prevent="goAuthor" />
             <div class="flex-1 min-w-0">
               <div class="font-semibold text-zinc-800 dark:text-zinc-100 cursor-pointer hover:text-amber-500 transition-colors truncate" role="link" tabindex="0" @click="goAuthor" @keydown.enter.prevent="goAuthor" @keydown.space.prevent="goAuthor">{{ authorName }}</div>
               <div class="text-xs text-zinc-400 truncate">{{ authorBio }}</div>
@@ -206,6 +203,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import BaseModal from '@/components/common/BaseModal.vue'
 import CommentSection from '@/components/comment/CommentSection.vue'
 import VideoPlayer from '@/components/video/VideoPlayer.vue'
 import { getTweetDetail, toggleLike, toggleFavorite, recordView, shareTweet } from '@/api/tweet'
@@ -225,6 +223,7 @@ import { submitReport } from '@/api/report'
 import { renderMarkdown, looksLikeMarkdown } from '@/utils/markdown'
 import { isVideoPost, pickVideoUrl } from '@/utils/media'
 import { themeAvatar } from '@/utils/avatar'
+import { authorAvatarOf } from '@/utils/author'
 import { canEdit, lockedReason } from '@/utils/contentStatus'
 import { compactNumber, relativeTime } from '@/utils/format'
 
@@ -313,11 +312,22 @@ const videoUrl = computed(() => {
   return pickVideoUrl(mediaUrls.value) || mediaUrls.value[0] || ''
 })
 const authorName = computed(() => auth.resolveDisplayName(tweet.value && tweet.value.author))
-const authorAvatar = computed(() => {
-  const raw = (tweet.value && tweet.value.author && tweet.value.author.avatar) || ''
-  if (raw) return raw
-  // 视频详情 DTO 无作者资料：回退首字头像，避免留一个空白圆
-  return isVideoPage.value ? themeAvatar(authorName.value.charAt(0) || '用') : ''
+// 头像：同步地址 → 自己（本地 me）→ 按作者 GUID 解析（推文列表/详情可能不带头像，视频详情只有 GUID）
+// → 首字头像兜底。加载失败同样回退首字头像，绝不留空白圆。
+const avatarFailed = ref(false)
+const authorAvatar = computed<string>(() => {
+  const guid = authorId.value
+  if (!avatarFailed.value) {
+    const raw = (tweet.value && tweet.value.author && tweet.value.author.avatar) || ''
+    if (raw) return raw
+    if (guid) {
+      const selfId = auth.user?.id ? String(auth.user.id).toLowerCase() : ''
+      if (selfId && selfId === String(guid).toLowerCase() && auth.user?.avatar) return auth.user.avatar
+      const resolved = authorAvatarOf(guid)
+      if (resolved) return resolved
+    }
+  }
+  return themeAvatar(authorName.value.charAt(0) || '用')
 })
 const authorBio = computed(() => (tweet.value && tweet.value.author && tweet.value.author.bio) || '这个人很懒，什么都没有写')
 const authorId = computed(() => {
@@ -356,6 +366,7 @@ function highlightMentions(text: string): MentionSeg[] {
 async function load(): Promise<void> {
   loading.value = true
   isFollowing.value = false
+  avatarFailed.value = false
   try {
     if (isVideoPage.value) {
       // 视频详情：走 Video 服务（videoGuid）
@@ -560,10 +571,6 @@ function nextMedia(): void {
 
 function onMediaError(): void {
   mediaFailed.value = true
-}
-
-function hideAvatar(e: Event): void {
-  (e.target as HTMLElement).style.visibility = 'hidden'
 }
 
 function onKeydown(e: KeyboardEvent): void {

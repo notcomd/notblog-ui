@@ -42,3 +42,16 @@ export function groupAvatar(): string {
     )
   );
 }
+
+/**
+ * 群聊图标（人群意象）：群会话／群头像缺省与加载失败时的语义兜底
+ * 与单聊「首字/对方头像」区分，避免群聊错用某个成员头像或空白破图
+ */
+export function groupIconAvatar(): string {
+  return (
+    'data:image/svg+xml,' +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#e4e4e7"/><g fill="none" stroke="#71717a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="37" cy="40" r="11"/><path d="M18 74v-6a16 16 0 0 1 16-16h6a16 16 0 0 1 16 16v6"/><circle cx="71" cy="44" r="8"/><path d="M62 74v-5a12 12 0 0 1 12-12h1a12 12 0 0 1 12 12v5"/></g></svg>'
+    )
+  );
+}

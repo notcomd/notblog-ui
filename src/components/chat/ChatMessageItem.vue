@@ -41,7 +41,19 @@
             <span class="block text-[11px] opacity-70">{{ formatSize(message.fileSize) }}</span>
           </span>
         </a>
-        <div v-else class="whitespace-pre-wrap break-words">{{ message.content }}</div>
+        <!-- 文本消息：纯文本 + 换行 + 表情（unicode）安全渲染，URL 以 <a> 分段渲染（不使用 v-html，杜绝 XSS） -->
+        <div v-else class="whitespace-pre-wrap break-words">
+          <template v-for="(seg, i) in contentSegments" :key="i">
+            <a
+              v-if="seg.href"
+              :href="seg.href"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="underline underline-offset-2 decoration-1 hover:opacity-80 break-all"
+            >{{ seg.text }}</a>
+            <template v-else>{{ seg.text }}</template>
+          </template>
+        </div>
 
         <!-- 元信息行：时间 + 发送状态；组内续条不重复显示时间 -->
         <div v-if="isGroupEnd || message.status === -1" class="mt-1 flex items-center gap-2 text-[10px] opacity-70">
@@ -81,6 +93,26 @@ const emit = defineEmits<{ (e: 'retry'): void }>()
 
 const chat = useChatStore()
 const isMine = computed(() => chat.isMine(props.message))
+
+/**
+ * 文本消息的富文本分段：把内容切成「纯文本 / 链接」段。
+ * ⚠️ 安全：只识别 http(s):// 链接；所有片段一律经 Vue 插值渲染为文本节点与 href 属性，
+ * 全程不使用 v-html，故内容中的 HTML/脚本不会被当作标记执行（防 XSS）。
+ */
+const URL_PATTERN = /https?:\/\/[^\s<>"'）】]+/g
+const contentSegments = computed<{ text: string; href?: string }[]>(() => {
+  const text = String(props.message.content ?? '')
+  const out: { text: string; href?: string }[] = []
+  let last = 0
+  for (const m of text.matchAll(URL_PATTERN)) {
+    const idx = m.index ?? 0
+    if (idx > last) out.push({ text: text.slice(last, idx) })
+    out.push({ text: m[0], href: m[0] })
+    last = idx + m[0].length
+  }
+  if (last < text.length) out.push({ text: text.slice(last) })
+  return out
+})
 
 /** 头像/图片加载失败：换成首字头像，避免留下空洞 */
 function onAvatarError(e: Event): void {

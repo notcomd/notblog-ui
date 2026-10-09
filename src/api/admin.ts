@@ -185,6 +185,33 @@ export function deleteTweet(tweetGuid: string) {
   return service.post(`/api/audit/tweets/${tweetGuid}/delete`).then(unwrap)
 }
 
+// ==================== 视频审核（Video /api/video/audit） ====================
+/**
+ * 管理端视频审核列表：Video `GET /api/video/audit/list`（仅管理员）。
+ * status 省略 = 全部状态；取值 Draft/Pending/Approved/Rejected（不区分大小写，不接受 All）。
+ */
+export async function getVideoAuditList(params: PageParams & { status?: string } = {}) {
+  const res = await service.get('/api/video/audit/list', {
+    params: {
+      status: params.status || undefined,
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? 10
+    }
+  })
+  const d: any = unwrap(res) || {}
+  return { items: pickItems(d), totalCount: d.totalCount ?? 0 }
+}
+
+/** 通过视频审核：Video `POST /api/video/audit/{videoGuid}/approve`（Pending → Approved） */
+export function approveVideo(videoGuid: string) {
+  return service.post(`/api/video/audit/${videoGuid}/approve`).then(unwrap)
+}
+
+/** 驳回视频：Video `POST /api/video/audit/{videoGuid}/reject`（body.reason 写入驳回原因） */
+export function rejectVideo(videoGuid: string, reason: string) {
+  return service.post(`/api/video/audit/${videoGuid}/reject`, { reason }).then(unwrap)
+}
+
 // ==================== 举报管理（Message /api/audit） ====================
 export async function getReports(params: PageParams = {}) {
   const res = await service.get('/api/audit/reports/pending', { params })
